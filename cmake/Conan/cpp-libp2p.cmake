@@ -10,8 +10,10 @@ execute_process(
 )
 
 # Build external cpp-libp2p
+include(ProcessorCount)
+ProcessorCount(CPU_COUNT)
 execute_process(
-    COMMAND ${CMAKE_COMMAND} --build "${CPP_LIBP2P_ROOT}"
+    COMMAND ${CMAKE_COMMAND} --build "${CPP_LIBP2P_ROOT}" --parallel ${CPU_COUNT}
 )
 
 find_package(libp2p CONFIG REQUIRED PATHS "${CPP_LIBP2P_ROOT}/install/lib/cmake/libp2p")
