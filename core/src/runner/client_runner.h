@@ -30,6 +30,8 @@ public:
     std::shared_ptr<boost::asio::io_service> get_service();
 
 private:
+    // NOTE: some libp2p methods require shared pointers to service, that's why
+    // we store it by shared pointer now
     std::shared_ptr<boost::asio::io_service> _io_service;
     std::optional<boost::asio::io_service::work> _work;
 };

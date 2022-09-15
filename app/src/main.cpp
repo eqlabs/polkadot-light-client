@@ -1,4 +1,6 @@
 #include <iostream>
+#include <ranges>
+#include <span>
 
 #include <soralog/impl/configurator_from_yaml.hpp>
 
@@ -6,10 +8,11 @@
 #include <libp2p/log/configurator.hpp>
 
 #include "runner/client_runner.h"
-#include "network/connection.h"
+#include "network/connection_manager.h"
 
 namespace plc::app {
 
+// TODO: use proper logger config, this one was just copy-pasted
 static const std::string logger_config = R"(
 # ----------------
 sinks:
@@ -49,14 +52,22 @@ void prepare_logging() {
     }
 }
 
+
+
 } // namespace plc::app
 
 int main(const int count, const char** args) {
-    plc::app::prepare_logging();
+    using namespace plc::app;
+    using namespace plc::core;
 
-    using plc::core::runner::ClientRunner;
-    auto runner = ClientRunner();
-    runner.post_task(plc::core::network::handshake(runner.get_service()));
+    prepare_logging();
+
+    auto runner = runner::ClientRunner();
+
+    auto peers = std::span(args, count) | std::views::drop(1) |
+        std::views::transform([](const char* str) { return std::string(str);});
+    auto connection_manager = network::ConnectionManager(runner, std::vector<std::string>(peers.begin(), peers.end()));
+
     runner.run();
 
     return 0;

@@ -5,9 +5,8 @@
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include <iostream>
-
 #include "utils/move_on_copy.h"
+#include "utils/callback_to_coro.h"
 
 namespace plc::core::runner {
 
@@ -40,10 +39,10 @@ struct fire_and_forget_t {
 };
 
 // Run coroutine task that doesn't return a value.
-// Assumption: task was NOT started execution before.
-// TODO: investigate if this can be checked in compile or runtime
+// Assumption: task was NOT started for execution before.
+// TODO: investigate if this can be checked in compile or run time
 fire_and_forget_t fire_and_forget(cppcoro::task<void>&& task) {
-    // store coroutine on the current stack
+    // store coroutine awaitable on the current stack
     auto local_task = std::move(task);
     co_await local_task;
 }
@@ -51,20 +50,8 @@ fire_and_forget_t fire_and_forget(cppcoro::task<void>&& task) {
 } // namespace
 
 void ClientRunner::run() {
-    auto task = [this]() -> cppcoro::task<void> {
-        cppcoro::async_manual_reset_event event;
-        boost::asio::deadline_timer t(*_io_service, boost::posix_time::seconds(5));
-        std::cout << "dispatching thread started" << std::endl;
-        t.async_wait([&event](const boost::system::error_code& error){
-            event.set();
-        });
-
-        std::cout << "waiting for event to happen" << std::endl;
-        co_await event;
-        std::cout << "event happened" << std::endl;
-    };
+    // TODO: implement proper stop logic
     _work.emplace(*_io_service);
-    post_task(task());
 
     _io_service->run();
 }

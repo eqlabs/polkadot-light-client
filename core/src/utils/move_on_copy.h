@@ -2,6 +2,9 @@
 
 namespace plc::core {
 
+// A helper class that performs a destructive copy (moves internal value instead).
+// This is useful to pass move-only objects into boost handler functions which are passed
+// by value in boost asio API.
 template <typename T>
 class MoveOnCopy {
 public:
