@@ -15,20 +15,20 @@
 
 namespace plc::core::network {
 
-class ConnectionManager {
+class ConnectionManager final {
 public:
     ConnectionManager(runner::ClientRunner& runner,
-        const std::vector<std::string>& peers);
+        const std::vector<std::string>& peers) noexcept;
 
 private:
     using ConnectionSPtr = std::shared_ptr<libp2p::connection::CapableConnection>;
 
 private:
-    cppcoro::task<void> connect_to(std::string peer);
+    cppcoro::task<void> connect_to(std::string peer) noexcept;
 
 private:
-    std::shared_ptr<libp2p::network::Dialer> _dialer;
-    std::unordered_map<std::string, ConnectionSPtr> _connections;
+    std::shared_ptr<libp2p::network::Dialer> m_dialer;
+    std::unordered_map<std::string, ConnectionSPtr> m_connections;
 };
 
 } // namespace plc::core::network

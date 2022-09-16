@@ -26,12 +26,13 @@
 #include <libp2p/protocol_muxer/multiselect.hpp>
 
 #include "utils/callback_to_coro.h"
+#include "utils/propagate.h"
 
 namespace plc::core::network {
 
 namespace {
 
-std::shared_ptr<libp2p::network::Dialer> make_dialer(std::shared_ptr<boost::asio::io_context> io_context) {
+std::shared_ptr<libp2p::network::Dialer> makem_dialer(std::shared_ptr<boost::asio::io_context> io_context) noexcept {
     auto multiselect = std::make_shared<libp2p::protocol_muxer::multiselect::Multiselect>();
 
     auto scheduler = std::make_shared<libp2p::basic::SchedulerImpl>(
@@ -90,14 +91,14 @@ std::shared_ptr<libp2p::network::Dialer> make_dialer(std::shared_ptr<boost::asio
 } // namespace
 
 ConnectionManager::ConnectionManager(runner::ClientRunner& runner,
-    const std::vector<std::string>& peers) {
-    _dialer = make_dialer(runner.get_service());
+    const std::vector<std::string>& peers) noexcept {
+    m_dialer = makem_dialer(runner.get_service());
     for (const auto& peer: peers) {
         runner.post_task(connect_to(peer));
     }
 }
 
-cppcoro::task<void> ConnectionManager::connect_to(std::string peer) {
+cppcoro::task<void> ConnectionManager::connect_to(std::string peer) noexcept {
     // TODO: handle parse error
     auto multiaddr = libp2p::multi::Multiaddress::create(peer)
         .value();
@@ -107,13 +108,13 @@ cppcoro::task<void> ConnectionManager::connect_to(std::string peer) {
         {multiaddr}
     };
     auto dial_result = co_await resume_in_callback<libp2p::network::Dialer::DialResult>([&](auto&& callback){
-        _dialer->dial(peerInfo, std::move(callback), std::chrono::milliseconds{1000});
+        m_dialer->dial(peerInfo, std::move(callback), std::chrono::milliseconds{1000});
     });
 
     // TODO: use logger
     if (dial_result.has_value()) {
         std::cout << "connection to " << peer << " succeded" << std::endl;
-        _connections.emplace(std::move(peer), std::move(dial_result.value()));
+        m_connections.emplace(move(peer), move(dial_result.value()));
     } else {
         // TODO: redial on failure?
         std::cout << "connection to " << peer << " failed: " << dial_result.error() << std::endl;
