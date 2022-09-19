@@ -7,7 +7,6 @@ Any rule may be ignored if it defies common sense in a particular situation
 
 This document is applicable to current repository and possible future **our** repositories in a scope of polkadot project. Any code in other existing repositories should be following guidelines of that project if such exist or just be consistent with surrounding code if doesn't.
 
-
 ## [M] Naming
 ```
 Local variable:         my_variable
