@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 
-project(polcadot_light_client)
+project(polkadot_light_client)
 set (CMAKE_CXX_STANDARD 20)
 
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/3rdparty_utils.cmake")

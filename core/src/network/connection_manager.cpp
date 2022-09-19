@@ -102,13 +102,13 @@ cppcoro::task<void> ConnectionManager::connectTo(std::string peer) noexcept {
     // TODO: handle parse error
     auto multiaddr = libp2p::multi::Multiaddress::create(peer)
         .value();
-    auto peerId = libp2p::peer::PeerId::fromBase58(multiaddr.getPeerId().value()).value();
-    libp2p::peer::PeerInfo peerInfo {
-        peerId,
+    auto peer_id = libp2p::peer::PeerId::fromBase58(multiaddr.getPeerId().value()).value();
+    libp2p::peer::PeerInfo peer_info {
+        peer_id,
         {multiaddr}
     };
     auto dial_result = co_await resumeInCallback<libp2p::network::Dialer::DialResult>([&](auto&& callback){
-        m_dialer->dial(peerInfo, std::move(callback), std::chrono::milliseconds{1000});
+        m_dialer->dial(peer_info, std::move(callback), std::chrono::milliseconds{1000});
     });
 
     // TODO: use logger
