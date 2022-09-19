@@ -48,7 +48,7 @@ struct CallbackAwaiter<void, F> {
 };
 
 template <typename Result, typename F>
-auto resume_in_callback(F&& f) {
+auto resumeInCallback(F&& f) {
     return CallbackAwaiter<Result, F>{std::forward<F>(f)};
 }
 

@@ -41,7 +41,7 @@ struct FireAndForget {
 // Run coroutine task that doesn't return a value.
 // Assumption: task was NOT started for execution before.
 // TODO: investigate if this can be checked in compile or run time
-FireAndForget fire_and_forget(cppcoro::task<void>&& task) noexcept {
+FireAndForget fireAndForget(cppcoro::task<void>&& task) noexcept {
     // store coroutine awaitable on the current stack
     auto local_task = std::move(task);
     co_await local_task;
@@ -56,13 +56,13 @@ void ClientRunner::run() noexcept {
     m_io_service->run();
 }
 
-void ClientRunner::post_task(cppcoro::task<void>&& task) noexcept {
+void ClientRunner::postTask(cppcoro::task<void>&& task) noexcept {
     m_io_service->post([task = MoveOnCopy<cppcoro::task<void>>{std::move(task)}]() mutable {
-        fire_and_forget(task.take());
+        fireAndForget(task.take());
     });
 }
 
-std::shared_ptr<boost::asio::io_service> ClientRunner::get_service() const noexcept {
+std::shared_ptr<boost::asio::io_service> ClientRunner::getService() const noexcept {
     return m_io_service;
 }
 

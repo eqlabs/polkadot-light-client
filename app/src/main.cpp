@@ -28,7 +28,7 @@ groups:
 # ----------------
   )";
 
-void prepare_logging() {
+void prepareLogging() {
     // prepare log system
     auto logging_system = std::make_shared<soralog::LoggingSystem>(
         std::make_shared<soralog::ConfiguratorFromYAML>(
@@ -60,7 +60,7 @@ int main(const int count, const char** args) {
     using namespace plc::app;
     using namespace plc::core;
 
-    prepare_logging();
+    prepareLogging();
 
     auto runner = runner::ClientRunner();
 

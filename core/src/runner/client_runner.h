@@ -17,17 +17,17 @@ public:
 
     void run() noexcept;
 
-    void post_func(std::invocable<> auto&& func) noexcept {
+    void postFunc(std::invocable<> auto&& func) noexcept {
         m_io_service->post(std::forward<decltype(func)>(func));
     }
 
-    void dispatch_func(std::invocable<> auto&& func) noexcept {
+    void dispatchFunc(std::invocable<> auto&& func) noexcept {
         m_io_service->dispatch(std::forward<decltype(func)>(func));
     }
 
-    void post_task(cppcoro::task<void>&& task) noexcept;
+    void postTask(cppcoro::task<void>&& task) noexcept;
 
-    std::shared_ptr<boost::asio::io_service> get_service() const noexcept;
+    std::shared_ptr<boost::asio::io_service> getService() const noexcept;
 
 private:
     // NOTE: some libp2p methods require shared pointers to service, that's why

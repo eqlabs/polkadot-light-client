@@ -24,7 +24,7 @@ private:
     using ConnectionSPtr = std::shared_ptr<libp2p::connection::CapableConnection>;
 
 private:
-    cppcoro::task<void> connect_to(std::string peer) noexcept;
+    cppcoro::task<void> connectTo(std::string peer) noexcept;
 
 private:
     std::shared_ptr<libp2p::network::Dialer> m_dialer;

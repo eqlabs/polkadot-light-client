@@ -32,7 +32,7 @@ namespace plc::core::network {
 
 namespace {
 
-std::shared_ptr<libp2p::network::Dialer> makem_dialer(std::shared_ptr<boost::asio::io_context> io_context) noexcept {
+std::shared_ptr<libp2p::network::Dialer> makeDialer(std::shared_ptr<boost::asio::io_context> io_context) noexcept {
     auto multiselect = std::make_shared<libp2p::protocol_muxer::multiselect::Multiselect>();
 
     auto scheduler = std::make_shared<libp2p::basic::SchedulerImpl>(
@@ -92,13 +92,13 @@ std::shared_ptr<libp2p::network::Dialer> makem_dialer(std::shared_ptr<boost::asi
 
 ConnectionManager::ConnectionManager(runner::ClientRunner& runner,
     const std::vector<std::string>& peers) noexcept {
-    m_dialer = makem_dialer(runner.get_service());
+    m_dialer = makeDialer(runner.getService());
     for (const auto& peer: peers) {
-        runner.post_task(connect_to(peer));
+        runner.postTask(connectTo(peer));
     }
 }
 
-cppcoro::task<void> ConnectionManager::connect_to(std::string peer) noexcept {
+cppcoro::task<void> ConnectionManager::connectTo(std::string peer) noexcept {
     // TODO: handle parse error
     auto multiaddr = libp2p::multi::Multiaddress::create(peer)
         .value();
@@ -107,7 +107,7 @@ cppcoro::task<void> ConnectionManager::connect_to(std::string peer) noexcept {
         peerId,
         {multiaddr}
     };
-    auto dial_result = co_await resume_in_callback<libp2p::network::Dialer::DialResult>([&](auto&& callback){
+    auto dial_result = co_await resumeInCallback<libp2p::network::Dialer::DialResult>([&](auto&& callback){
         m_dialer->dial(peerInfo, std::move(callback), std::chrono::milliseconds{1000});
     });
 
