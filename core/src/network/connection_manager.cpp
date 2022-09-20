@@ -14,16 +14,31 @@
 #include <libp2p/crypto/random_generator/boost_generator.hpp>
 #include <libp2p/crypto/rsa_provider/rsa_provider_impl.hpp>
 #include <libp2p/crypto/secp256k1_provider/secp256k1_provider_impl.hpp>
+#include <libp2p/host/basic_host/basic_host.hpp>
 #include <libp2p/network/impl/dialer_impl.hpp>
+#include <libp2p/network/impl/dnsaddr_resolver_impl.hpp>
 #include <libp2p/network/impl/connection_manager_impl.hpp>
+#include <libp2p/network/cares/cares.hpp>
 #include <libp2p/network/impl/listener_manager_impl.hpp>
 #include <libp2p/network/impl/router_impl.hpp>
 #include <libp2p/network/impl/transport_manager_impl.hpp>
+#include <libp2p/network/impl/network_impl.hpp>
 #include <libp2p/muxer/yamux/yamux.hpp>
+#include <libp2p/peer/address_repository/inmem_address_repository.hpp>
+#include <libp2p/peer/key_repository/inmem_key_repository.hpp>
+#include <libp2p/peer/protocol_repository/inmem_protocol_repository.hpp>
+#include <libp2p/peer/impl/identity_manager_impl.hpp>
+#include <libp2p/peer/impl/peer_repository_impl.hpp>
+#include <libp2p/protocol_muxer/multiselect.hpp>
+#include <libp2p/protocol/kademlia/impl/content_routing_table_impl.hpp>
+#include <libp2p/protocol/kademlia/impl/kademlia_impl.hpp>
+#include <libp2p/protocol/kademlia/impl/peer_routing_table_impl.hpp>
+#include <libp2p/protocol/kademlia/impl/storage_impl.hpp>
+#include <libp2p/protocol/kademlia/impl/storage_backend_default.hpp>
+#include <libp2p/protocol/kademlia/impl/validator_default.hpp>
 #include <libp2p/security/noise.hpp>
 #include <libp2p/transport/impl/upgrader_impl.hpp>
 #include <libp2p/transport/tcp/tcp_transport.hpp>
-#include <libp2p/protocol_muxer/multiselect.hpp>
 
 #include "utils/callback_to_coro.h"
 #include "utils/propagate.h"
@@ -31,6 +46,8 @@
 namespace plc::core::network {
 
 namespace {
+
+static const libp2p::network::c_ares::Ares cares = {};
 
 std::shared_ptr<libp2p::network::Dialer> makeDialer(std::shared_ptr<boost::asio::io_context> io_context) noexcept {
     auto multiselect = std::make_shared<libp2p::protocol_muxer::multiselect::Multiselect>();
@@ -42,8 +59,7 @@ std::shared_ptr<libp2p::network::Dialer> makeDialer(std::shared_ptr<boost::asio:
 
     auto bus = std::make_shared<libp2p::event::Bus>();
     auto connection_manager = std::make_shared<libp2p::network::ConnectionManagerImpl>(bus);
-
-    auto csprng = std::make_shared<libp2p::crypto::random::BoostRandomGenerator>();
+    auto random_generator = std::make_shared<libp2p::crypto::random::BoostRandomGenerator>();
     auto ed25519_provider =
         std::make_shared<libp2p::crypto::ed25519::Ed25519ProviderImpl>();
     auto rsa_provider = std::make_shared<libp2p::crypto::rsa::RsaProviderImpl>();
@@ -53,7 +69,7 @@ std::shared_ptr<libp2p::network::Dialer> makeDialer(std::shared_ptr<boost::asio:
     auto hmac_provider = std::make_shared<libp2p::crypto::hmac::HmacProviderImpl>();
     auto crypto_provider =
         std::make_shared<libp2p::crypto::CryptoProviderImpl>(
-            csprng, ed25519_provider, rsa_provider, ecdsa_provider,
+            random_generator, ed25519_provider, rsa_provider, ecdsa_provider,
             secp256k1_provider, hmac_provider);
     auto validator =
         std::make_shared<libp2p::crypto::validator::KeyValidatorImpl>(crypto_provider);
@@ -83,10 +99,34 @@ std::shared_ptr<libp2p::network::Dialer> makeDialer(std::shared_ptr<boost::asio:
     auto router = std::make_shared<libp2p::network::RouterImpl>();
     auto listener_manager = std::make_shared<libp2p::network::ListenerManagerImpl>(multiselect, router,
         transport_manager, connection_manager);
-
-    return std::make_shared<libp2p::network::DialerImpl>(multiselect, transport_manager,
+    auto dialer = std::make_shared<libp2p::network::DialerImpl>(multiselect, transport_manager,
         connection_manager, listener_manager, scheduler);
+
+    auto identity_manager = std::make_shared<libp2p::peer::IdentityManagerImpl>(keypair, key_marshaller);
+    auto network = std::make_unique<libp2p::network::NetworkImpl>(listener_manager, dialer, connection_manager);
+    auto dns_address_resolver = std::make_shared<libp2p::network::DnsaddrResolverImpl>(io_context, cares);
+    auto peer_address_repository = std::make_shared<libp2p::peer::InmemAddressRepository>(dns_address_resolver);
+    auto key_repository = std::make_shared<libp2p::peer::InmemKeyRepository>();
+    auto protocol_repository = std::make_shared<libp2p::peer::InmemProtocolRepository>();
+    auto peer_repository = std::make_unique<libp2p::peer::PeerRepositoryImpl>(peer_address_repository, key_repository,
+        protocol_repository);
+    auto host = std::make_shared<libp2p::host::BasicHost>(identity_manager, std::move(network), std::move(peer_repository), bus, transport_manager);
+    libp2p::protocol::kademlia::Config kademlia_config{};
+    auto kademlia_storage_backed = std::make_shared<libp2p::protocol::kademlia::StorageBackendDefault>();
+    auto kademlia_storage = std::make_shared<libp2p::protocol::kademlia::StorageImpl>(kademlia_config,
+        kademlia_storage_backed, scheduler);
+    auto kademlia_content_routing_table = std::make_shared<libp2p::protocol::kademlia::ContentRoutingTableImpl>(
+        kademlia_config, *scheduler, bus);
+    auto kademlia_peer_routing_table = std::make_shared<libp2p::protocol::kademlia::PeerRoutingTableImpl>(kademlia_config, identity_manager, bus);
+    auto kademlia_validator = std::make_shared<libp2p::protocol::kademlia::ValidatorDefault>();
+    auto kademlia = std::make_shared<libp2p::protocol::kademlia::KademliaImpl>(kademlia_config, host,
+        kademlia_storage, kademlia_content_routing_table, kademlia_peer_routing_table, kademlia_validator,
+        scheduler, bus, random_generator);
+
+    return dialer;
 }
+
+
 
 } // namespace
 
