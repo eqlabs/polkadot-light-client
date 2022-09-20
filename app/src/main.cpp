@@ -1,6 +1,4 @@
 #include <iostream>
-#include <ranges>
-#include <span>
 
 #include <soralog/impl/configurator_from_yaml.hpp>
 
@@ -64,9 +62,11 @@ int main(const int count, const char** args) {
 
     auto runner = runner::ClientRunner();
 
-    auto peers = std::span(args, count) | std::views::drop(1) |
-        std::views::transform([](const char* str) { return std::string(str);});
-    auto connection_manager = network::ConnectionManager(runner, std::vector<std::string>(peers.begin(), peers.end()));
+    std::vector<std::string> peers;
+    for (int i = 0; i < count; ++i) {
+        peers.push_back(args[i]);
+    }
+    auto connection_manager = network::ConnectionManager(runner, peers);
 
     runner.run();
 
