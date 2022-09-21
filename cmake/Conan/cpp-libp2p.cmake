@@ -3,9 +3,12 @@
 set(CPP_LIBP2P_ROOT "${CMAKE_BINARY_DIR}/cpp-libp2p.cmake")
 file(MAKE_DIRECTORY "${CPP_LIBP2P_ROOT}")
 
+message(STATUS "---- cpp-libp2p.cmake -----")
+message(STATUS "PLC_PROFILE_PATH is ${PLC_PROFILE_PATH}")
+
 # Configure external cpp-libp2p
 execute_process(
-    COMMAND ${CMAKE_COMMAND} "${CMAKE_CURRENT_LIST_DIR}/cpp-libp2p"
+    COMMAND ${CMAKE_COMMAND} "${CMAKE_CURRENT_LIST_DIR}/cpp-libp2p" -DPLC_PROFILE_PATH=${PLC_PROFILE_PATH}
     WORKING_DIRECTORY "${CPP_LIBP2P_ROOT}"
 )
 
