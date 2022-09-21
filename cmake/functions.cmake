@@ -1,7 +1,12 @@
 function(addtest test_name)
   add_executable(${test_name} ${ARGN})
-  addtest_part(${test_name} ${ARGN})
-  target_link_libraries(${test_name} GTest::gmock_main)
+  if (POLICY CMP0076)
+    cmake_policy(SET CMP0076 NEW)
+  endif ()
+  target_sources(${test_name} PUBLIC
+      ${ARGN}
+      )
+  target_link_libraries(${test_name} GTest::gtest GTest::gmock_main)
   add_test(
       NAME ${test_name}
       COMMAND $<TARGET_FILE:${test_name}>
@@ -13,16 +18,3 @@ function(addtest test_name)
       )
   set_property(GLOBAL APPEND PROPERTY TEST_TARGETS ${test_name})
 endfunction()
-
-function(addtest_part test_name)
-  if (POLICY CMP0076)
-    cmake_policy(SET CMP0076 NEW)
-  endif ()
-  target_sources(${test_name} PUBLIC
-      ${ARGN}
-      )
-  target_link_libraries(${test_name}
-      GTest::gtest
-      )
-endfunction()
-
