@@ -63,7 +63,7 @@ int main(const int count, const char** args) {
     auto runner = runner::ClientRunner();
 
     std::vector<std::string> peers;
-    for (int i = 0; i < count; ++i) {
+    for (int i = 1; i < count; ++i) {
         peers.push_back(args[i]);
     }
     auto connection_manager = network::ConnectionManager(runner, peers);
