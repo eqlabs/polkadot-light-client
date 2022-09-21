@@ -1,4 +1,4 @@
-function(addtest test_name)
+function(add_test_module test_name)
   add_executable(${test_name} ${ARGN})
   if (POLICY CMP0076)
     cmake_policy(SET CMP0076 NEW)
