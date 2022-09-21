@@ -1,6 +1,8 @@
-#include "network/connection_manager.h"
+#include "network/peer_manager.h"
 
 #include <iostream>
+
+#include <boost/asio/io_context.hpp>
 
 #include <libp2p/basic/scheduler/scheduler_impl.hpp>
 #include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
@@ -36,6 +38,7 @@
 #include <libp2p/protocol/kademlia/impl/storage_impl.hpp>
 #include <libp2p/protocol/kademlia/impl/storage_backend_default.hpp>
 #include <libp2p/protocol/kademlia/impl/validator_default.hpp>
+#include <libp2p/protocol/identify/identify.hpp>
 #include <libp2p/security/noise.hpp>
 #include <libp2p/transport/impl/upgrader_impl.hpp>
 #include <libp2p/transport/tcp/tcp_transport.hpp>
@@ -47,9 +50,40 @@ namespace plc::core::network {
 
 namespace {
 
+std::optional<libp2p::peer::PeerInfo> parsePeerInfo(std::string peer) noexcept {
+    // TODO: handle parse error
+    if (auto multiaddr = libp2p::multi::Multiaddress::create(peer); multiaddr.has_value()) {
+        if (auto peer_id = libp2p::peer::PeerId::fromBase58(multiaddr.value().getPeerId().value());
+            peer_id.has_value()) {
+            return libp2p::peer::PeerInfo{
+                peer_id.value(),
+                {multiaddr.value()}
+            };
+        }
+    }
+
+    return std::nullopt;
+}
+
+} // namespace
+
+PeerManager::PeerManager(runner::ClientRunner& runner,
+    const std::vector<std::string>& peers) noexcept {
+    initProtocols(runner.getService());
+    for (const auto& peer: peers) {
+        if (auto peerInfo = parsePeerInfo(peer)) {
+            m_kademlia->addPeer(*peerInfo, true);
+        }
+    }
+    m_identify->start();
+    m_kademlia->start();
+}
+
+PeerManager::~PeerManager() = default;
+
 static const libp2p::network::c_ares::Ares cares = {};
 
-std::shared_ptr<libp2p::network::Dialer> makeDialer(std::shared_ptr<boost::asio::io_context> io_context) noexcept {
+void PeerManager::initProtocols(std::shared_ptr<boost::asio::io_context> io_context) {
     auto multiselect = std::make_shared<libp2p::protocol_muxer::multiselect::Multiselect>();
 
     auto scheduler = std::make_shared<libp2p::basic::SchedulerImpl>(
@@ -110,7 +144,7 @@ std::shared_ptr<libp2p::network::Dialer> makeDialer(std::shared_ptr<boost::asio:
     auto protocol_repository = std::make_shared<libp2p::peer::InmemProtocolRepository>();
     auto peer_repository = std::make_unique<libp2p::peer::PeerRepositoryImpl>(peer_address_repository, key_repository,
         protocol_repository);
-    auto host = std::make_shared<libp2p::host::BasicHost>(identity_manager, std::move(network), std::move(peer_repository), bus, transport_manager);
+    m_host = std::make_shared<libp2p::host::BasicHost>(identity_manager, std::move(network), std::move(peer_repository), bus, transport_manager);
     libp2p::protocol::kademlia::Config kademlia_config{};
     auto kademlia_storage_backed = std::make_shared<libp2p::protocol::kademlia::StorageBackendDefault>();
     auto kademlia_storage = std::make_shared<libp2p::protocol::kademlia::StorageImpl>(kademlia_config,
@@ -119,46 +153,14 @@ std::shared_ptr<libp2p::network::Dialer> makeDialer(std::shared_ptr<boost::asio:
         kademlia_config, *scheduler, bus);
     auto kademlia_peer_routing_table = std::make_shared<libp2p::protocol::kademlia::PeerRoutingTableImpl>(kademlia_config, identity_manager, bus);
     auto kademlia_validator = std::make_shared<libp2p::protocol::kademlia::ValidatorDefault>();
-    auto kademlia = std::make_shared<libp2p::protocol::kademlia::KademliaImpl>(kademlia_config, host,
+    m_kademlia = std::make_shared<libp2p::protocol::kademlia::KademliaImpl>(kademlia_config, m_host,
         kademlia_storage, kademlia_content_routing_table, kademlia_peer_routing_table, kademlia_validator,
         scheduler, bus, random_generator);
+    m_kademlia->addPeer(m_host->getPeerInfo(), true);
 
-    return dialer;
-}
-
-
-
-} // namespace
-
-ConnectionManager::ConnectionManager(runner::ClientRunner& runner,
-    const std::vector<std::string>& peers) noexcept {
-    m_dialer = makeDialer(runner.getService());
-    for (const auto& peer: peers) {
-        runner.postTask(connectTo(peer));
-    }
-}
-
-cppcoro::task<void> ConnectionManager::connectTo(std::string peer) noexcept {
-    // TODO: handle parse error
-    auto multiaddr = libp2p::multi::Multiaddress::create(peer)
-        .value();
-    auto peer_id = libp2p::peer::PeerId::fromBase58(multiaddr.getPeerId().value()).value();
-    libp2p::peer::PeerInfo peer_info {
-        peer_id,
-        {multiaddr}
-    };
-    auto dial_result = co_await resumeInCallback<libp2p::network::Dialer::DialResult>([&](auto&& callback){
-        m_dialer->dial(peer_info, std::move(callback), std::chrono::milliseconds{1000});
-    });
-
-    // TODO: use logger
-    if (dial_result.has_value()) {
-        std::cout << "connection to " << peer << " succeded" << std::endl;
-        m_connections.emplace(move(peer), move(dial_result.value()));
-    } else {
-        // TODO: redial on failure?
-        std::cout << "connection to " << peer << " failed: " << dial_result.error() << std::endl;
-    }
+    auto identify_msg_processor = std::make_shared<libp2p::protocol::IdentifyMessageProcessor>(
+        *m_host, *connection_manager, *identity_manager, key_marshaller);
+    m_identify = std::make_shared<libp2p::protocol::Identify>(*m_host, identify_msg_processor, *bus);
 }
 
 } // namespace plc::core::network
