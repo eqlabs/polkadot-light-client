@@ -6,7 +6,7 @@ set (CMAKE_CXX_STANDARD 20)
 if (NOT PLC_PROFILE)
   set(PLC_PROFILE "clang_debug")
 endif()
-set(PLC_PROFILE_PATH "${CMAKE_SOURCE_DIR}/${PLC_PROFILE}_profile.cmake")
+set(PLC_PROFILE_PATH "${CMAKE_SOURCE_DIR}/cmake/${PLC_PROFILE}_profile.cmake")
 include("${PLC_PROFILE_PATH}")
 
 message(STATUS "---- top level polkadot-light-client cmakelists.txt-----")
