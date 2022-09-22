@@ -3,6 +3,12 @@ cmake_minimum_required(VERSION 3.14)
 project(cpp-libp2p)
 include(ExternalProject)
 
+if(LSAN)
+  message(STATUS "[${CMAKE_PROJECT_NAME}] LSAN=On")
+else()
+  message(STATUS "[${CMAKE_PROJECT_NAME}] LSAN=Off")
+endif()
+
 set(INSTALL_DIR "${CMAKE_BINARY_DIR}/install")
 ExternalProject_Add(cpp-libp2p
     GIT_REPOSITORY     "git@github.com:eqlabs/cpp-libp2p.git"
@@ -12,4 +18,4 @@ ExternalProject_Add(cpp-libp2p
     SOURCE_DIR         "${CMAKE_BINARY_DIR}/src"
     BINARY_DIR         "${CMAKE_BINARY_DIR}/build"
     INSTALL_DIR        "${INSTALL_DIR}"
-    CMAKE_ARGS         -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DPACKAGE_MANAGER=Conan)
+    CMAKE_ARGS         -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} -DPACKAGE_MANAGER=Conan -DLSAN=${LSAN})

@@ -5,7 +5,7 @@ file(MAKE_DIRECTORY "${CPP_LIBP2P_ROOT}")
 
 # Configure external cpp-libp2p
 execute_process(
-    COMMAND ${CMAKE_COMMAND} "${CMAKE_CURRENT_LIST_DIR}/cpp-libp2p"
+    COMMAND ${CMAKE_COMMAND} "${CMAKE_CURRENT_LIST_DIR}/cpp-libp2p" -DLSAN=${LSAN}
     WORKING_DIRECTORY "${CPP_LIBP2P_ROOT}"
 )
 
