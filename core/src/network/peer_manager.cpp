@@ -1,6 +1,7 @@
 #include "network/peer_manager.h"
 
 #include <iostream>
+#include <chrono>
 
 #include <boost/asio/io_context.hpp>
 
@@ -46,6 +47,7 @@
 
 #include "utils/callback_to_coro.h"
 #include "utils/propagate.h"
+#include "utils/result.h"
 
 namespace plc::core::network {
 
@@ -78,8 +80,14 @@ PeerManager::PeerManager(runner::ClientRunner& runner,
     }
     m_identify->start();
     m_kademlia->start();
+    m_timer = std::make_unique<runner::PeriodicTimer>(
+        runner.makePeriodicTimer(std::chrono::milliseconds(200), [this]() {
+        updateConnections();
+    }));
+    updateConnections();
 }
 
+// TODO: gracefully stop all the connections
 PeerManager::~PeerManager() = default;
 
 static const libp2p::network::c_ares::Ares cares = {};
@@ -164,6 +172,7 @@ void PeerManager::initProtocols(std::shared_ptr<boost::asio::io_context> io_cont
         *m_host, *connection_manager, *identity_manager, key_marshaller);
     m_identify = std::make_shared<libp2p::protocol::Identify>(*m_host, identify_msg_processor, *bus);
     m_ping = std::make_shared<libp2p::protocol::Ping>(*m_host, *bus, *io_context, random_generator);
+
     m_host->setProtocolHandler(m_ping->getProtocolId(), [ping = std::weak_ptr{m_ping}](auto&& stream) {
         if (auto ping_ptr = ping.lock()) {
             if (auto peer_id = stream->remotePeerId()) {
@@ -173,6 +182,202 @@ void PeerManager::initProtocols(std::shared_ptr<boost::asio::io_context> io_cont
             }
         }
     });
+
+    m_event_handlers.push_back(
+        m_host->getBus()
+            .getChannel<libp2p::event::protocol::kademlia::PeerAddedChannel>()
+            .subscribe([this](const libp2p::peer::PeerId& peer_id) {
+                onDiscoveredPeer(peer_id);
+            })
+    );
+
+    m_identify->onIdentifyReceived(
+        [this](const libp2p::peer::PeerId &peer_id) {
+            onConnectedPeer(peer_id);
+        });
+}
+
+PeerManager::PeerState PeerManager::makePeerState() const {
+    return {ConnectionState::Disconnected, ConnectionAction::None, m_current_tick, nullptr, false};
+}
+
+void PeerManager::onDiscoveredPeer(const libp2p::peer::PeerId& peer_id) {
+    if (m_host->getId() == peer_id) {
+        return;
+    }
+
+    if (m_peers_info.contains(peer_id)) {
+        return;
+    }
+
+    m_peers_info.emplace(peer_id, makePeerState());
+
+    // TODO: use logging
+    std::cout << "New peer discovered: " << peer_id.toBase58() << std::endl;
+}
+
+void PeerManager::onConnectedPeer(const libp2p::peer::PeerId& peer_id) {
+    std::cout << "Connected to peer_id " << peer_id.toBase58() << std::endl;
+
+    if (m_host->getId() == peer_id) {
+        return;
+    }
+
+    auto it = m_peers_info.find(peer_id);
+    if (it == m_peers_info.end()) {
+        it = m_peers_info.emplace(peer_id, makePeerState()).first;
+    }
+    auto& peer_state = it->second;
+
+    if (auto connection = m_host->getNetwork().getConnectionManager()
+        .getBestConnectionForPeer(peer_id)) {
+        assert(connection->isInitiator());
+        peer_state.state = ConnectionState::Connected;
+        if (peer_state.action == ConnectionAction::Connecting) {
+            peer_state.action = ConnectionAction::None;
+        }
+        m_ping->startPinging(
+            connection,
+            [this, peer_id, connection](
+                Result<std::shared_ptr<
+                    libp2p::protocol::PingClientSession>> session_res) {
+                if (session_res.has_error()) {
+                    // TODO: use logging
+                    std::cerr << "Pinging stopped because of error: " << peer_id.toBase58()
+                        << ", " << session_res.error().message() << std::endl;
+                    if (auto it = m_peers_info.find(peer_id); it != m_peers_info.end()) {
+                        it->second.is_pinging = false;
+                        updateTick(it->second);
+                    }
+                    disconnect(peer_id);
+                } else {
+                    if (auto it = m_peers_info.find(peer_id); it != m_peers_info.end()) {
+                        // TODO: use logging
+                        std::cout << "Pinging " << peer_id.toBase58() << std::endl;
+                        updateTick(it->second);
+                    } else {
+                        // TODO: use logging
+                        std::cerr << "Received ping from unknown peer " << peer_id.toBase58() << std::endl;
+                    }
+                }
+            });
+    } else {
+        peer_state.state = ConnectionState::Disconnected;
+        if (peer_state.action == ConnectionAction::Disconnecting) {
+            peer_state.action = ConnectionAction::None;
+        }
+    }
+
+    auto addresses_res =
+        m_host->getPeerRepository().getAddressRepository().getAddresses(peer_id);
+    if (addresses_res.has_value()) {
+      auto &addresses = addresses_res.value();
+      libp2p::peer::PeerInfo peer_info{.id = peer_id, .addresses = std::move(addresses)};
+      m_kademlia->addPeer(peer_info, false);
+    }
+}
+
+void PeerManager::updateTick(PeerState& state) {
+    state.last_activity = m_current_tick;
+}
+
+void PeerManager::disconnect(const libp2p::peer::PeerId& peer_id) {
+    if (auto it = m_peers_info.find(peer_id); it != m_peers_info.end()) {
+        m_peers_info.erase(it);
+    }
+    if (peer_id != m_host->getId()) {
+        m_host->disconnect(peer_id);
+    }
+}
+
+void PeerManager::connect(const libp2p::peer::PeerId& peer_id) {
+    if (peer_id == m_host->getId()) {
+        return;
+    }
+
+    auto peer_info = m_host->getPeerRepository().getPeerInfo(peer_id);
+    if (peer_info.addresses.empty()) {
+        std::cerr << "Not found addresses for peer_id " << peer_id.toBase58() << std::endl;
+        return;
+    }
+
+    auto connectedness = m_host->connectedness(peer_info);
+    if (connectedness == libp2p::Host::Connectedness::CAN_NOT_CONNECT) {
+        std::cerr << "Can not connect to peer_id " << peer_id.toBase58() << std::endl;
+        return;
+    }
+
+    std::cout << "Try to connect to peer_id " << peer_info.id.toBase58();
+    for (auto addr : peer_info.addresses) {
+        std::cout << "  address: ", addr.getStringAddress();
+    }
+    std::cout << std::endl;
+
+    m_host->connect(
+        peer_info,
+        [this, peer_id](auto&& res) mutable {
+            if (!res.has_value()) {
+                std::cout << "Connecting to peer_id"
+                    << peer_id.toBase58() << " failed "
+                    << res.error().message() << std::endl;
+                return;
+            }
+
+            auto& connection = res.value();
+            auto remote_peer_id_res = connection->remotePeer();
+            if (!remote_peer_id_res.has_value()) {
+                std::cerr << "Connected, but not identified yet, expecting peer_id "
+                    << peer_id.toBase58() << std::endl;
+                return;
+            }
+
+            auto& remote_peer_id = remote_peer_id_res.value();
+            if (remote_peer_id == peer_id) {
+                onConnectedPeer(peer_id);
+            }
+        },
+        std::chrono::seconds{15});
+}
+
+void PeerManager::updateConnections() {
+    ++m_current_tick;
+
+    static constexpr size_t min_connections = 10;
+    static constexpr size_t max_connections = 20;
+    size_t connected_count = 0u;
+    for (const auto& [peer, state]: m_peers_info) {
+        if (state.state == ConnectionState::Connected ||
+            state.action == ConnectionAction::Connecting) {
+            ++connected_count;
+        }
+    }
+
+    if (connected_count < min_connections) {
+        for (auto& [peer, state]: m_peers_info) {
+            if (state.state == ConnectionState::Disconnected &&
+                state.action == ConnectionAction::None) {
+                state.action = ConnectionAction::Connecting;
+                updateTick(state);
+                connect(peer);
+                ++connected_count;
+                if (connected_count == max_connections) {
+                    break;
+                }
+            }
+        }
+    } else if (connected_count > max_connections) {
+        for (auto& [peer, state]: m_peers_info) {
+            if (state.state == ConnectionState::Connected) {
+                state.action = ConnectionAction::Disconnecting;
+                updateTick(state);
+                disconnect(peer);
+                --connected_count;
+                if (connected_count == max_connections) {
+                    break;
+                }
+            }
+        }
+    }
 }
 
 } // namespace plc::core::network

@@ -1,5 +1,6 @@
 add_library(plc_core
     src/runner/client_runner.cpp
+    src/runner/timer.cpp
     src/network/peer_manager.cpp)
 message(STATUS "dir = ${CMAKE_CURRENT_LIST_DIR}/src")
 target_include_directories(plc_core PUBLIC "${CMAKE_CURRENT_LIST_DIR}/src")

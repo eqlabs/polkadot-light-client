@@ -6,6 +6,7 @@
 #include <unordered_map>
 
 #include <libp2p/peer/peer_id.hpp>
+#include <libp2p/network/connection_manager.hpp>
 
 #include "runner/client_runner.h"
 
@@ -48,18 +49,32 @@ public:
 private:
     enum class ConnectionState {
         Disconnected,
-        Connecting,
         Connected,
+    };
+
+    enum class ConnectionAction {
+        None,
+        Connecting,
         Disconnecting
     };
 
     struct PeerState {
-        ConnectionState connection_state;
+        ConnectionState state;
+        ConnectionAction action;
         size_t last_activity;
+        libp2p::network::ConnectionManager::ConnectionSPtr connection;
+        bool is_pinging;
     };
 
 private:
     void initProtocols(std::shared_ptr<boost::asio::io_context> io_context);
+    PeerState makePeerState() const;
+    void onDiscoveredPeer(const libp2p::peer::PeerId& peer_id);
+    void onConnectedPeer(const libp2p::peer::PeerId& peer_id);
+    void connect(const libp2p::peer::PeerId& peer_id);
+    void disconnect(const libp2p::peer::PeerId& peer_id);
+    void updateTick(PeerState& state);
+    void updateConnections();
 
 private:
     Config m_config;
@@ -68,8 +83,11 @@ private:
     std::shared_ptr<libp2p::protocol::kademlia::Kademlia> m_kademlia;
     std::shared_ptr<libp2p::protocol::Identify> m_identify;
     std::shared_ptr<libp2p::protocol::Ping> m_ping;
-    std::unordered_map<libp2p::peer::PeerId, PeerState> m_peer_info;
-    std::vector<libp2p::event::Handle> m_event_handels;
+    std::unordered_map<libp2p::peer::PeerId, PeerState> m_peers_info;
+    std::vector<libp2p::event::Handle> m_event_handlers;
+
+    size_t m_current_tick = 0;
+    std::unique_ptr<runner::PeriodicTimer> m_timer;
 };
 
 } // namespace plc::core::network

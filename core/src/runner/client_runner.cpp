@@ -66,4 +66,9 @@ std::shared_ptr<boost::asio::io_service> ClientRunner::getService() const noexce
     return m_io_service;
 }
 
+PeriodicTimer ClientRunner::makePeriodicTimer(std::chrono::milliseconds interval,
+    PeriodicTimer::Handler&& handler) const noexcept {
+    return {*m_io_service, interval, std::move(handler)};
+}
+
 } // namespace plc::core::runner
