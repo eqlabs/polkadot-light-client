@@ -20,9 +20,11 @@ namespace host {
 
 namespace protocol {
 namespace kademlia {
+    class Config;
     class Kademlia;
 } // namespace kademlia
     class Identify;
+    class Ping;
 } // namespace protocol
 
 namespace event {
@@ -62,8 +64,10 @@ private:
 private:
     Config m_config;
     std::shared_ptr<libp2p::host::BasicHost> m_host;
+    std::unique_ptr<const libp2p::protocol::kademlia::Config> m_kademlia_config;
     std::shared_ptr<libp2p::protocol::kademlia::Kademlia> m_kademlia;
     std::shared_ptr<libp2p::protocol::Identify> m_identify;
+    std::shared_ptr<libp2p::protocol::Ping> m_ping;
     std::unordered_map<libp2p::peer::PeerId, PeerState> m_peer_info;
     std::vector<libp2p::event::Handle> m_event_handels;
 };

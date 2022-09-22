@@ -39,6 +39,7 @@
 #include <libp2p/protocol/kademlia/impl/storage_backend_default.hpp>
 #include <libp2p/protocol/kademlia/impl/validator_default.hpp>
 #include <libp2p/protocol/identify/identify.hpp>
+#include <libp2p/protocol/ping/ping.hpp>
 #include <libp2p/security/noise.hpp>
 #include <libp2p/transport/impl/upgrader_impl.hpp>
 #include <libp2p/transport/tcp/tcp_transport.hpp>
@@ -71,7 +72,7 @@ PeerManager::PeerManager(runner::ClientRunner& runner,
     const std::vector<std::string>& peers) noexcept {
     initProtocols(runner.getService());
     for (const auto& peer: peers) {
-        if (auto peerInfo = parsePeerInfo(peer)) {
+        if (const auto peerInfo = parsePeerInfo(peer)) {
             m_kademlia->addPeer(*peerInfo, true);
         }
     }
@@ -145,15 +146,16 @@ void PeerManager::initProtocols(std::shared_ptr<boost::asio::io_context> io_cont
     auto peer_repository = std::make_unique<libp2p::peer::PeerRepositoryImpl>(peer_address_repository, key_repository,
         protocol_repository);
     m_host = std::make_shared<libp2p::host::BasicHost>(identity_manager, std::move(network), std::move(peer_repository), bus, transport_manager);
-    libp2p::protocol::kademlia::Config kademlia_config{};
+    m_kademlia_config = std::make_unique<libp2p::protocol::kademlia::Config>();
     auto kademlia_storage_backed = std::make_shared<libp2p::protocol::kademlia::StorageBackendDefault>();
-    auto kademlia_storage = std::make_shared<libp2p::protocol::kademlia::StorageImpl>(kademlia_config,
+    auto kademlia_storage = std::make_shared<libp2p::protocol::kademlia::StorageImpl>(*m_kademlia_config,
         kademlia_storage_backed, scheduler);
     auto kademlia_content_routing_table = std::make_shared<libp2p::protocol::kademlia::ContentRoutingTableImpl>(
-        kademlia_config, *scheduler, bus);
-    auto kademlia_peer_routing_table = std::make_shared<libp2p::protocol::kademlia::PeerRoutingTableImpl>(kademlia_config, identity_manager, bus);
+        *m_kademlia_config, *scheduler, bus);
+    auto kademlia_peer_routing_table = std::make_shared<libp2p::protocol::kademlia::PeerRoutingTableImpl>(
+        *m_kademlia_config, identity_manager, bus);
     auto kademlia_validator = std::make_shared<libp2p::protocol::kademlia::ValidatorDefault>();
-    m_kademlia = std::make_shared<libp2p::protocol::kademlia::KademliaImpl>(kademlia_config, m_host,
+    m_kademlia = std::make_shared<libp2p::protocol::kademlia::KademliaImpl>(*m_kademlia_config, m_host,
         kademlia_storage, kademlia_content_routing_table, kademlia_peer_routing_table, kademlia_validator,
         scheduler, bus, random_generator);
     m_kademlia->addPeer(m_host->getPeerInfo(), true);
@@ -161,6 +163,16 @@ void PeerManager::initProtocols(std::shared_ptr<boost::asio::io_context> io_cont
     auto identify_msg_processor = std::make_shared<libp2p::protocol::IdentifyMessageProcessor>(
         *m_host, *connection_manager, *identity_manager, key_marshaller);
     m_identify = std::make_shared<libp2p::protocol::Identify>(*m_host, identify_msg_processor, *bus);
+    m_ping = std::make_shared<libp2p::protocol::Ping>(*m_host, *bus, *io_context, random_generator);
+    m_host->setProtocolHandler(m_ping->getProtocolId(), [ping = std::weak_ptr{m_ping}](auto&& stream) {
+        if (auto ping_ptr = ping.lock()) {
+            if (auto peer_id = stream->remotePeerId()) {
+                std::cout << "Handled " << ping_ptr->getProtocolId() << " protocol stream from: " <<
+                    peer_id.value().toBase58() << std::endl;
+                ping_ptr->handle(std::forward<decltype(stream)>(stream));
+            }
+        }
+    });
 }
 
 } // namespace plc::core::network
