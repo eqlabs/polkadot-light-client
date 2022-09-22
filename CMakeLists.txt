@@ -16,11 +16,7 @@ message(STATUS "CMAKE_CXX_COMPILER is ${CMAKE_CXX_COMPILER}")
 message(STATUS "CMAKE_C_COMPILER is ${CMAKE_C_COMPILER}")
 message(STATUS "PACKAGE_MANAGER is ${PACKAGE_MANAGER}")
 
-option(ASAN "Enable address sanitizer" OFF)
-option(LSAN "Enable leak sanitizer" OFF)
-option(MSAN "Enable memory sanitizer" OFF)
-option(TSAN "Enable thread sanitizer" OFF)
-option(UBSAN "Enable UB sanitizer" OFF)
+option(SAN "Enable sanitizer" OFF)
 
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/3rdparty_utils.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/print.cmake")
