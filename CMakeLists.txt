@@ -9,13 +9,6 @@ endif()
 set(PLC_PROFILE_PATH "${CMAKE_SOURCE_DIR}/cmake/${PLC_PROFILE}_profile.cmake")
 include("${PLC_PROFILE_PATH}")
 
-message(STATUS "---- top level polkadot-light-client cmakelists.txt-----")
-message(STATUS "PLC_PROFILE_PATH is ${PLC_PROFILE_PATH}")
-message(STATUS "CMAKE_BUILD_TYPE is ${CMAKE_BUILD_TYPE}")
-message(STATUS "CMAKE_CXX_COMPILER is ${CMAKE_CXX_COMPILER}")
-message(STATUS "CMAKE_C_COMPILER is ${CMAKE_C_COMPILER}")
-message(STATUS "PACKAGE_MANAGER is ${PACKAGE_MANAGER}")
-
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/3rdparty_utils.cmake")
 
 add_3rdparty(Boost)

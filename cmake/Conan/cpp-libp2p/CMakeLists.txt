@@ -3,10 +3,6 @@ cmake_minimum_required(VERSION 3.14)
 project(cpp-libp2p)
 include(ExternalProject)
 
-message(STATUS "---- cpp-libp2p/cmakefiles.txt-----")
-message(STATUS "PLC_PROFILE_PATH is ${PLC_PROFILE_PATH}")
-
-
 set(INSTALL_DIR "${CMAKE_BINARY_DIR}/install")
 ExternalProject_Add(cpp-libp2p
     GIT_REPOSITORY     "git@github.com:eqlabs/cpp-libp2p.git"
