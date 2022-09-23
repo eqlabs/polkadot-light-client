@@ -15,15 +15,18 @@ PeriodicTimer::PeriodicTimer(boost::asio::io_service& io_service,
     m_state = std::make_shared<State>(true, boost::asio::deadline_timer(io_service), nullptr);
 
     assert(handler);
-    m_state->handler = [state_weak = std::weak_ptr{m_state}, handler = std::move(handler)](const boost::system::error_code& error) {
+    auto timer_interval = boost::posix_time::milliseconds(interval.count());
+    m_state->handler = [state_weak = std::weak_ptr{m_state}, handler = std::move(handler),
+        timer_interval](const boost::system::error_code& error) {
         // TODO: process errors
         if (const auto state = state_weak.lock(); !error && state && state->running) {
             handler();
+            state->timer.expires_from_now(timer_interval);
             state->timer.async_wait(state->handler);
         }
     };
 
-    m_state->timer.expires_from_now(boost::posix_time::milliseconds(interval.count()));
+    m_state->timer.expires_from_now(timer_interval);
     m_state->timer.async_wait(m_state->handler);
 }
 

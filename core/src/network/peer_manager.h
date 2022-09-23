@@ -62,7 +62,6 @@ private:
         ConnectionState state;
         ConnectionAction action;
         size_t last_activity;
-        libp2p::network::ConnectionManager::ConnectionSPtr connection;
         bool is_pinging;
     };
 
@@ -79,7 +78,7 @@ private:
 private:
     Config m_config;
     std::shared_ptr<libp2p::host::BasicHost> m_host;
-    std::unique_ptr<const libp2p::protocol::kademlia::Config> m_kademlia_config;
+    std::unique_ptr<libp2p::protocol::kademlia::Config> m_kademlia_config;
     std::shared_ptr<libp2p::protocol::kademlia::Kademlia> m_kademlia;
     std::shared_ptr<libp2p::protocol::Identify> m_identify;
     std::shared_ptr<libp2p::protocol::Ping> m_ping;
