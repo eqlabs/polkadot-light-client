@@ -18,7 +18,7 @@ public:
     using Handler = std::function<void()>;
 
 public:
-    PeriodicTimer(boost::asio::io_service& io_service, std::chrono::milliseconds interval, Handler&& handler) noexcept;
+    PeriodicTimer(boost::asio::io_service& io_service, std::chrono::milliseconds interval, Handler&& handler);
     PeriodicTimer(PeriodicTimer&& other) noexcept = default;
     ~PeriodicTimer() noexcept;
 

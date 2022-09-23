@@ -5,14 +5,14 @@
 namespace plc::core::runner {
 
 struct PeriodicTimer::State {
-    bool running;
-    boost::asio::deadline_timer timer;
     std::function<void(boost::system::error_code)> handler;
+    boost::asio::deadline_timer timer;
+    bool running;
 };
 
 PeriodicTimer::PeriodicTimer(boost::asio::io_service& io_service,
-    std::chrono::milliseconds interval, Handler&& handler) noexcept {
-    m_state = std::make_shared<State>(true, boost::asio::deadline_timer(io_service), nullptr);
+    std::chrono::milliseconds interval, Handler&& handler) {
+    m_state = std::make_shared<State>(State{nullptr, boost::asio::deadline_timer(io_service), true});
 
     assert(handler);
     auto timer_interval = boost::posix_time::milliseconds(interval.count());
