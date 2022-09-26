@@ -6,7 +6,7 @@ include(ExternalProject)
 set(INSTALL_DIR "${CMAKE_BINARY_DIR}/install")
 ExternalProject_Add(cpp-libp2p
     GIT_REPOSITORY     "git@github.com:eqlabs/cpp-libp2p.git"
-    GIT_TAG            "cmake-propagation"
+    GIT_TAG            "master"
     GIT_SHALLOW        TRUE
     DOWNLOAD_DIR       "${CMAKE_BINARY_DIR}/download"
     SOURCE_DIR         "${CMAKE_BINARY_DIR}/src"
