@@ -1,3 +1,2 @@
-set(CMAKE_BUILD_TYPE "Debug")
-set(CMAKE_CXX_COMPILER clang++ CACHE STRING "")
-set(CMAKE_C_COMPILER clang CACHE STRING "")
+include("${CMAKE_CURRENT_LIST_DIR}/clang.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/debug.cmake")
