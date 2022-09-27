@@ -1,0 +1,43 @@
+sinks:
+  - name: colored_stdout
+    type: console
+    stream: stdout
+    color: true
+    thread: name
+    capacity: 64
+    max_message_length: 120
+    buffer: 131072
+    latency: 100
+  - name: file
+    type: file
+    path: /tmp/plc_app.log
+    thread: name
+    capacity: 2048
+    buffer: 4194304
+    latency: 1000
+  - name: sink_to_everywhere
+    type: multisink
+    sinks:
+      - file
+      - colored_stdout
+groups:
+  - name: main
+    sink: sink_to_everywhere
+    level: trace
+    children:
+      - name: blockchain
+      - name: consensus
+        level: debug
+        children:
+          - name: grandpa
+            level: info
+          - name: babe
+            children:
+              - name: block_executor
+                level: trace
+      - name: runtime
+        level: off
+        children:
+          - name: transaction
+            sink: file
+            level: debug
