@@ -83,6 +83,7 @@ groups:
 
 void prepareLogging() {
     // prepare log system
+    // TODO: replace this with command line parameter when we have argument parsing happening
     auto envfile = std::getenv(replacement.c_str());
     std::string config = simple_config;
     if (envfile != nullptr) {
