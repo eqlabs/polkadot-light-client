@@ -85,15 +85,6 @@ int main(const int count, const char** args) {
 
     prepareLogging();
 
-    auto log_ = libp2p::log::createLogger("main","app");
-    log_->trace("Example of trace log message");
-    log_->debug("There is a debug value in this line: {}", 0xDEADBEEF);
-    log_->verbose("Let's gossip about something");
-    log_->info("This is simple info message");
-    log_->warn("This is formatted message with level '{}'", "warning");
-    log_->error("This is message with level '{}' and number {}", "error", 777);
-    log_->critical("This is example of critical situations");
-
     auto runner = runner::ClientRunner();
 
     std::vector<std::string> peers;
