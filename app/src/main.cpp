@@ -21,7 +21,7 @@ sinks:
     latency: 0
   - name: file
     type: file
-    path: /tmp/plc_app.log
+    path: plc_app.log
     thread: name
     capacity: 2048
     buffer: 4194304
