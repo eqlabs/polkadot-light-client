@@ -54,7 +54,7 @@ namespace plc::core::network {
 
 namespace {
 
-std::optional<libp2p::peer::PeerInfo> parsePeerInfo(std::string peer) noexcept {
+std::optional<libp2p::peer::PeerInfo> parsePeerInfo(std::string peer) {
     // TODO: handle parse error
     if (auto multiaddr = libp2p::multi::Multiaddress::create(peer); multiaddr.has_value()) {
         if (auto peer_id = libp2p::peer::PeerId::fromBase58(multiaddr.value().getPeerId().value());
@@ -72,7 +72,7 @@ std::optional<libp2p::peer::PeerInfo> parsePeerInfo(std::string peer) noexcept {
 } // namespace
 
 PeerManager::PeerManager(runner::ClientRunner& runner,
-    const std::vector<std::string>& peers) noexcept {
+    const std::vector<std::string>& peers) {
     initProtocols(runner.getService());
 
     m_kademlia->addPeer(m_host->getPeerInfo(), true);

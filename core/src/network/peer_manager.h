@@ -43,7 +43,7 @@ public:
 
 public:
     PeerManager(runner::ClientRunner& runner,
-        const std::vector<std::string>& boot_nodes) noexcept;
+        const std::vector<std::string>& boot_nodes);
     ~PeerManager();
 
 private:
