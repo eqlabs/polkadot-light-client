@@ -113,11 +113,11 @@ cppcoro::task<void> ConnectionManager::connectTo(std::string peer) noexcept {
 
     // TODO: use logger
     if (dial_result.has_value()) {
-        std::cout << "connection to " << peer << " succeded" << std::endl;
+        log_->info("connection to {} succeded", peer);
         m_connections.emplace(move(peer), move(dial_result.value()));
     } else {
         // TODO: redial on failure?
-        std::cout << "connection to " << peer << " failed: " << dial_result.error() << std::endl;
+        log_->error("connection to {} failed: {}", peer, dial_result.error());
     }
 }
 

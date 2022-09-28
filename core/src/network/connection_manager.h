@@ -29,6 +29,7 @@ private:
 private:
     std::shared_ptr<libp2p::network::Dialer> m_dialer;
     std::unordered_map<std::string, ConnectionSPtr> m_connections;
+    libp2p::log::Logger log_ = libp2p::log::createLogger("ConnectionManager", "network");
 };
 
 } // namespace plc::core::network
