@@ -1,4 +1,5 @@
 #include <iostream>
+#include <regex>
 
 #include <soralog/impl/configurator_from_yaml.hpp>
 
@@ -10,10 +11,40 @@
 
 namespace plc::app {
 
-static const std::string logger_config = R"(
+static const std::string replacement = "_PLCLOGFILE_";
+
+static const std::string simple_config = R"(
 # ----------------
 sinks:
-  - name: colored_stdout
+  - name: console
+    type: console
+    stream: stdout
+    color: true
+    thread: name
+    latency: 0
+groups:
+  - name: main
+    sink: console
+    level: trace
+    children:
+      - name: libp2p
+        level: off
+      - name: plc
+        children:
+        - name: core
+          children:
+            - name: network
+            - name: runner
+            - name: utils
+            - name: transaction
+        - name: app
+# ----------------
+  )";
+
+static const std::string multisink_config = R"(
+# ----------------
+sinks:
+  - name: console
     type: console
     stream: stdout
     color: true
@@ -21,7 +52,7 @@ sinks:
     latency: 0
   - name: file
     type: file
-    path: plc_app.log
+    path: _PLCLOGFILE_
     thread: name
     capacity: 2048
     buffer: 4194304
@@ -30,7 +61,7 @@ sinks:
     type: multisink
     sinks:
       - file
-      - colored_stdout
+      - console
 groups:
   - name: main
     sink: sink_to_everywhere
@@ -52,10 +83,19 @@ groups:
 
 void prepareLogging() {
     // prepare log system
+    auto envfile = std::getenv(replacement.c_str());
+    std::string config = simple_config;
+    if (envfile != nullptr) {
+        std::string logfile = envfile;
+        if (logfile.size() > 0) {
+            config = std::regex_replace(multisink_config, std::regex("(_PLCLOGFILE_)(.*)"), logfile);
+        }
+    }
+
     auto logging_system = std::make_shared<soralog::LoggingSystem>(
         std::make_shared<soralog::ConfiguratorFromYAML>(
             std::make_shared<libp2p::log::Configurator>(),
-            logger_config));
+            config));
     auto r = logging_system->configure();
     if (!r.message.empty()) {
         (r.has_error ? std::cerr : std::cout) << r.message << std::endl;
