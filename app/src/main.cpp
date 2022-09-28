@@ -18,10 +18,7 @@ sinks:
     stream: stdout
     color: true
     thread: name
-    capacity: 64
-    max_message_length: 120
-    buffer: 131072
-    latency: 100
+    latency: 0
   - name: file
     type: file
     path: /tmp/plc_app.log
