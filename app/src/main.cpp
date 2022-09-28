@@ -51,13 +51,11 @@ groups:
   )";
 
 void prepareLogging() {
-
     // prepare log system
     auto logging_system = std::make_shared<soralog::LoggingSystem>(
         std::make_shared<soralog::ConfiguratorFromYAML>(
             std::make_shared<libp2p::log::Configurator>(),
             logger_config));
-
     auto r = logging_system->configure();
     if (!r.message.empty()) {
         (r.has_error ? std::cerr : std::cout) << r.message << std::endl;
