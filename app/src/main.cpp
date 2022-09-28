@@ -52,6 +52,7 @@ groups:
 
 void prepareLogging() {
 
+    // prepare log system
     auto logging_system = std::make_shared<soralog::LoggingSystem>(
         std::make_shared<soralog::ConfiguratorFromYAML>(
             std::make_shared<libp2p::log::Configurator>(),
