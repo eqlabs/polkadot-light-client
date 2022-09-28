@@ -10,15 +10,55 @@
 
 namespace plc::app {
 
+static const std::string logger_config = R"(
+# ----------------
+sinks:
+  - name: colored_stdout
+    type: console
+    stream: stdout
+    color: true
+    thread: name
+    capacity: 64
+    max_message_length: 120
+    buffer: 131072
+    latency: 100
+  - name: file
+    type: file
+    path: /tmp/plc_app.log
+    thread: name
+    capacity: 2048
+    buffer: 4194304
+    latency: 1000
+  - name: sink_to_everywhere
+    type: multisink
+    sinks:
+      - file
+      - colored_stdout
+groups:
+  - name: main
+    sink: sink_to_everywhere
+    level: trace
+    children:
+      - name: libp2p
+        level: off
+      - name: plc
+        children:
+        - name: core
+          children:
+            - name: network
+            - name: runner
+            - name: utils
+            - name: transaction
+        - name: app
+# ----------------
+  )";
+
 void prepareLogging() {
-    // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-    std::shared_ptr<soralog::Configurator> yaml_configurator_from_file =
-    std::make_shared<soralog::ConfiguratorFromYAML>(
-        std::filesystem::path("./config/logger.yml"));
 
-    std::shared_ptr<soralog::Configurator> configurator = yaml_configurator_from_file;
-
-    auto logging_system = std::make_shared<soralog::LoggingSystem>(configurator);
+    auto logging_system = std::make_shared<soralog::LoggingSystem>(
+        std::make_shared<soralog::ConfiguratorFromYAML>(
+            std::make_shared<libp2p::log::Configurator>(),
+            logger_config));
 
     auto r = logging_system->configure();
     if (!r.message.empty()) {
@@ -30,7 +70,7 @@ void prepareLogging() {
 
     libp2p::log::setLoggingSystem(logging_system);
     if (std::getenv("TRACE_DEBUG") != nullptr) {
-        libp2p::log::setLevelOfGroup("main", soralog::Level::TRACE);
+        libp2p::log::setLevelOfGroup("plc", soralog::Level::TRACE);
     } else if (std::getenv("INFO_DEBUG") != nullptr)  {
         libp2p::log::setLevelOfGroup("main", soralog::Level::INFO);
     } else {
@@ -48,7 +88,7 @@ int main(const int count, const char** args) {
 
     prepareLogging();
 
-    auto log_ = libp2p::log::createLogger("main");
+    auto log_ = libp2p::log::createLogger("main","app");
     log_->trace("Example of trace log message");
     log_->debug("There is a debug value in this line: {}", 0xDEADBEEF);
     log_->verbose("Let's gossip about something");
