@@ -25,11 +25,11 @@ sinks:
 groups:
   - name: main
     sink: console
-    level: trace
+    level: off
     children:
       - name: libp2p
-        level: off
       - name: plc
+        level: info
         children:
         - name: core
           children:
@@ -65,10 +65,9 @@ sinks:
 groups:
   - name: main
     sink: sink_to_everywhere
-    level: info
+    level: off
     children:
       - name: libp2p
-        level: off
       - name: plc
         children:
         - name: core
@@ -82,7 +81,7 @@ groups:
   )";
 
 // pass in 'true' here to get demo logging lines, one of each class
-void prepareLogging(bool demo = false) {
+void prepareLogging() {
     // prepare log system
     // TODO: replace this with command line parameter when we have argument parsing happening
     auto envfile = std::getenv(replacement.c_str());
@@ -108,20 +107,9 @@ void prepareLogging(bool demo = false) {
 
     libp2p::log::setLoggingSystem(logging_system);
     if (std::getenv("LOG_TRACE") != nullptr) {
-        libp2p::log::setLevelOfGroup("main", soralog::Level::TRACE);
+        libp2p::log::setLevelOfGroup("plc", soralog::Level::TRACE);
     } else if (std::getenv("LOG_ERROR") != nullptr)  {
-        libp2p::log::setLevelOfGroup("main", soralog::Level::ERROR);
-    }
-
-    if (demo) {
-        auto log_ = libp2p::log::createLogger("main","app");
-        log_->trace("Example of trace log message");
-        log_->debug("There is a debug value in this line: {}", 0xDEADBEEF);
-        log_->verbose("Let's gossip about something");
-        log_->info("This is simple info message");
-        log_->warn("This is formatted message with level '{}'", "warning");
-        log_->error("This is message with level '{}' and number {}", "error", 777);
-        log_->critical("This is example of critical situations");
+        libp2p::log::setLevelOfGroup("plc", soralog::Level::ERROR);
     }
 }
 
