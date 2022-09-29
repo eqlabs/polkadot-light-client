@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 namespace plc::core {
 
 // A helper class that performs a destructive copy (moves internal value instead).
@@ -8,8 +10,9 @@ namespace plc::core {
 template <typename T>
 class MoveOnCopy {
 public:
-    template <typename ...Args>
-    MoveOnCopy(Args&& ...args): _val(std::forward<Args>(args)...) {}
+    template <typename U>
+    MoveOnCopy(U&& val, std::enable_if_t<std::is_same_v<T, std::remove_const_t<U>>>* = nullptr)
+        : _val(std::forward<U>(val)) {}
     MoveOnCopy(const MoveOnCopy& other): _val(std::move(other._val)) {}
     MoveOnCopy(MoveOnCopy&& other) = default;
 
