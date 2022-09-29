@@ -6,7 +6,7 @@
 #include <libp2p/log/configurator.hpp>
 
 #include "runner/client_runner.h"
-#include "network/connection_manager.h"
+#include "network/peer_manager.h"
 
 namespace plc::app {
 
@@ -66,7 +66,7 @@ int main(const int count, const char** args) {
     for (int i = 1; i < count; ++i) {
         peers.push_back(args[i]);
     }
-    auto connection_manager = network::ConnectionManager(runner, peers);
+    auto connection_manager = network::PeerManager(runner, peers);
 
     runner.run();
 
