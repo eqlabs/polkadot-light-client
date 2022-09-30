@@ -177,10 +177,10 @@ void PeerManager::initProtocols(std::shared_ptr<boost::asio::io_context> io_cont
     m_identify = std::make_shared<libp2p::protocol::Identify>(*m_host, identify_msg_processor, *bus);
     m_ping = std::make_shared<libp2p::protocol::Ping>(*m_host, *bus, *io_context, random_generator);
 
-    m_host->setProtocolHandler(m_ping->getProtocolId(), [this, ping = std::weak_ptr{m_ping}](auto&& stream) {
+    m_host->setProtocolHandler(m_ping->getProtocolId(), [logger = m_log, ping = std::weak_ptr{m_ping}](auto&& stream) {
         if (auto ping_ptr = ping.lock()) {
             if (auto peer_id = stream->remotePeerId()) {
-                this->m_log->info("Handled {} protocol stream from: {}", ping_ptr->getProtocolId(), peer_id.value().toHex());
+                logger->debug("Handled {} protocol stream from: {}", ping_ptr->getProtocolId(), peer_id.value().toHex());
                 ping_ptr->handle(std::forward<decltype(stream)>(stream));
             }
         }
@@ -215,7 +215,7 @@ void PeerManager::onDiscoveredPeer(const libp2p::peer::PeerId& peer_id) {
 
     m_peers_info.emplace(peer_id, makePeerState());
 
-    m_log->info("New peer discovered: {}", peer_id.toHex());
+    m_log->debug("New peer discovered: {}", peer_id.toHex());
 }
 
 void PeerManager::onConnectedPeer(const libp2p::peer::PeerId& peer_id) {
@@ -258,7 +258,7 @@ void PeerManager::onConnectedPeer(const libp2p::peer::PeerId& peer_id) {
                     } else {
                         if (auto it = m_peers_info.find(peer_id); it != m_peers_info.end()) {
                             it->second.is_pinging = true;
-                            m_log->info("Pinging {}", peer_id.toHex());
+                            m_log->trace("Pinging {}", peer_id.toHex());
                             updateTick(it->second);
                         } else {
                             m_log->error("Received ping from unknown peer: {}", peer_id.toHex());
