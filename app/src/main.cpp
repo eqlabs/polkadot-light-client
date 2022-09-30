@@ -108,6 +108,8 @@ void prepareLogging() {
     libp2p::log::setLoggingSystem(logging_system);
     if (std::getenv("LOG_TRACE") != nullptr) {
         libp2p::log::setLevelOfGroup("plc", soralog::Level::TRACE);
+    } else if (std::getenv("LOG_DEBUG") != nullptr) {
+        libp2p::log::setLevelOfGroup("plc", soralog::Level::DEBUG);
     } else if (std::getenv("LOG_ERROR") != nullptr)  {
         libp2p::log::setLevelOfGroup("plc", soralog::Level::ERROR);
     }
