@@ -1,0 +1,40 @@
+name: Build
+
+on: [push] # for testing; TODO restrict to master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      compiler: [{
+	"cc": "gcc",
+	"cxx": "g++"
+       }, {
+	"cc": "clang",
+	"cxx": "clang++"
+      }]
+    steps:
+    - uses: actions/checkout@v1
+      name: checkout
+      with:
+        clean: true
+        fetch-depth: 1
+    - name: install dependencies
+      run: |
+        set -e
+        sudo apt-get update || true
+        sudo apt-get install -y apt-utils build-essential libssl-dev cmake python3 python3-pip
+        sudo pip install conan
+    - name: cmake
+      env:
+        CC: ${{ compiler.cc }}
+        CXX: ${{ compiler.cxx }}
+      run: |
+        set -e
+	mkdir build
+	cd build
+	cmake ..
+	make
+
+	
