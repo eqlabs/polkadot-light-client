@@ -28,6 +28,12 @@ jobs:
         sudo apt-get update || true
         sudo apt-get install -y apt-utils build-essential libssl-dev cmake python3 python3-pip
         sudo pip install conan
+    - name: select gcc
+      if: matrix.compiler.cc == "gcc"
+      run: |
+        sudo apt install gcc-11 g++-11
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 --slave /usr/bin/g++ g++ /usr/bin/g++-11 --slave /usr/bin/gcov gcov /usr/bin/gcov-11
+        sudo update-alternatives --set gcc /usr/bin/gcc-11
     - name: cmake
       env:
         CC: ${{ matrix.compiler.cc }}
