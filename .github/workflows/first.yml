@@ -38,6 +38,8 @@ jobs:
         if [ "$CC" = "gcc" ]; then
           conan profile update settings.compiler.libcxx=libstdc++11 default
         fi
+        eval `ssh-agent -s`
+        ssh-add - <<< '${{ secrets.LIBP2PDEP }}'
         mkdir build
         cd build
         cmake ..
