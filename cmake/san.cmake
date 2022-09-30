@@ -1,7 +1,5 @@
 include(${CMAKE_CURRENT_LIST_DIR}/utils.cmake)
 
-
-
 if(SAN)
   if (DEFINED POLLY_FLAGS_SANITIZE_ADDRESS_CMAKE_)
     return()
@@ -9,7 +7,6 @@ if(SAN)
     set(POLLY_FLAGS_SANITIZE_ADDRESS_CMAKE_ 1)
   endif ()
 
-  set(SAN_FLAGS -g)
   if(SAN STREQUAL "ASAN")
     print("Address Sanitizer is enabled")
     include(${CMAKE_CURRENT_LIST_DIR}/toolchain/flags/sanitize_address.cmake)
