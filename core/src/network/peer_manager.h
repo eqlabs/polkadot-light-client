@@ -87,6 +87,7 @@ private:
 
     size_t m_current_tick = 0;
     std::unique_ptr<runner::PeriodicTimer> m_timer;
+    libp2p::log::Logger log_ = libp2p::log::createLogger("PeerManager","network");
 };
 
 } // namespace plc::core::network
