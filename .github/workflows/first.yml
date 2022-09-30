@@ -8,11 +8,11 @@ jobs:
     strategy:
       fail-fast: true
       compiler: [{
-	"cc": "gcc",
-	"cxx": "g++"
+        "cc": "gcc",
+        "cxx": "g++"
        }, {
-	"cc": "clang",
-	"cxx": "clang++"
+        "cc": "clang",
+        "cxx": "clang++"
       }]
     steps:
     - uses: actions/checkout@v1
@@ -32,7 +32,7 @@ jobs:
         CXX: ${{ compiler.cxx }}
       run: |
         set -e
-	mkdir build
-	cd build
-	cmake ..
-	make
+        mkdir build
+        cd build
+        cmake ..
+        make
