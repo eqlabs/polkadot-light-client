@@ -7,9 +7,9 @@ option(TESTING "Build tests" ON)
 option(SAN "Enable sanitizer" OFF)
 
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/3rdparty_utils.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/cmake/san.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/functions.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/utils.cmake")
-include("${CMAKE_CURRENT_LIST_DIR}/cmake/san.cmake")
 
 # the property is out of "if TESTING" scope due to addtest func is out too
 set_property(GLOBAL PROPERTY TEST_TARGETS)
