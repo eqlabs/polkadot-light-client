@@ -7,13 +7,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
-      compiler: [{
-        "cc": "gcc",
-        "cxx": "g++"
-       }, {
-        "cc": "clang",
-        "cxx": "clang++"
-      }]
+      matrix:
+        os: [ubuntu-latest]
+        compiler: [{
+          "cc": "gcc",
+          "cxx": "g++"
+         }, {
+          "cc": "clang",
+          "cxx": "clang++"
+        }]
     steps:
     - uses: actions/checkout@v1
       name: checkout
@@ -28,8 +30,8 @@ jobs:
         sudo pip install conan
     - name: cmake
       env:
-        CC: ${{ compiler.cc }}
-        CXX: ${{ compiler.cxx }}
+        CC: ${{ matrix.compiler.cc }}
+        CXX: ${{ matrix.compiler.cxx }}
       run: |
         set -e
         mkdir build
