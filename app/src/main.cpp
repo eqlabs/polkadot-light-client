@@ -135,14 +135,13 @@ int main(const int count, const char** args) {
 
     plc::core::setStop([r = &runner, pm = &peer_manager] () {
       auto logger = libp2p::log::createLogger("stop","network");
-      logger->info("stop called");
+      logger->info("Stop");
       pm->disconnectAll();
       r->stop();
     });
 
     runner.run();
-    mainLogger->info("back from runner.run");
-    mainLogger->info("exiting application");
+    mainLogger->info("Exiting application");
 
     return 0;
 }

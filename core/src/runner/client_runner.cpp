@@ -7,6 +7,7 @@
 
 #include "utils/move_on_copy.h"
 #include "utils/callback_to_coro.h"
+#include "utils/stop.h"
 
 namespace plc::core::runner {
 
@@ -32,8 +33,11 @@ struct FireAndForget {
         }
 
         void unhandled_exception() noexcept {
-          // TODO: need error handling here asdf 2
-          std::terminate();
+          auto logger = libp2p::log::createLogger("FireAndForget","network");
+          logger->error("unhandled_exception");
+          // Here I'm attempting a graceful exit
+          // But would std::terminate() be wiser?
+          plc::core::stop();
         }
     };
 };
@@ -50,16 +54,15 @@ FireAndForget fireAndForget(cppcoro::task<void>&& task) noexcept {
 } // namespace
 
 void ClientRunner::run() noexcept {
-    // TODO: implement proper stop logic asdf 4
     m_work.emplace(*m_io_service);
 
     m_io_service->run();
 }
 
 void ClientRunner::stop() noexcept {
-    m_log->info("ClientRunner::stop");
+    m_log->info("client runner: stop");
     m_io_service->stop();
-    m_log->info("  m_io_service stopped status is {}", m_io_service->stopped());
+    m_log->info("m_io_service stopped status is {}", m_io_service->stopped());
 }
 
 void ClientRunner::postTask(cppcoro::task<void>&& task) noexcept {

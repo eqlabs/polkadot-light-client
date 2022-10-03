@@ -50,14 +50,11 @@
 #include "utils/stop.h"
 
 
-int iter {};
-
 namespace plc::core::network {
 
 namespace {
 
 std::optional<libp2p::peer::PeerInfo> parsePeerInfo(std::string peer, libp2p::log::Logger logger) {
-    // TODO: handle parse error asdf 1 = DONE
     if (auto multiaddr = libp2p::multi::Multiaddress::create(peer); multiaddr.has_value()) {
         if (auto peer_id = libp2p::peer::PeerId::fromBase58(multiaddr.value().getPeerId().value());
             peer_id.has_value()) {
@@ -98,7 +95,6 @@ PeerManager::PeerManager(runner::ClientRunner& runner,
     updateConnections();
 }
 
-// TODO: gracefully stop all the connections asdf 5
 PeerManager::~PeerManager() = default;
 
 static const libp2p::network::c_ares::Ares cares = {};
@@ -245,12 +241,7 @@ void PeerManager::onConnectedPeer(const libp2p::peer::PeerId& peer_id) {
         return;
     }
 
-    iter++;
     m_log->info("Connected to peer_id {}", peer_id.toHex());
-    if (iter > 6) {
-        plc::core::stop();
-        return;
-    }
 
     if (auto connection = m_host->getNetwork().getConnectionManager()
         .getBestConnectionForPeer(peer_id)) {
@@ -314,12 +305,12 @@ void PeerManager::disconnect(const libp2p::peer::PeerId& peer_id) {
 }
 
 void PeerManager::disconnectAll() {
-    m_log->info("PeerManager::disconnectAll");
+    m_log->info("peer manager: disconnect all");
     for (auto& [peer, state]: m_peers_info) {
         if (state.state == ConnectionState::Connected) {
             state.action = ConnectionAction::Disconnecting;
             updateTick(state);
-            m_log->info("  disconnect peer {}", peer.toHex());
+            m_log->debug("  disconnect peer {}", peer.toHex());
             disconnect(peer);
         }
     }

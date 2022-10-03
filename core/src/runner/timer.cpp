@@ -18,7 +18,6 @@ PeriodicTimer::PeriodicTimer(boost::asio::io_service& io_service,
     auto timer_interval = boost::posix_time::milliseconds(interval.count());
     m_state->handler = [state_weak = std::weak_ptr{m_state}, handler = std::move(handler),
         timer_interval, logger = m_log](const boost::system::error_code& error) {
-        // TODO: process errors asdf 3 - DONE
         if (!error) {
             if (const auto state = state_weak.lock(); state && state->running) {
                 handler();
