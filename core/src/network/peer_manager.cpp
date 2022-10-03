@@ -223,8 +223,6 @@ void PeerManager::onDiscoveredPeer(const libp2p::peer::PeerId& peer_id) {
     m_log->debug("New peer discovered: {}", peer_id.toHex());
 }
 
-
-
 void PeerManager::onConnectedPeer(const libp2p::peer::PeerId& peer_id) {
     if (m_host->getId() == peer_id) {
         return;
