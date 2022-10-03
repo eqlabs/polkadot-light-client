@@ -18,6 +18,8 @@ public:
 
     void run() noexcept;
 
+    void stop() noexcept;
+
     void postFunc(std::invocable<> auto&& func) noexcept {
         m_io_service->post(std::forward<decltype(func)>(func));
     }
@@ -35,6 +37,7 @@ private:
     // we store it by shared pointer now
     std::shared_ptr<boost::asio::io_service> m_io_service;
     std::optional<boost::asio::io_service::work> m_work;
+    libp2p::log::Logger m_log = libp2p::log::createLogger("ClientRunner","runner");
 };
 
 } // plc::core::runner

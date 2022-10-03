@@ -17,12 +17,18 @@ PeriodicTimer::PeriodicTimer(boost::asio::io_service& io_service,
     assert(handler);
     auto timer_interval = boost::posix_time::milliseconds(interval.count());
     m_state->handler = [state_weak = std::weak_ptr{m_state}, handler = std::move(handler),
-        timer_interval](const boost::system::error_code& error) {
-        // TODO: process errors
-        if (const auto state = state_weak.lock(); !error && state && state->running) {
-            handler();
-            state->timer.expires_from_now(timer_interval);
-            state->timer.async_wait(state->handler);
+        timer_interval, logger = m_log](const boost::system::error_code& error) {
+        // TODO: process errors asdf 3 - DONE
+        if (!error) {
+            if (const auto state = state_weak.lock(); state && state->running) {
+                handler();
+                state->timer.expires_from_now(timer_interval);
+                state->timer.async_wait(state->handler);
+            } else {
+                logger->error("Could not access time state");
+            }
+        } else {
+            logger->error("Handler is called with an error: {}", error);
         }
     };
 

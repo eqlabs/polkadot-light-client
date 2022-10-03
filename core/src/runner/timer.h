@@ -6,6 +6,8 @@
 
 #include <boost/asio.hpp>
 
+#include <libp2p/log/logger.hpp>
+
 namespace plc::core::runner {
 
 // TODO: make a coroutine version of this, so that we could use:
@@ -33,6 +35,7 @@ private:
 
 private:
     std::shared_ptr<State> m_state;
+    libp2p::log::Logger m_log = libp2p::log::createLogger("Timer","runner");
 };
 
 } // namespace pcl::core::runner

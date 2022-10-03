@@ -1,7 +1,5 @@
 #include "network/peer_manager.h"
 
-// TODO: remove iostream and use logging instead
-#include <iostream>
 #include <chrono>
 
 #include <boost/asio/io_context.hpp>
@@ -49,13 +47,17 @@
 #include "utils/callback_to_coro.h"
 #include "utils/propagate.h"
 #include "utils/result.h"
+#include "utils/stop.h"
+
+
+int iter {};
 
 namespace plc::core::network {
 
 namespace {
 
-std::optional<libp2p::peer::PeerInfo> parsePeerInfo(std::string peer) {
-    // TODO: handle parse error
+std::optional<libp2p::peer::PeerInfo> parsePeerInfo(std::string peer, libp2p::log::Logger logger) {
+    // TODO: handle parse error asdf 1 = DONE
     if (auto multiaddr = libp2p::multi::Multiaddress::create(peer); multiaddr.has_value()) {
         if (auto peer_id = libp2p::peer::PeerId::fromBase58(multiaddr.value().getPeerId().value());
             peer_id.has_value()) {
@@ -63,7 +65,11 @@ std::optional<libp2p::peer::PeerInfo> parsePeerInfo(std::string peer) {
                 peer_id.value(),
                 {multiaddr.value()}
             };
+        } else {
+            logger->error("Error decoding multi-address from base58: {}", multiaddr.value().getPeerId().value());
         }
+    } else {
+        logger->error("Error creating multi-address from peer: {}", peer);
     }
 
     return std::nullopt;
@@ -77,8 +83,10 @@ PeerManager::PeerManager(runner::ClientRunner& runner,
 
     m_kademlia->addPeer(m_host->getPeerInfo(), true);
     for (const auto& peer: peers) {
-        if (const auto peerInfo = parsePeerInfo(peer)) {
+        if (const auto peerInfo = parsePeerInfo(peer, m_log)) {
             m_kademlia->addPeer(*peerInfo, true);
+        } else {
+            m_log->error("Could not parse peer: {}", peer);
         }
     }
     m_identify->start();
@@ -90,7 +98,7 @@ PeerManager::PeerManager(runner::ClientRunner& runner,
     updateConnections();
 }
 
-// TODO: gracefully stop all the connections
+// TODO: gracefully stop all the connections asdf 5
 PeerManager::~PeerManager() = default;
 
 static const libp2p::network::c_ares::Ares cares = {};
@@ -157,7 +165,7 @@ void PeerManager::initProtocols(std::shared_ptr<boost::asio::io_context> io_cont
     auto peer_repository = std::make_unique<libp2p::peer::PeerRepositoryImpl>(peer_address_repository, key_repository,
         protocol_repository);
     m_host = std::make_shared<libp2p::host::BasicHost>(identity_manager, std::move(network), std::move(peer_repository), bus, transport_manager);
-    std::cout << "Local host peer id " << m_host->getId().toHex() << std::endl;
+    m_log->info("Local host peer id {}", m_host->getId().toHex());
 
     m_kademlia_config = std::make_unique<libp2p::protocol::kademlia::Config>();
     // TODO: get protocol id from chain spec
@@ -179,11 +187,10 @@ void PeerManager::initProtocols(std::shared_ptr<boost::asio::io_context> io_cont
     m_identify = std::make_shared<libp2p::protocol::Identify>(*m_host, identify_msg_processor, *bus);
     m_ping = std::make_shared<libp2p::protocol::Ping>(*m_host, *bus, *io_context, random_generator);
 
-    m_host->setProtocolHandler(m_ping->getProtocolId(), [ping = std::weak_ptr{m_ping}](auto&& stream) {
+    m_host->setProtocolHandler(m_ping->getProtocolId(), [logger = m_log, ping = std::weak_ptr{m_ping}](auto&& stream) {
         if (auto ping_ptr = ping.lock()) {
             if (auto peer_id = stream->remotePeerId()) {
-                std::cout << "Handled " << ping_ptr->getProtocolId() << " protocol stream from: " <<
-                    peer_id.value().toHex() << std::endl;
+                logger->debug("Handled {} protocol stream from: {}", ping_ptr->getProtocolId(), peer_id.value().toHex());
                 ping_ptr->handle(std::forward<decltype(stream)>(stream));
             }
         }
@@ -218,8 +225,10 @@ void PeerManager::onDiscoveredPeer(const libp2p::peer::PeerId& peer_id) {
 
     m_peers_info.emplace(peer_id, makePeerState());
 
-    std::cout << "New peer discovered: " << peer_id.toHex() << std::endl;
+    m_log->debug("New peer discovered: {}", peer_id.toHex());
 }
+
+
 
 void PeerManager::onConnectedPeer(const libp2p::peer::PeerId& peer_id) {
     if (m_host->getId() == peer_id) {
@@ -236,7 +245,12 @@ void PeerManager::onConnectedPeer(const libp2p::peer::PeerId& peer_id) {
         return;
     }
 
-    std::cout << "Connected to peer_id " << peer_id.toHex() << std::endl;
+    iter++;
+    m_log->info("Connected to peer_id {}", peer_id.toHex());
+    if (iter > 6) {
+        plc::core::stop();
+        return;
+    }
 
     if (auto connection = m_host->getNetwork().getConnectionManager()
         .getBestConnectionForPeer(peer_id)) {
@@ -252,8 +266,7 @@ void PeerManager::onConnectedPeer(const libp2p::peer::PeerId& peer_id) {
                     Result<std::shared_ptr<
                         libp2p::protocol::PingClientSession>> session_res) {
                     if (session_res.has_error()) {
-                        std::cerr << "Pinging stopped because of error: " << peer_id.toHex()
-                            << ", " << session_res.error().message() << std::endl;
+                        this->m_log->error("Pinging stopped because of error: {}, {}", peer_id.toHex(), session_res.error().message());
                         if (auto it = m_peers_info.find(peer_id); it != m_peers_info.end()) {
                             it->second.is_pinging = false;
                             updateTick(it->second);
@@ -262,10 +275,10 @@ void PeerManager::onConnectedPeer(const libp2p::peer::PeerId& peer_id) {
                     } else {
                         if (auto it = m_peers_info.find(peer_id); it != m_peers_info.end()) {
                             it->second.is_pinging = true;
-                            std::cout << "Pinging " << peer_id.toHex() << std::endl;
+                            m_log->trace("Pinging {}", peer_id.toHex());
                             updateTick(it->second);
                         } else {
-                            std::cerr << "Received ping from unknown peer " << peer_id.toHex() << std::endl;
+                            m_log->error("Received ping from unknown peer: {}", peer_id.toHex());
                         }
                     }
                 });
@@ -300,6 +313,18 @@ void PeerManager::disconnect(const libp2p::peer::PeerId& peer_id) {
     }
 }
 
+void PeerManager::disconnectAll() {
+    m_log->info("PeerManager::disconnectAll");
+    for (auto& [peer, state]: m_peers_info) {
+        if (state.state == ConnectionState::Connected) {
+            state.action = ConnectionAction::Disconnecting;
+            updateTick(state);
+            m_log->info("  disconnect peer {}", peer.toHex());
+            disconnect(peer);
+        }
+    }
+}
+
 void PeerManager::connect(const libp2p::peer::PeerId& peer_id) {
     if (peer_id == m_host->getId()) {
         return;
@@ -307,37 +332,36 @@ void PeerManager::connect(const libp2p::peer::PeerId& peer_id) {
 
     auto peer_info = m_host->getPeerRepository().getPeerInfo(peer_id);
     if (peer_info.addresses.empty()) {
-        std::cerr << "Not found addresses for peer_id " << peer_id.toHex() << std::endl;
+        m_log->error("No found addresses for peer_id: {}", peer_id.toHex());
         return;
     }
 
     auto connectedness = m_host->connectedness(peer_info);
     if (connectedness == libp2p::Host::Connectedness::CAN_NOT_CONNECT) {
-        std::cerr << "Cannot connect to peer_id " << peer_id.toHex() << std::endl;
+        m_log->error("Cannot connect to peer_id: {}", peer_id.toHex());
         return;
     }
 
-    std::cout << "Try to connect to peer_id " << peer_info.id.toHex();
+    std::stringstream buffer;
+    buffer << "Try to connect to peer_id " << peer_info.id.toHex();
     for (auto addr : peer_info.addresses) {
-        std::cout << "  address: " << addr.getStringAddress();
+        buffer << "  address: " << addr.getStringAddress();
     }
-    std::cout << std::endl;
+    buffer << std::endl;
+    m_log->info(buffer.str());
 
     m_host->connect(
         peer_info,
         [this, peer_id](auto&& res) mutable {
             if (!res.has_value()) {
-                std::cout << "Connecting to peer_id"
-                    << peer_id.toHex() << " failed "
-                    << res.error().message() << std::endl;
+                m_log->error("Connecting to peer_id {} failed {}", peer_id.toHex(), res.error().message());
                 return;
             }
 
             auto& connection = res.value();
             auto remote_peer_id_res = connection->remotePeer();
             if (!remote_peer_id_res.has_value()) {
-                std::cerr << "Connected, but not identified yet, expecting peer_id "
-                    << peer_id.toHex() << std::endl;
+                m_log->error("Connected, but not identified yet, expecting peer_id {}", peer_id.toHex());
                 return;
             }
 

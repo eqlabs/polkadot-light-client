@@ -8,6 +8,7 @@
 
 #include "runner/client_runner.h"
 #include "network/peer_manager.h"
+#include "utils/stop.h"
 
 namespace plc::app {
 
@@ -122,6 +123,7 @@ int main(const int count, const char** args) {
     using namespace plc::core;
 
     prepareLogging();
+    auto mainLogger = libp2p::log::createLogger("main","network");
 
     auto runner = runner::ClientRunner();
 
@@ -129,9 +131,18 @@ int main(const int count, const char** args) {
     for (int i = 1; i < count; ++i) {
         peers.push_back(args[i]);
     }
-    auto connection_manager = network::PeerManager(runner, peers);
+    auto peer_manager = network::PeerManager(runner, peers);
+
+    plc::core::setStop([r = &runner, pm = &peer_manager] () {
+      auto logger = libp2p::log::createLogger("stop","network");
+      logger->info("stop called");
+      pm->disconnectAll();
+      r->stop();
+    });
 
     runner.run();
+    mainLogger->info("back from runner.run");
+    mainLogger->info("exiting application");
 
     return 0;
 }

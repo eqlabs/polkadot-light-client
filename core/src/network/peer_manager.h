@@ -45,6 +45,7 @@ public:
     PeerManager(runner::ClientRunner& runner,
         const std::vector<std::string>& boot_nodes);
     ~PeerManager();
+    void disconnectAll();
 
 private:
     enum class ConnectionState {
@@ -87,6 +88,7 @@ private:
 
     size_t m_current_tick = 0;
     std::unique_ptr<runner::PeriodicTimer> m_timer;
+    libp2p::log::Logger m_log = libp2p::log::createLogger("PeerManager","network");
 };
 
 } // namespace plc::core::network
