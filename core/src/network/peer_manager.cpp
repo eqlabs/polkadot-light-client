@@ -47,13 +47,14 @@
 #include "utils/callback_to_coro.h"
 #include "utils/propagate.h"
 #include "utils/result.h"
+#include "utils/stop.h"
+
 
 namespace plc::core::network {
 
 namespace {
 
-std::optional<libp2p::peer::PeerInfo> parsePeerInfo(std::string peer) {
-    // TODO: handle parse error
+std::optional<libp2p::peer::PeerInfo> parsePeerInfo(std::string peer, libp2p::log::Logger logger) {
     if (auto multiaddr = libp2p::multi::Multiaddress::create(peer); multiaddr.has_value()) {
         if (auto peer_id = libp2p::peer::PeerId::fromBase58(multiaddr.value().getPeerId().value());
             peer_id.has_value()) {
@@ -61,7 +62,11 @@ std::optional<libp2p::peer::PeerInfo> parsePeerInfo(std::string peer) {
                 peer_id.value(),
                 {multiaddr.value()}
             };
+        } else {
+            logger->error("Error decoding multi-address from base58: {}", multiaddr.value().getPeerId().value());
         }
+    } else {
+        logger->error("Error creating multi-address from peer: {}", peer);
     }
 
     return std::nullopt;
@@ -75,8 +80,10 @@ PeerManager::PeerManager(runner::ClientRunner& runner,
 
     m_kademlia->addPeer(m_host->getPeerInfo(), true);
     for (const auto& peer: peers) {
-        if (const auto peerInfo = parsePeerInfo(peer)) {
+        if (const auto peerInfo = parsePeerInfo(peer, m_log)) {
             m_kademlia->addPeer(*peerInfo, true);
+        } else {
+            m_log->error("Could not parse peer: {}", peer);
         }
     }
     m_identify->start();
@@ -88,7 +95,6 @@ PeerManager::PeerManager(runner::ClientRunner& runner,
     updateConnections();
 }
 
-// TODO: gracefully stop all the connections
 PeerManager::~PeerManager() = default;
 
 static const libp2p::network::c_ares::Ares cares = {};
@@ -218,6 +224,8 @@ void PeerManager::onDiscoveredPeer(const libp2p::peer::PeerId& peer_id) {
     m_log->debug("New peer discovered: {}", peer_id.toHex());
 }
 
+
+
 void PeerManager::onConnectedPeer(const libp2p::peer::PeerId& peer_id) {
     if (m_host->getId() == peer_id) {
         return;
@@ -293,6 +301,18 @@ void PeerManager::disconnect(const libp2p::peer::PeerId& peer_id) {
     }
     if (peer_id != m_host->getId()) {
         m_host->disconnect(peer_id);
+    }
+}
+
+void PeerManager::disconnectAll() {
+    m_log->info("peer manager: disconnect all");
+    for (auto& [peer, state]: m_peers_info) {
+        if (state.state == ConnectionState::Connected) {
+            state.action = ConnectionAction::Disconnecting;
+            updateTick(state);
+            m_log->debug("  disconnect peer {}", peer.toHex());
+            disconnect(peer);
+        }
     }
 }
 

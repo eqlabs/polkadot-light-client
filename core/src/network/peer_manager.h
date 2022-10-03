@@ -45,6 +45,7 @@ public:
     PeerManager(runner::ClientRunner& runner,
         const std::vector<std::string>& boot_nodes);
     ~PeerManager();
+    void disconnectAll();
 
 private:
     enum class ConnectionState {
