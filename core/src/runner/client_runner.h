@@ -17,7 +17,6 @@ public:
     ClientRunner() noexcept;
 
     void run() noexcept;
-
     void stop() noexcept;
 
     void postFunc(std::invocable<> auto&& func) noexcept {

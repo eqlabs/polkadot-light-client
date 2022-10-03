@@ -49,7 +49,6 @@
 #include "utils/result.h"
 #include "utils/stop.h"
 
-
 namespace plc::core::network {
 
 namespace {
