@@ -125,7 +125,7 @@ int main(const int count, const char** args) {
     using namespace plc::core;
 
     prepareLogging();
-    auto mainLogger = libp2p::log::createLogger("plc","network");
+    auto mainLogger = libp2p::log::createLogger("main","plc");
 
     auto runner = runner::ClientRunner();
 
@@ -135,11 +135,11 @@ int main(const int count, const char** args) {
     }
     auto peer_manager = network::PeerManager(runner, peers);
 
-    plc::core::setStop([r = &runner, pm = &peer_manager] () {
+    plc::core::setStop([&runner, &peer_manager] () {
       auto logger = libp2p::log::createLogger("stop","network");
       logger->info("Stop");
-      pm->disconnectAll();
-      r->stop();
+      peer_manager.disconnectAll();
+      runner.stop();
     });
 
     runner.run();
