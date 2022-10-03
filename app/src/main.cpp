@@ -125,7 +125,7 @@ int main(const int count, const char** args) {
     using namespace plc::core;
 
     prepareLogging();
-    auto mainLogger = libp2p::log::createLogger("main","network");
+    auto mainLogger = libp2p::log::createLogger("plc","network");
 
     auto runner = runner::ClientRunner();
 
