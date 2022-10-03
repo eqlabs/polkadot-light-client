@@ -53,6 +53,7 @@ jobs:
         fi
         eval `ssh-agent -s`
         ssh-add - <<< '${{ secrets.LIBP2PDEP }}'
+        ssh-add - <<< '${{ secrets.SORALOGDEP }}'
         mkdir build
         cd build
         cmake ..
