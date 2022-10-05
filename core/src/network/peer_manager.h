@@ -76,7 +76,8 @@ private:
     void updateConnections();
 
 private:
-    Config m_config;
+    // -Wunused-private-field
+    // Config m_config;
     std::shared_ptr<libp2p::host::BasicHost> m_host;
     std::unique_ptr<libp2p::protocol::kademlia::Config> m_kademlia_config;
     std::shared_ptr<libp2p::protocol::kademlia::Kademlia> m_kademlia;
