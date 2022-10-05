@@ -11,20 +11,19 @@ struct PeriodicTimer::State {
 };
 
 PeriodicTimer::PeriodicTimer(boost::asio::io_service& io_service,
-    std::chrono::milliseconds interval, Handler&& handler) {
+    std::chrono::milliseconds interval, Handler&& handler, libp2p::log::Logger logger) {
     m_state = std::make_shared<State>(State{nullptr, boost::asio::deadline_timer(io_service), true});
 
     assert(handler);
+    m_log = logger != nullptr ? logger : libp2p::log::createLogger("Timer","runner");
     auto timer_interval = boost::posix_time::milliseconds(interval.count());
     m_state->handler = [state_weak = std::weak_ptr{m_state}, handler = std::move(handler),
         timer_interval, logger = m_log](const boost::system::error_code& error) {
-        if (!error) {
-            if (const auto state = state_weak.lock(); state && state->running) {
+        if (!error)  [[likely]] {
+            if (const auto state = state_weak.lock(); state && state->running){
                 handler();
                 state->timer.expires_from_now(timer_interval);
                 state->timer.async_wait(state->handler);
-            } else {
-                logger->error("Could not access time state");
             }
         } else {
             logger->error("Handler is called with an error: {}", error);

@@ -9,6 +9,7 @@
 #include <libp2p/network/connection_manager.hpp>
 
 #include "runner/client_runner.h"
+#include "utils/stoppable.h"
 
 namespace boost::asio {
     class io_context;
@@ -35,17 +36,18 @@ namespace event {
 
 namespace plc::core::network {
 
-class PeerManager final {
+class PeerManager final : public Stoppable {
 public:
     struct Config {
         size_t max_peers_to_connect;
     };
 
 public:
-    PeerManager(runner::ClientRunner& runner,
-        const std::vector<std::string>& boot_nodes);
+    PeerManager(std::shared_ptr<runner::ClientRunner> runner,
+        const std::vector<std::string>& boot_nodes,
+        std::shared_ptr<plc::core::StopHandler> stop_handler);
     ~PeerManager();
-    void disconnectAll();
+    void stop() noexcept override;
 
 private:
     enum class ConnectionState {
@@ -89,6 +91,7 @@ private:
     size_t m_current_tick = 0;
     std::unique_ptr<runner::PeriodicTimer> m_timer;
     libp2p::log::Logger m_log = libp2p::log::createLogger("PeerManager","network");
+    std::shared_ptr<StopHandler> m_stop_handler;
 };
 
 } // namespace plc::core::network

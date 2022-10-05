@@ -20,11 +20,14 @@ public:
     using Handler = std::function<void()>;
 
 public:
-    PeriodicTimer(boost::asio::io_service& io_service, std::chrono::milliseconds interval, Handler&& handler);
+    // may optionally pass in logger, used instead of default logger
+    PeriodicTimer(boost::asio::io_service& io_service, std::chrono::milliseconds interval, Handler&& handler, 
+        libp2p::log::Logger logger = nullptr);
     PeriodicTimer(PeriodicTimer&& other) noexcept = default;
     ~PeriodicTimer() noexcept;
 
     void stop() noexcept;
+    void setLogger(libp2p::log::Logger _log);
 
 private:
     // Use move-only pointer semantics for a timer and store all the stuff
@@ -35,7 +38,7 @@ private:
 
 private:
     std::shared_ptr<State> m_state;
-    libp2p::log::Logger m_log = libp2p::log::createLogger("Timer","runner");
+    libp2p::log::Logger m_log;
 };
 
 } // namespace pcl::core::runner

@@ -47,7 +47,6 @@
 #include "utils/callback_to_coro.h"
 #include "utils/propagate.h"
 #include "utils/result.h"
-#include "utils/stop.h"
 
 namespace plc::core::network {
 
@@ -73,9 +72,10 @@ std::optional<libp2p::peer::PeerInfo> parsePeerInfo(std::string peer, libp2p::lo
 
 } // namespace
 
-PeerManager::PeerManager(runner::ClientRunner& runner,
-    const std::vector<std::string>& peers) {
-    initProtocols(runner.getService());
+PeerManager::PeerManager(std::shared_ptr<runner::ClientRunner> runner,
+    const std::vector<std::string>& peers, std::shared_ptr<plc::core::StopHandler> stop_handler) :
+    m_stop_handler(stop_handler) {
+    initProtocols(runner->getService());
 
     m_kademlia->addPeer(m_host->getPeerInfo(), true);
     for (const auto& peer: peers) {
@@ -88,7 +88,7 @@ PeerManager::PeerManager(runner::ClientRunner& runner,
     m_identify->start();
     m_kademlia->start();
     m_timer = std::make_unique<runner::PeriodicTimer>(
-        runner.makePeriodicTimer(std::chrono::milliseconds(200), [this]() {
+        runner->makePeriodicTimer(std::chrono::milliseconds(200), [this]() {
         updateConnections();
     }));
     updateConnections();
@@ -301,13 +301,13 @@ void PeerManager::disconnect(const libp2p::peer::PeerId& peer_id) {
     }
 }
 
-void PeerManager::disconnectAll() {
-    m_log->info("peer manager: disconnect all");
+void PeerManager::stop() noexcept {
+    m_log->debug("peer manager: stop");
     for (auto& [peer, state]: m_peers_info) {
         if (state.state == ConnectionState::Connected) {
             state.action = ConnectionAction::Disconnecting;
             updateTick(state);
-            m_log->debug("  disconnect peer {}", peer.toHex());
+            m_log->debug("  disconnecting from {}", peer.toHex());
             disconnect(peer);
         }
     }
