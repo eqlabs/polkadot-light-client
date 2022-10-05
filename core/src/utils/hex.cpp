@@ -53,7 +53,7 @@ Result<std::vector<uint8_t>> unhex(std::string_view hex) {
     return blob;
 }
 
-Result<BlockHash> fromHexWithPrefix(const std::string_view &block_id_str) {
+Result<BlockHash> fromHexWithPrefix(std::string_view block_id_str) {
     const static std::string leading_chrs = "0x";
 
     if (block_id_str.substr(0, leading_chrs.size()) != leading_chrs) {
@@ -79,6 +79,14 @@ Result<BlockHash> fromHexWithPrefix(const std::string_view &block_id_str) {
     } catch (const std::exception &e) {
         return UnhexError::Unknown;
     }
+}
+
+std::string hex(const std::vector<uint8_t> &hexValue) {
+    std::string prefix = "0x";
+    std::string result(hexValue.size() * 2 + prefix.size(), '\x00');
+    result.replace(0, prefix.size(), "0x");
+    boost::algorithm::hex_lower(hexValue.begin(), hexValue.end(), result.begin() + prefix.size());
+    return result;
 }
 
 }

@@ -94,6 +94,7 @@ private:
 
     Result<void> loadFields(const boost::property_tree::ptree &tree);
     Result<void> loadGenesis(const boost::property_tree::ptree &tree);
+    Result<void> loadBootNodes(const boost::property_tree::ptree &tree);
 
     template <typename T>
     Result<std::decay_t<T>> ensure(std::string_view entry_name,

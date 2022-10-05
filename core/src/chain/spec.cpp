@@ -7,6 +7,7 @@
 #include <boost/property_tree/json_parser.hpp>
 
 #include <libp2p/outcome/outcome.hpp>
+#include <libp2p/peer/peer_id.hpp>
 
 #include "../utils/hex.h"
 
@@ -38,6 +39,7 @@ Result<void> Spec::loadFromFile(const std::string &file_path) {
 
     OUTCOME_TRY(loadFields(tree));
     OUTCOME_TRY(loadGenesis(tree));
+    OUTCOME_TRY(loadBootNodes(tree));
 
     return libp2p::outcome::success();
 }
@@ -94,6 +96,29 @@ Result<void> Spec::loadFields(const boost::property_tree::ptree &tree) {
             m_known_code_substitutes.emplace(block_id_parsed);
         }
     }
+
+    auto fork_blocks_opt = tree.get_child_optional("forkBlocks");
+    if (fork_blocks_opt.has_value() && fork_blocks_opt.value().get<std::string>("") != "null") {
+//        log_->warn(
+//                    "A non-empty set of 'forkBlocks' encountered! They might not be "
+//                    "taken into account!");
+        for (auto &[_, fork_block] : fork_blocks_opt.value()) {
+            OUTCOME_TRY(hash, fromHexWithPrefix(fork_block.get<std::string>("")));
+            m_fork_blocks.emplace(hash);
+        }
+    }
+
+    auto bad_blocks_opt = tree.get_child_optional("badBlocks");
+    if (bad_blocks_opt.has_value() && bad_blocks_opt.value().get<std::string>("") != "null") {
+//        log_->warn(
+//                    "A non-empty set of 'badBlocks' encountered! They might not be "
+//                    "taken into account!");
+        for (auto &[_, bad_block] : bad_blocks_opt.value()) {
+            OUTCOME_TRY(hash, fromHexWithPrefix(bad_block.get<std::string>("")));
+            m_bad_blocks.emplace(hash);
+        }
+    }
+
     return libp2p::outcome::success();
 }
 
@@ -131,6 +156,25 @@ Result<void> Spec::loadGenesis(const boost::property_tree::ptree &tree) {
 
     OUTCOME_TRY(read_key_block(top_tree, m_genesis));
 
+    return libp2p::outcome::success();
+}
+
+Result<void> Spec::loadBootNodes(const boost::property_tree::ptree &tree) {
+    OUTCOME_TRY(boot_nodes, ensure("bootNodes", tree.get_child_optional("bootNodes")));
+    for (auto &v : boot_nodes) {
+        if (auto ma_res = libp2p::multi::Multiaddress::create(v.second.data())) {
+            auto &&multiaddr = ma_res.value();
+            if (auto peer_id_base58 = multiaddr.getPeerId(); peer_id_base58.has_value()) {
+                OUTCOME_TRY(libp2p::peer::PeerId::fromBase58(peer_id_base58.value()));
+                m_boot_nodes.emplace_back(std::move(multiaddr));
+            } else {
+                return Error::MissingPeerId;
+            }
+        } else {
+            //log_->warn("Unsupported multiaddress '{}'. Ignoring that boot node",
+//                       v.second.data());
+        }
+    }
     return libp2p::outcome::success();
 }
 
