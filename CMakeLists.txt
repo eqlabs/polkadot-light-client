@@ -17,6 +17,7 @@ endif()
 add_3rdparty(Boost)
 add_3rdparty(cpp-libp2p)
 add_3rdparty(cppcoro)
+add_3rdparty(scale)
 
 add_subdirectory(core)
 add_subdirectory(app)
