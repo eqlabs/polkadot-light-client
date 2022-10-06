@@ -52,16 +52,21 @@ namespace plc::core::network {
 
 namespace {
 
+std::optional<libp2p::peer::PeerInfo> createPeerInfo(libp2p::multi::Multiaddress multiaddr) {
+    if (auto peer_id = libp2p::peer::PeerId::fromBase58(multiaddr.getPeerId().value());
+        peer_id.has_value()) {
+        return libp2p::peer::PeerInfo{
+            peer_id.value(),
+            {multiaddr}
+        };
+    }
+    return std::nullopt;
+}
+
 std::optional<libp2p::peer::PeerInfo> parsePeerInfo(std::string peer) {
     // TODO: handle parse error
     if (auto multiaddr = libp2p::multi::Multiaddress::create(peer); multiaddr.has_value()) {
-        if (auto peer_id = libp2p::peer::PeerId::fromBase58(multiaddr.value().getPeerId().value());
-            peer_id.has_value()) {
-            return libp2p::peer::PeerInfo{
-                peer_id.value(),
-                {multiaddr.value()}
-            };
-        }
+        return createPeerInfo(multiaddr.value());
     }
 
     return std::nullopt;
@@ -79,13 +84,20 @@ PeerManager::PeerManager(runner::ClientRunner& runner,
             m_kademlia->addPeer(*peerInfo, true);
         }
     }
-    m_identify->start();
-    m_kademlia->start();
-    m_timer = std::make_unique<runner::PeriodicTimer>(
-        runner.makePeriodicTimer(std::chrono::milliseconds(200), [this]() {
-        updateConnections();
-    }));
-    updateConnections();
+    initAndUpdateConnections(runner);
+}
+
+PeerManager::PeerManager(runner::ClientRunner &runner,
+                         const std::vector<libp2p::multi::Multiaddress> &peers) {
+    initProtocols(runner.getService());
+
+    m_kademlia->addPeer(m_host->getPeerInfo(), true);
+    for (const auto& peer: peers) {
+        if (const auto peerInfo = createPeerInfo(peer)) {
+            m_kademlia->addPeer(*peerInfo, true);
+        }
+    }
+    initAndUpdateConnections(runner);
 }
 
 // TODO: gracefully stop all the connections
@@ -197,7 +209,17 @@ void PeerManager::initProtocols(std::shared_ptr<boost::asio::io_context> io_cont
     m_identify->onIdentifyReceived(
         [this](const libp2p::peer::PeerId &peer_id) {
             onConnectedPeer(peer_id);
-        });
+    });
+}
+
+void PeerManager::initAndUpdateConnections(runner::ClientRunner &runner) {
+    m_identify->start();
+    m_kademlia->start();
+    m_timer = std::make_unique<runner::PeriodicTimer>(
+        runner.makePeriodicTimer(std::chrono::milliseconds(200), [this]() {
+        updateConnections();
+    }));
+    updateConnections();
 }
 
 PeerManager::PeerState PeerManager::makePeerState() const {

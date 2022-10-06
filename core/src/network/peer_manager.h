@@ -44,6 +44,8 @@ public:
 public:
     PeerManager(runner::ClientRunner& runner,
         const std::vector<std::string>& boot_nodes);
+    PeerManager(runner::ClientRunner& runner,
+        const std::vector<libp2p::multi::Multiaddress>& peers);
     ~PeerManager();
 
 private:
@@ -67,6 +69,7 @@ private:
 
 private:
     void initProtocols(std::shared_ptr<boost::asio::io_context> io_context);
+    void initAndUpdateConnections(runner::ClientRunner& runner);
     PeerState makePeerState() const;
     void onDiscoveredPeer(const libp2p::peer::PeerId& peer_id);
     void onConnectedPeer(const libp2p::peer::PeerId& peer_id);

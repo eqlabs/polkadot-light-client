@@ -29,7 +29,6 @@ using BlockId = boost::variant<BlockHash, BlockNumber>;
 
 class Spec final {
 public:
-
     enum class Error {
       MissingEntry = 1,
       MissingPeerId,
@@ -67,6 +66,13 @@ public:
         return m_properties;
     }
 
+    std::optional<std::string> getProperty(const std::string &property) {
+        if (auto it = m_properties.find(property); it != m_properties.end()) {
+            return it->second;
+        }
+        return std::nullopt;
+    }
+
     const std::set<BlockHash> &getForkBlocks() const {
         return m_fork_blocks;
     }
@@ -92,20 +98,19 @@ public:
     }
 
 private:
-
     Result<void> loadFields(const boost::property_tree::ptree &tree);
     Result<void> loadGenesis(const boost::property_tree::ptree &tree);
     Result<void> loadBootNodes(const boost::property_tree::ptree &tree);
 
     template <typename T>
     Result<std::decay_t<T>> ensure(std::string_view entry_name, boost::optional<T> opt_entry) const {
-      if (!opt_entry) {
-        m_log->error("Missing required entry '{}' in the chain spec", entry_name);
-        return Error::MissingEntry;
-      }
-      return opt_entry.value();
+        if (!opt_entry) {
+            m_log->error("Missing required entry '{}' in the chain spec", entry_name);
+            return Error::MissingEntry;
+        }
+        return opt_entry.value();
     }
-    Result<BlockId> parseBlockId(const std::string_view &block_id_str) const;    
+    Result<BlockId> parseBlockId(std::string_view block_id_str) const;
 
     std::string m_name;
     std::string m_id;

@@ -70,8 +70,8 @@ Result<void> Spec::loadFields(const boost::property_tree::ptree &tree) {
             if (auto it = endpoint.begin(); endpoint.size() >= 2) {
                 auto &uri = it->second;
                 auto &priority = (++it)->second;
-                m_telemetry_endpoints.emplace_back(uri.get<std::string>(""),
-                                                   priority.get<size_t>(""));
+                m_telemetry_endpoints.emplace_back(std::move(uri.get<std::string>("")),
+                                                   std::move(priority.get<size_t>("")));
             }
         }
     }
@@ -79,13 +79,13 @@ Result<void> Spec::loadFields(const boost::property_tree::ptree &tree) {
     if (auto properties_opt = tree.get_child_optional("properties"); properties_opt.has_value()
             && properties_opt.value().get<std::string>("") != "null") {
         for (auto &[propertyName, propertyValue] : properties_opt.value()) {
-            m_properties.emplace(propertyName, propertyValue.get<std::string>(""));
+            m_properties.emplace(std::move(propertyName), std::move(propertyValue.get<std::string>("")));
         }
     }
     
     if (auto consensus_engine_opt = tree.get_child_optional("consensusEngine"); consensus_engine_opt.has_value()) {
-        auto consensus_engine = consensus_engine_opt.value().get<std::string>("");
-        if (consensus_engine != "null") {
+        if (auto consensus_engine = consensus_engine_opt.value().get<std::string>("");
+            consensus_engine != "null") {
             m_consensus_engine.emplace(std::move(consensus_engine));
         }
     }
@@ -93,7 +93,7 @@ Result<void> Spec::loadFields(const boost::property_tree::ptree &tree) {
     if (auto code_substitutes_opt = tree.get_child_optional("codeSubstitutes"); code_substitutes_opt.has_value()) {
         for (const auto &[block_id, code] : code_substitutes_opt.value()) {
             OUTCOME_TRY(block_id_parsed, parseBlockId(block_id));
-            m_known_code_substitutes.emplace(block_id_parsed);
+            m_known_code_substitutes.emplace(std::move(block_id_parsed));
         }
     }
 
@@ -101,7 +101,7 @@ Result<void> Spec::loadFields(const boost::property_tree::ptree &tree) {
     if (fork_blocks_opt.has_value() && fork_blocks_opt.value().get<std::string>("") != "null") {
         for (auto &[_, fork_block] : fork_blocks_opt.value()) {
             OUTCOME_TRY(hash, fromHexWithPrefix(fork_block.get<std::string>("")));
-            m_fork_blocks.emplace(hash);
+            m_fork_blocks.emplace(std::move(hash));
         }
     }
 
@@ -109,7 +109,7 @@ Result<void> Spec::loadFields(const boost::property_tree::ptree &tree) {
     if (bad_blocks_opt.has_value() && bad_blocks_opt.value().get<std::string>("") != "null") {
         for (auto &[_, bad_block] : bad_blocks_opt.value()) {
             OUTCOME_TRY(hash, fromHexWithPrefix(bad_block.get<std::string>("")));
-            m_bad_blocks.emplace(hash);
+            m_bad_blocks.emplace(std::move(hash));
         }
     }
 
@@ -117,20 +117,18 @@ Result<void> Spec::loadFields(const boost::property_tree::ptree &tree) {
 }
 
 Result<void> Spec::loadGenesis(const boost::property_tree::ptree &tree) {
-    OUTCOME_TRY(genesis_tree, ensure("genesis", tree.get_child_optional("genesis")));
-    OUTCOME_TRY(genesis_raw_tree, ensure("genesis/raw", genesis_tree.get_child_optional("raw")));
+    OUTCOME_TRY(genesis, ensure("genesis", tree.get_child_optional("genesis")));
+    OUTCOME_TRY(genesis_raw, ensure("genesis/raw", genesis.get_child_optional("raw")));
     boost::property_tree::ptree top_tree;
-    // v0.7+ format
-    if (auto top_tree_opt = genesis_raw_tree.get_child_optional("top"); top_tree_opt.has_value()) {
+
+    if (auto top_tree_opt = genesis_raw.get_child_optional("top"); top_tree_opt.has_value()) {
         top_tree = top_tree_opt.value();
-    } else {
-        // Try to fall back to v0.6
-        top_tree = genesis_raw_tree.begin()->second;
+    } else {    
+        top_tree = genesis_raw.begin()->second;
     }
 
-    auto read_key_block = [this](const auto &tree, GenesisRawData &data) -> Result<void> {
+    auto read_key_block = [](const auto &tree, GenesisRawData &data) -> Result<void> {
         for (const auto &[child_key, child_value] : tree) {
-            // get rid of leading 0x for key and value and unhex
             OUTCOME_TRY(key_processed, unhexWith0x(child_key));
             OUTCOME_TRY(value_processed, unhexWith0x(child_value.data()));
             data.emplace_back(std::move(key_processed), std::move(value_processed));
@@ -138,7 +136,7 @@ Result<void> Spec::loadGenesis(const boost::property_tree::ptree &tree) {
         return libp2p::outcome::success();
     };
 
-    if (auto children_default_tree_opt = genesis_raw_tree.get_child_optional("childrenDefault");
+    if (auto children_default_tree_opt = genesis_raw.get_child_optional("childrenDefault");
         children_default_tree_opt.has_value()) {
         for (const auto &[key, value] : children_default_tree_opt.value()) {
             GenesisRawData child;
@@ -155,8 +153,8 @@ Result<void> Spec::loadGenesis(const boost::property_tree::ptree &tree) {
 
 Result<void> Spec::loadBootNodes(const boost::property_tree::ptree &tree) {
     OUTCOME_TRY(boot_nodes, ensure("bootNodes", tree.get_child_optional("bootNodes")));
-    for (auto &v : boot_nodes) {
-        if (auto ma_res = libp2p::multi::Multiaddress::create(v.second.data())) {
+    for (auto &node : boot_nodes) {
+        if (auto ma_res = libp2p::multi::Multiaddress::create(node.second.data())) {
             auto &&multiaddr = ma_res.value();
             if (auto peer_id_base58 = multiaddr.getPeerId(); peer_id_base58.has_value()) {
                 OUTCOME_TRY(libp2p::peer::PeerId::fromBase58(peer_id_base58.value()));
@@ -165,18 +163,19 @@ Result<void> Spec::loadBootNodes(const boost::property_tree::ptree &tree) {
                 return Error::MissingPeerId;
             }
         } else {
-            m_log->warn("Unsupported multiaddress '{}'. Ignoring that boot node", v.second.data());
+            m_log->warn("Unsupported multiaddress '{}'. Ignoring that boot node", node.second.data());
         }
     }
     return libp2p::outcome::success();
 }
 
-Result<BlockId> Spec::parseBlockId(const std::string_view &block_id_str) const {
+Result<BlockId> Spec::parseBlockId(std::string_view block_id_str) const {
     BlockId block_id;
-    if (block_id_str.rfind("0x", 0) != std::string::npos) {  // Is it hash?
+    if (block_id_str.rfind("0x", 0) != std::string::npos) {
         OUTCOME_TRY(block_hash, fromHexWithPrefix(block_id_str));
         block_id = block_hash;
-    } else {
+    }
+    else {
         BlockNumber block_num;
         auto res = std::from_chars(block_id_str.data(),
                                  block_id_str.data() + block_id_str.size(),
@@ -189,4 +188,4 @@ Result<BlockId> Spec::parseBlockId(const std::string_view &block_id_str) const {
     return block_id;
 }
 
-}
+} //namespace plc::core::chain
