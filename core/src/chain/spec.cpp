@@ -33,7 +33,7 @@ Result<void> Spec::loadFromFile(const std::string &file_path) {
     try {
         boost::property_tree::read_json(file_path, tree);
     } catch (boost::property_tree::json_parser_error &error) {
-        //log
+        m_log->error("Could not load chain spec from file {}. Error at line {}: {}", error.filename(), error.line(), error.message());
         return Error::ParserError;
     }
 
@@ -54,7 +54,7 @@ Result<void> Spec::loadFields(const boost::property_tree::ptree &tree) {
     if (auto entry = tree.get_child_optional("chainType"); entry.has_value()) {
         m_chain_type = entry.value().get<std::string>("");
     } else {
-        //log - setting to default - live
+        m_log->info("Missing field 'chainType' in chain spec, setting to default - live");
         m_chain_type = std::string("Live");
     }
 
@@ -99,9 +99,6 @@ Result<void> Spec::loadFields(const boost::property_tree::ptree &tree) {
 
     auto fork_blocks_opt = tree.get_child_optional("forkBlocks");
     if (fork_blocks_opt.has_value() && fork_blocks_opt.value().get<std::string>("") != "null") {
-//        log_->warn(
-//                    "A non-empty set of 'forkBlocks' encountered! They might not be "
-//                    "taken into account!");
         for (auto &[_, fork_block] : fork_blocks_opt.value()) {
             OUTCOME_TRY(hash, fromHexWithPrefix(fork_block.get<std::string>("")));
             m_fork_blocks.emplace(hash);
@@ -110,9 +107,6 @@ Result<void> Spec::loadFields(const boost::property_tree::ptree &tree) {
 
     auto bad_blocks_opt = tree.get_child_optional("badBlocks");
     if (bad_blocks_opt.has_value() && bad_blocks_opt.value().get<std::string>("") != "null") {
-//        log_->warn(
-//                    "A non-empty set of 'badBlocks' encountered! They might not be "
-//                    "taken into account!");
         for (auto &[_, bad_block] : bad_blocks_opt.value()) {
             OUTCOME_TRY(hash, fromHexWithPrefix(bad_block.get<std::string>("")));
             m_bad_blocks.emplace(hash);
@@ -171,8 +165,7 @@ Result<void> Spec::loadBootNodes(const boost::property_tree::ptree &tree) {
                 return Error::MissingPeerId;
             }
         } else {
-            //log_->warn("Unsupported multiaddress '{}'. Ignoring that boot node",
-//                       v.second.data());
+            m_log->warn("Unsupported multiaddress '{}'. Ignoring that boot node", v.second.data());
         }
     }
     return libp2p::outcome::success();

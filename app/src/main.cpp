@@ -72,6 +72,7 @@ groups:
         children:
         - name: core
           children:
+            - name: chain
             - name: network
             - name: runner
             - name: utils

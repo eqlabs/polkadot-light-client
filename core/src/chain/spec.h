@@ -10,6 +10,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/variant.hpp>
 
+#include <libp2p/log/logger.hpp>
 #include <libp2p/multi/multiaddress.hpp>
 
 #include "../utils/result.h"
@@ -18,7 +19,7 @@
 namespace boost {
     template<typename T>
     class optional;
-}
+} //namespace boost
 
 namespace plc::core::chain {
 
@@ -97,10 +98,9 @@ private:
     Result<void> loadBootNodes(const boost::property_tree::ptree &tree);
 
     template <typename T>
-    Result<std::decay_t<T>> ensure(std::string_view entry_name,
-                                            boost::optional<T> opt_entry) const {
+    Result<std::decay_t<T>> ensure(std::string_view entry_name, boost::optional<T> opt_entry) const {
       if (!opt_entry) {
-        //log error        
+        m_log->error("Missing required entry '{}' in the chain spec", entry_name);
         return Error::MissingEntry;
       }
       return opt_entry.value();
@@ -120,8 +120,10 @@ private:
     GenesisRawData m_genesis;
     ChildrenDefaultRawData m_children_default;
     std::unordered_set<BlockId> m_known_code_substitutes;
+
+    libp2p::log::Logger m_log = libp2p::log::createLogger("Spec", "chain");
 };
 
-}
+} //namespace plc::core::chain
 
 OUTCOME_HPP_DECLARE_ERROR(plc::core::chain, Spec::Error);
