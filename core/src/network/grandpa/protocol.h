@@ -27,7 +27,7 @@ namespace plc::core::network::grandpa {
 
 class Observer {
 public:
-    virtual ~Observer() = 0;
+    virtual ~Observer() noexcept = default;
 
     virtual void onMessage(const libp2p::peer::PeerId &peer_id, const Message& message) = 0;
 };
@@ -47,19 +47,18 @@ public:
     Protocol(
         libp2p::Host& host,
         runner::ClientRunner& client_runner,
-        std::shared_ptr<Observer> grandpa_observer,
-        const PeerInfo& own_info);
+        std::shared_ptr<Observer> grandpa_observer);
 
     void start();
     void stop();
+
+    cppcoro::task<Result<std::shared_ptr<Protocol::Stream>>> newOutgoingStream(PeerId peer_id);
 
 private:
     cppcoro::task<void> readHandshake(std::shared_ptr<Stream> stream);
     void read(std::shared_ptr<Stream> stream);
     cppcoro::task<void> readingTask(std::shared_ptr<Stream> stream);
     cppcoro::task<void> incomingStreamTask(std::shared_ptr<Stream> stream);
-    static cppcoro::task<Result<void>> readHandshake(std::weak_ptr<Protocol> self, std::shared_ptr<ScaleMessageReadWriter> reader_writer);
-    static cppcoro::task<Result<void>> sendHandshake(std::weak_ptr<Protocol> self, std::shared_ptr<ScaleMessageReadWriter> reader_writer);
 
 private:
     static const libp2p::peer::Protocol protocol;
@@ -67,7 +66,6 @@ private:
     libp2p::Host& m_host;
     runner::ClientRunner& m_runner;
     std::shared_ptr<Observer> m_observer;
-    const PeerInfo& m_own_info;
     bool m_is_running = false;
 
     libp2p::log::Logger m_log = libp2p::log::createLogger("Protocol", "grandpa_protocol");

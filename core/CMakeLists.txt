@@ -13,4 +13,6 @@ target_link_libraries(plc_core PUBLIC
     p2p::p2p_kademlia
     p2p::p2p_ping
     p2p::p2p_gossip
+    p2p::p2p_loopback_stream
+    scale::scale
     cppcoro::cppcoro)
