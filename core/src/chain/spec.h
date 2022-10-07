@@ -3,7 +3,6 @@
 #include <map>
 #include <set>
 #include <string>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -54,7 +53,7 @@ public:
         return m_boot_nodes;
     }
 
-    const std::unordered_set<BlockId> &getKnownCodeSubstitutes() const {
+    const std::set<BlockId> &getKnownCodeSubstitutes() const {
         return m_known_code_substitutes;
     }
 
@@ -93,7 +92,7 @@ public:
         return m_children_default;
     }
 
-    const std::vector<std::pair<std::string, size_t> > &getTelemetryEndpoints() const {
+    const std::vector<std::pair<std::string, size_t>> &getTelemetryEndpoints() const {
         return m_telemetry_endpoints;
     }
 
@@ -124,7 +123,7 @@ private:
     std::optional<std::string> m_consensus_engine;
     GenesisRawData m_genesis;
     ChildrenDefaultRawData m_children_default;
-    std::unordered_set<BlockId> m_known_code_substitutes;
+    std::set<BlockId> m_known_code_substitutes;
 
     libp2p::log::Logger m_log = libp2p::log::createLogger("Spec", "chain");
 };

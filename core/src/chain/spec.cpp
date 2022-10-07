@@ -78,8 +78,8 @@ Result<void> Spec::loadFields(const boost::property_tree::ptree &tree) {
     
     if (auto properties_opt = tree.get_child_optional("properties"); properties_opt.has_value()
             && properties_opt.value().get<std::string>("") != "null") {
-        for (auto &[propertyName, propertyValue] : properties_opt.value()) {
-            m_properties.emplace(std::move(propertyName), std::move(propertyValue.get<std::string>("")));
+        for (auto &[property_name, property_value] : properties_opt.value()) {
+            m_properties.emplace(std::move(property_name), std::move(property_value.get<std::string>("")));
         }
     }
     
@@ -100,7 +100,7 @@ Result<void> Spec::loadFields(const boost::property_tree::ptree &tree) {
     auto fork_blocks_opt = tree.get_child_optional("forkBlocks");
     if (fork_blocks_opt.has_value() && fork_blocks_opt.value().get<std::string>("") != "null") {
         for (auto &[_, fork_block] : fork_blocks_opt.value()) {
-            OUTCOME_TRY(hash, fromHexWithPrefix(fork_block.get<std::string>("")));
+            OUTCOME_TRY(hash, unhexWith0xToBlockHash(fork_block.get<std::string>("")));
             m_fork_blocks.emplace(std::move(hash));
         }
     }
@@ -108,7 +108,7 @@ Result<void> Spec::loadFields(const boost::property_tree::ptree &tree) {
     auto bad_blocks_opt = tree.get_child_optional("badBlocks");
     if (bad_blocks_opt.has_value() && bad_blocks_opt.value().get<std::string>("") != "null") {
         for (auto &[_, bad_block] : bad_blocks_opt.value()) {
-            OUTCOME_TRY(hash, fromHexWithPrefix(bad_block.get<std::string>("")));
+            OUTCOME_TRY(hash, unhexWith0xToBlockHash(bad_block.get<std::string>("")));
             m_bad_blocks.emplace(std::move(hash));
         }
     }
@@ -172,7 +172,7 @@ Result<void> Spec::loadBootNodes(const boost::property_tree::ptree &tree) {
 Result<BlockId> Spec::parseBlockId(std::string_view block_id_str) const {
     BlockId block_id;
     if (block_id_str.rfind("0x", 0) != std::string::npos) {
-        OUTCOME_TRY(block_hash, fromHexWithPrefix(block_id_str));
+        OUTCOME_TRY(block_hash, unhexWith0xToBlockHash(block_id_str));
         block_id = block_hash;
     }
     else {
