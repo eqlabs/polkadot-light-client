@@ -12,8 +12,8 @@
 #include <libp2p/log/logger.hpp>
 #include <libp2p/multi/multiaddress.hpp>
 
-#include "../utils/result.h"
-#include "../utils/types.h"
+#include "utils/result.h"
+#include "utils/types.h"
 
 namespace boost {
     template<typename T>

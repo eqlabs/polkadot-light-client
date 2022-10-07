@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 
-#include "result.h"
-#include "types.h"
+#include "utils/result.h"
+#include "utils/types.h"
 
 namespace plc::core {
 

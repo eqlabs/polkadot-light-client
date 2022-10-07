@@ -9,7 +9,7 @@
 #include <libp2p/outcome/outcome.hpp>
 #include <libp2p/peer/peer_id.hpp>
 
-#include "../utils/hex.h"
+#include "utils/hex.h"
 
 OUTCOME_CPP_DEFINE_CATEGORY(plc::core::chain, Spec::Error, e) {
     using E = plc::core::chain::Spec::Error;
