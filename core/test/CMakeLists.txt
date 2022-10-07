@@ -11,7 +11,7 @@ target_include_directories(move_on_copy_test PUBLIC "${CMAKE_CURRENT_LIST_DIR}/.
 target_include_directories(chain_spec_parse_test PUBLIC "${CMAKE_CURRENT_LIST_DIR}/../src")
 target_include_directories(hex_test PUBLIC "${CMAKE_CURRENT_LIST_DIR}/../src")
 
-target_link_libraries(chain_spec_parse_test  p2p::p2p  plc_core)
-target_link_libraries(hex_test  p2p::p2p plc_core)
+target_link_libraries(chain_spec_parse_test p2p::p2p plc_core)
+target_link_libraries(hex_test p2p::p2p plc_core)
 
 file(COPY ${CMAKE_CURRENT_LIST_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR}/test_bin)

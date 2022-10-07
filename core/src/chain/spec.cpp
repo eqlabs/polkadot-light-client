@@ -23,7 +23,7 @@ OUTCOME_CPP_DEFINE_CATEGORY(plc::core::chain, Spec::Error, e) {
     case E::NotImplemented:
         return "Known entry name, but parsing not implemented";
     }
-    return "Unknown error in ChainSpecImpl";
+    return "Unknown error";
 }
 
 namespace plc::core::chain {

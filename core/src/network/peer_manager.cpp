@@ -84,7 +84,7 @@ PeerManager::PeerManager(runner::ClientRunner& runner,
             m_kademlia->addPeer(*peerInfo, true);
         }
     }
-    initAndUpdateConnections(runner);
+    startAndUpdateConnections(runner);
 }
 
 PeerManager::PeerManager(runner::ClientRunner &runner,
@@ -97,7 +97,7 @@ PeerManager::PeerManager(runner::ClientRunner &runner,
             m_kademlia->addPeer(*peerInfo, true);
         }
     }
-    initAndUpdateConnections(runner);
+    startAndUpdateConnections(runner);
 }
 
 // TODO: gracefully stop all the connections
@@ -212,7 +212,7 @@ void PeerManager::initProtocols(std::shared_ptr<boost::asio::io_context> io_cont
     });
 }
 
-void PeerManager::initAndUpdateConnections(runner::ClientRunner &runner) {
+void PeerManager::startAndUpdateConnections(runner::ClientRunner &runner) {
     m_identify->start();
     m_kademlia->start();
     m_timer = std::make_unique<runner::PeriodicTimer>(
