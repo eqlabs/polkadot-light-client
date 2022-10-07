@@ -1,4 +1,4 @@
-#include "spec.h"
+#include "chain/spec.h"
 
 #include <charconv>
 
