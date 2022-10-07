@@ -19,7 +19,7 @@ protected:
     std::shared_ptr<plc::core::chain::Spec> chainSpec;
 };
 
-TEST_F(ChainSpecParseTest, ParseSpec) {
+TEST_F(ChainSpecParseTest, ShouldParseSpec) {
     plc::core::Result<void> result = chainSpec->loadFromFile("assets/chain.json");
     EXPECT_FALSE(result.has_error());
     EXPECT_EQ("Polkadot CC1", chainSpec->getName());
@@ -86,5 +86,18 @@ TEST_F(ChainSpecParseTest, ParseSpec) {
         }
     }
     EXPECT_EQ(2, foundBlocks);
+}
 
+TEST_F(ChainSpecParseTest, ShouldFailOnParsingBadSpec) {
+    plc::core::Result<void> result = chainSpec->loadFromFile("assets/bad_chain.json");
+    EXPECT_TRUE(result.has_error());
+    auto error = result.error();
+    EXPECT_EQ(static_cast<int>(plc::core::chain::Spec::Error::ParserError), error.value());
+}
+
+TEST_F(ChainSpecParseTest, ShouldFailOnParsingSpecWithMissingId) {
+    plc::core::Result<void> result = chainSpec->loadFromFile("assets/chain_missing_id.json");
+    EXPECT_TRUE(result.has_error());
+    auto error = result.error();
+    EXPECT_EQ(static_cast<int>(plc::core::chain::Spec::Error::MissingEntry), error.value());
 }
