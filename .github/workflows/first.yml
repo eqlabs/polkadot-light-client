@@ -62,8 +62,6 @@ jobs:
         SORALOG_SSH_KEY: ${{ secrets.SORALOGDEP }}
       run: |
         set -e
-        echo asdf "${LIBP2P_SSH_KEY}"
-        echo asdf "${SORALOG_SSH_KEY}"
         conan profile new default
         conan profile update settings.arch=x86_64 default
         conan profile update settings.os=Linux default
