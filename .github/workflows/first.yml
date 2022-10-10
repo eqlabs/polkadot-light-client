@@ -93,5 +93,5 @@ jobs:
         mkdir build
         cd build
         # cmake ..
-        cmake -DSORALOG_GITHUB_HOST=soralog -DSQLITE_GITHUB_HOST=sqlite ..
-        make
+        cmake -DSORALOG_GITHUB_HOST=soralog -DSQLITE_GITHUB_HOST=soralog -DLIBP2P_GITHUB_HOST=libp2p  ..
+        # make
