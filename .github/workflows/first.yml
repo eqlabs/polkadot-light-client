@@ -1,6 +1,12 @@
 name: Build
 
-on: [push] # for testing; TODO restrict to master
+on:
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+    branches:
+    - github-action
 
 jobs:
   build:
@@ -28,6 +34,16 @@ jobs:
         sudo apt-get update || true
         sudo apt-get install -y apt-utils build-essential libssl-dev cmake python3 python3-pip
         sudo pip install conan
+    - name: Cache Conan Data
+      uses: actions/cache@v3
+      env:
+        cache-name: conan-data
+      with:
+        # caching node_modules
+        path: ~/.conan/data
+        key: ${{ matrix.compiler.cc }}-${{ env.cache-name }}
+        restore-keys: |
+          ${{ matrix.compiler.cc }}-${{ env.cache-name }}
     - name: select gcc
       if: matrix.compiler.cc == 'gcc'
       run: |
@@ -42,6 +58,8 @@ jobs:
       env:
         CC: ${{ matrix.compiler.cc }}
         CXX: ${{ matrix.compiler.cxx }}
+        SORALOG_SSH_KEY: ${{ secrets.SORALOGDEP }}
+        SQLITE_SSH_KEY: ${{ secrets.SQLITEDEP }}
       run: |
         set -e
         conan profile new default
@@ -51,10 +69,29 @@ jobs:
           conan profile update settings.compiler=gcc default
           conan profile update settings.compiler.libcxx=libstdc++11 default
         fi
+
+        # eval `ssh-agent -s`
+        # ssh-add - <<< '${{ secrets.LIBP2PDEP }}'
+        # ssh-add - <<< '${{ secrets.SORALOGDEP }}'
+
+        mkdir -p ~/.ssh/
+        echo "${SORALOG_SSH_KEY}" > ~/.ssh/soralog.key
+        chmod 400 ~/.ssh/soralog.key
+        echo "${SQLITE_SSH_KEY}" > ~/.ssh/sqlite.key
+        chmod 400 ~/.ssh/sqlite.key
+        echo Host soralog                       > ~/.ssh/config
+        echo   HostName github.com              >> ~/.ssh/config
+        echo   IdentityFile ~/.ssh/soralog.key  >> ~/.ssh/config
+        echo   User git                         >> ~/.ssh/config
+        echo                                    >> ~/.ssh/config
+        echo Host sqlite                        >> ~/.ssh/config
+        echo   HostName github.com              >> ~/.ssh/config
+        echo   IdentityFile ~/.ssh/sqlite.key   >> ~/.ssh/config
+        echo   User git                         >> ~/.ssh/config
         eval `ssh-agent -s`
-        ssh-add - <<< '${{ secrets.LIBP2PDEP }}'
-        ssh-add - <<< '${{ secrets.SORALOGDEP }}'
+
         mkdir build
         cd build
-        cmake ..
+        # cmake ..
+        cmake -DSORALOG_GITHUB_HOST=soralog -DSQLITE_GITHUB_HOST=sqlite ..
         make
