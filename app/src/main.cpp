@@ -6,6 +6,7 @@
 #include <libp2p/log/logger.hpp>
 #include <libp2p/log/configurator.hpp>
 
+#include "chain/spec.h"
 #include "runner/client_runner.h"
 #include "network/peer_manager.h"
 
@@ -33,6 +34,7 @@ groups:
         children:
         - name: core
           children:
+            - name: chain
             - name: network
             - name: runner
             - name: utils
@@ -72,6 +74,7 @@ groups:
         children:
         - name: core
           children:
+            - name: chain
             - name: network
             - name: runner
             - name: utils
@@ -108,6 +111,8 @@ void prepareLogging() {
     libp2p::log::setLoggingSystem(logging_system);
     if (std::getenv("LOG_TRACE") != nullptr) {
         libp2p::log::setLevelOfGroup("plc", soralog::Level::TRACE);
+    } else if (std::getenv("LOG_DEBUG") != nullptr) {
+        libp2p::log::setLevelOfGroup("plc", soralog::Level::DEBUG);
     } else if (std::getenv("LOG_ERROR") != nullptr)  {
         libp2p::log::setLevelOfGroup("plc", soralog::Level::ERROR);
     }
@@ -124,12 +129,27 @@ int main(const int count, const char** args) {
     prepareLogging();
 
     auto runner = runner::ClientRunner();
+    std::unique_ptr<network::PeerManager> connection_manager;
 
-    std::vector<std::string> peers;
-    for (int i = 1; i < count; ++i) {
-        peers.push_back(args[i]);
+    if (count == 2) {
+        auto result = plc::core::chain::Spec::loadFromFile(args[1]);
+        if (result.has_error()) {
+            exit(EXIT_FAILURE);
+        }
+        auto chainSpec = result.value();
+        connection_manager = std::make_unique<network::PeerManager>(runner, chainSpec.getBootNodes());
     }
-    auto connection_manager = network::PeerManager(runner, peers);
+    else if (count > 2){
+        std::vector<std::string> peers;
+        for (int i = 1; i < count; ++i) {
+            peers.push_back(args[i]);
+        }
+        connection_manager = std::make_unique<network::PeerManager>(runner, peers);
+    }
+    else {
+        std::cerr << "Too few arguments, needed at least 1 with chain spec file or 2 (or more) with peer addresses" << std::endl;
+        exit(EXIT_FAILURE);
+    }
 
     runner.run();
 

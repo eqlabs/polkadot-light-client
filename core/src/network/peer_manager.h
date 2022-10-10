@@ -44,6 +44,8 @@ public:
 public:
     PeerManager(runner::ClientRunner& runner,
         const std::vector<std::string>& boot_nodes);
+    PeerManager(runner::ClientRunner& runner,
+        const std::vector<libp2p::multi::Multiaddress>& peers);
     ~PeerManager();
 
 private:
@@ -67,6 +69,7 @@ private:
 
 private:
     void initProtocols(std::shared_ptr<boost::asio::io_context> io_context);
+    void startAndUpdateConnections(runner::ClientRunner& runner);
     PeerState makePeerState() const;
     void onDiscoveredPeer(const libp2p::peer::PeerId& peer_id);
     void onConnectedPeer(const libp2p::peer::PeerId& peer_id);
@@ -76,7 +79,8 @@ private:
     void updateConnections();
 
 private:
-    Config m_config;
+    // -Wunused-private-field
+    // Config m_config;
     std::shared_ptr<libp2p::host::BasicHost> m_host;
     std::unique_ptr<libp2p::protocol::kademlia::Config> m_kademlia_config;
     std::shared_ptr<libp2p::protocol::kademlia::Kademlia> m_kademlia;
@@ -87,6 +91,7 @@ private:
 
     size_t m_current_tick = 0;
     std::unique_ptr<runner::PeriodicTimer> m_timer;
+    libp2p::log::Logger m_log = libp2p::log::createLogger("PeerManager","network");
 };
 
 } // namespace plc::core::network

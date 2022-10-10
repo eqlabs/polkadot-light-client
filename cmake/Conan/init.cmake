@@ -32,11 +32,17 @@ function(add_conan_package PACKAGE_NAME PACKAGE_VERSION)
         GENERATORS cmake_find_package
         OPTIONS ${ADD_CONAN_PACKAGE_CONFIG_OPTIONS})
 
+    if (SAN)
+        string(REPLACE ";" " " SAN_FLAGS_STRING "${SAN_FLAGS}")
+        set(CONAN_ENV "CXXFLAGS=${SAN_FLAGS_STRING}; CFLAGS=${SAN_FLAGS_STRING}; LDFLAGS=${SAN_FLAGS_STRING}")
+    endif()
+
     conan_cmake_autodetect(CONAN_SETTINGS)
     conan_cmake_install(PATH_OR_REFERENCE .
         BUILD missing
         REMOTE conancenter
-        SETTINGS ${CONAN_SETTINGS})
+        SETTINGS ${CONAN_SETTINGS}
+        ENV ${CONAN_ENV})
     set(CMAKE_CURRENT_BINARY_DIR "${PREV_CMAKE_CURRENT_BINARY_DIR}")
     list(APPEND CMAKE_MODULE_PATH "${PACKAGE_DIR}")
     set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" PARENT_SCOPE)
