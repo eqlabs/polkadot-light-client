@@ -79,16 +79,16 @@ jobs:
         chmod 400 ~/.ssh/libp2p.key
         echo "${SORALOG_SSH_KEY}" > ~/.ssh/soralog.key
         chmod 400 ~/.ssh/soralog.key
-        echo Host libp2p                        >> ~/.ssh/config
+        echo Host libp2p                        > ~/.ssh/config
         echo   HostName github.com              >> ~/.ssh/config
         echo   IdentityFile ~/.ssh/libp2p.key   >> ~/.ssh/config
         echo   User git                         >> ~/.ssh/config
-        eval `ssh-agent -s`
-        echo Host soralog                       > ~/.ssh/config
+        echo                                    >> ~/.ssh/config
+        echo Host soralog                       >> ~/.ssh/config
         echo   HostName github.com              >> ~/.ssh/config
         echo   IdentityFile ~/.ssh/soralog.key  >> ~/.ssh/config
         echo   User git                         >> ~/.ssh/config
-        echo                                    >> ~/.ssh/config
+        eval `ssh-agent -s`
 
         mkdir build
         cd build
