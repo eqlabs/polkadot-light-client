@@ -128,15 +128,15 @@ int main(const int count, const char** args) {
 
     prepareLogging();
 
-    auto chainSpec = chain::Spec();
     auto runner = runner::ClientRunner();
     std::unique_ptr<network::PeerManager> connection_manager;
 
     if (count == 2) {
-        auto result = chainSpec.loadFromFile(args[1]);
+        auto result = plc::core::chain::Spec::loadFromFile(args[1]);
         if (result.has_error()) {
             exit(EXIT_FAILURE);
         }
+        auto chainSpec = result.value();
         connection_manager = std::make_unique<network::PeerManager>(runner, chainSpec.getBootNodes());
     }
     else if (count > 2){

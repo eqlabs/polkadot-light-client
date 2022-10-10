@@ -28,20 +28,21 @@ OUTCOME_CPP_DEFINE_CATEGORY(plc::core::chain, Spec::Error, e) {
 
 namespace plc::core::chain {
 
-Result<void> Spec::loadFromFile(const std::string &file_path) {
+Result<Spec> Spec::loadFromFile(const std::string &file_path) {
+    Spec spec;
     boost::property_tree::ptree tree;
     try {
         boost::property_tree::read_json(file_path, tree);
     } catch (boost::property_tree::json_parser_error &error) {
-        m_log->error("Could not load chain spec from file {}. Error at line {}: {}", error.filename(), error.line(), error.message());
+        spec.m_log->error("Could not load chain spec from file {}. Error at line {}: {}", error.filename(), error.line(), error.message());
         return Error::ParserError;
     }
 
-    OUTCOME_TRY(loadFields(tree));
-    OUTCOME_TRY(loadGenesis(tree));
-    OUTCOME_TRY(loadBootNodes(tree));
+    OUTCOME_TRY(spec.loadFields(tree));
+    OUTCOME_TRY(spec.loadGenesis(tree));
+    OUTCOME_TRY(spec.loadBootNodes(tree));
 
-    return libp2p::outcome::success();
+    return spec;
 }
 
 Result<void> Spec::loadFields(const boost::property_tree::ptree &tree) {

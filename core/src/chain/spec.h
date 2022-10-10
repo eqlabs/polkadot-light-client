@@ -22,8 +22,8 @@ namespace boost {
 
 namespace plc::core::chain {
 
-using GenesisRawData = std::vector<std::pair<ByteArray, ByteArray>>;
-using ChildrenDefaultRawData = std::map<ByteArray, GenesisRawData>;
+using GenesisRawData = std::vector<std::pair<ByteBuffer, ByteBuffer>>;
+using ChildrenDefaultRawData = std::map<ByteBuffer, GenesisRawData>;
 using BlockId = boost::variant<BlockHash, BlockNumber>;
 
 class Spec final {
@@ -35,7 +35,7 @@ public:
       NotImplemented
     };
 
-    Result<void> loadFromFile(const std::string &file_path);
+    static Result<Spec> loadFromFile(const std::string &file_path);
 
     const std::string &getName() const {
         return m_name;
@@ -97,6 +97,8 @@ public:
     }
 
 private:
+    Spec() = default;
+
     Result<void> loadFields(const boost::property_tree::ptree &tree);
     Result<void> loadGenesis(const boost::property_tree::ptree &tree);
     Result<void> loadBootNodes(const boost::property_tree::ptree &tree);
