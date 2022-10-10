@@ -12,9 +12,8 @@
 #include "utils/callback_to_coro.h"
 
 namespace plc::core::network {
-/**
- * Read and write messages, encoded into SCALE with a prepended varint
- */
+
+// Read and write messages, encoded into SCALE with a prepended varint
 class ScaleMessageReadWriter {
     using MessageReadWriter = libp2p::basic::MessageReadWriter;
 public:
@@ -45,25 +44,20 @@ public:
         }
     }
 
-    /**
-     * SCALE-encode a message and write it to the channel
-     */
     template <typename MsgType>
     cppcoro::task<Result<size_t>> write(const MsgType &msg) const {
         auto encoded_msg_res = scale::encode(msg);
         if (!encoded_msg_res) {
             co_return encoded_msg_res.error();
         }
-        auto write_res = co_await resumeInCallback<Result<size_t>>(
+
+        co_return co_await resumeInCallback<Result<size_t>>(
             [reader_writer = m_read_writer, msg = std::move(encoded_msg_res.value())](auto func) {
                 reader_writer->write(msg, std::move(func));
         });
-
-        co_return write_res;
     }
 
     private:
         std::shared_ptr<libp2p::basic::MessageReadWriter> m_read_writer;
 };
 }  // namespace pcl::core::network
-
