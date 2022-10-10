@@ -19,7 +19,7 @@ class ClientRunner;
 
 namespace plc::core::network {
 
-class ScaleMessageReadWriter;
+class MessageReadWriter;
 
 } // namespace plc::core::network
 

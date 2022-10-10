@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <type_traits>
 
-#include "network/common/streams.h"
+#include "network/scale/streams.h"
 
 namespace plc::core::network {
 
@@ -28,20 +28,17 @@ union Roles {
     uint8_t value;
 
     explicit Roles(uint8_t val = 0) : value(val) {}
+
+    template <typename Self, typename Archive>
+    static void serialize(Self& self, Archive& archive) {
+        archive(self.value);
+    }
 };
 
 inline bool operator==(const Roles &lhs, const Roles &rhs) {
     return lhs.value == rhs.value;
 }
 
-template <EncoderStream Stream>
-Stream &operator<<(Stream &s, const Roles &v) {
-    return s << v.value;
-}
-
-template <DecoderStream Stream>
-Stream &operator>>(Stream &s, Roles &v) {
-    return s >> v.value;
-}
+PLC_DEFINE_STREAM_OPERATORS(Roles);
 
 }  // namespace plc::core::network
