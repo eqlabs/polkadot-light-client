@@ -1,0 +1,10 @@
+{
+  "name": "Polkadot CC1",
+  "id": "polkadot",
+  "chainType": "Live"
+  "bootNodes": [
+    "/dns4/p2p.cc1-0.polkadot.network/tcp/30100/p2p/12D3KooWEdsXX9657ppNqqrRuaCHFvuNemasgU5msLDwSJ6WqsKc",
+    "/dns4/cc1-1.parity.tech/tcp/30333/p2p/12D3KooWFN2mhgpkJsDBuNuE5427AcDrsib8EoqGMZmkxWwx3Md4",
+    "/some/wrong/multiaddress"
+  ],
+}
