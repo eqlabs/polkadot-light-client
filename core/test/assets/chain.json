@@ -1,0 +1,37 @@
+{
+  "name": "Polkadot CC1",
+  "id": "polkadot",
+  "chainType": "Live",
+  "bootNodes": [
+    "/dns4/p2p.cc1-0.polkadot.network/tcp/30100/p2p/12D3KooWEdsXX9657ppNqqrRuaCHFvuNemasgU5msLDwSJ6WqsKc",
+    "/dns4/cc1-1.parity.tech/tcp/30333/p2p/12D3KooWFN2mhgpkJsDBuNuE5427AcDrsib8EoqGMZmkxWwx3Md4",
+    "/some/wrong/multiaddress"
+  ],
+  "telemetryEndpoints": [
+    [
+      "wss://telemetry.polkadot.io/submit/",
+      0
+    ]
+  ],
+  "protocolId": "dot",
+  "properties": {
+    "ss58Format": 0,
+    "tokenDecimals": 12,
+    "tokenSymbol": "DOT"
+  },
+  "forkBlocks": null,
+  "badBlocks": [
+      "0x15b1b925b0aa5cfe43c88cd024f74258cb5cfe3af424882c901014e8acd0d241",
+      "0x2563260209012232649ab9dc003f62e274c684037de499a23062f8e0e816c605"
+  ],
+  "consensusEngine": null,
+  "genesis": {
+      "raw": {
+        "top": {
+          "0x9c": "0x00",
+          "0x9c5d": "0x01",
+          "0x795a": "0x0d1a"
+        }
+      }
+  }
+}
