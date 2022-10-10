@@ -56,8 +56,8 @@ void ClientRunner::run() noexcept {
     m_io_service->run();
 }
 
-void ClientRunner::postTask(cppcoro::task<void>&& task) noexcept {
-    m_io_service->post([task = MoveOnCopy<cppcoro::task<void>>{std::move(task)}]() mutable {
+void ClientRunner::dispatchTask(cppcoro::task<void>&& task) noexcept {
+    m_io_service->dispatch([task = MoveOnCopy<cppcoro::task<void>>{std::move(task)}]() mutable {
         fireAndForget(task.take());
     });
 }

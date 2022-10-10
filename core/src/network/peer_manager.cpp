@@ -74,8 +74,8 @@ public:
     LogGrandpaObserver(libp2p::log::Logger logger) : m_logger(std::move(logger)) {}
     ~LogGrandpaObserver() noexcept override = default;
 
-    void onMessage(const libp2p::peer::PeerId &peer_id, const grandpa::Message& message) {
-        m_logger->debug("New grandpa message");
+    void onMessage(const libp2p::peer::PeerId& peer_id, const grandpa::Message&) override {
+        m_logger->debug("New grandpa message from {}", peer_id);
     }
 
 private:
@@ -265,18 +265,6 @@ void PeerManager::onConnectedPeer(const libp2p::peer::PeerId& peer_id) {
     if (auto connection = m_host->getNetwork().getConnectionManager()
         .getBestConnectionForPeer(peer_id)) {
         peer_state.state = ConnectionState::Connected;
-        auto grandpa_connect = [grandpa = m_grandpa, log = m_log, peer_id = peer_id]() -> cppcoro::task<void> {
-            if (auto stream_res = co_await grandpa->newOutgoingStream(peer_id)) {
-                if (auto& connection = stream_res.value()) {
-                    log->info("Opened grandpa stream to {}", peer_id);
-                } else {
-                    log->warn("Peer {} doesn't accept grandpa stream", peer_id);
-                }
-            } else {
-                log->warn("Failed to open grandpa stream");
-            }
-        };
-        m_runner.postTask(grandpa_connect());
         if (!peer_state.is_pinging) {
             m_ping->startPinging(
                 connection,

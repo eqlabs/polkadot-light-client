@@ -52,8 +52,6 @@ public:
     void start();
     void stop();
 
-    cppcoro::task<Result<std::shared_ptr<Protocol::Stream>>> newOutgoingStream(PeerId peer_id);
-
 private:
     cppcoro::task<void> readHandshake(std::shared_ptr<Stream> stream);
     void read(std::shared_ptr<Stream> stream);

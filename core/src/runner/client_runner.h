@@ -24,7 +24,16 @@ public:
     void dispatchFunc(std::invocable<> auto&& func) noexcept {
         m_io_service->dispatch(std::forward<decltype(func)>(func));
     }
-    void postTask(cppcoro::task<void>&& task) noexcept;
+
+    // We have only the dispatch task method withut `postTask`
+    // because cppcoro::task always suspends before execution.
+    // That makes it impossible to "capture" members to local variables in a task method:
+    // task<void> someTask() {
+    //     auto self = weak_from_this(); // won't be executed if we post task, not dispatch
+    //     auto res = co_await someOperation();
+    // }
+    // When using `dispatchTask` we are executing task code up to the first suspension point.
+    void dispatchTask(cppcoro::task<void>&& task) noexcept;
 
     std::shared_ptr<boost::asio::io_service> getService() const noexcept;
 

@@ -35,7 +35,7 @@ void Protocol::start() {
                 self->m_log->trace("Handled {} protocol stream from: {}",
                     protocol,
                     peer_id.value());
-                self->m_runner.postTask(self->incomingStreamTask(std::forward<decltype(stream)>(stream)));
+                self->m_runner.dispatchTask(self->incomingStreamTask(std::forward<decltype(stream)>(stream)));
             } else {
                 self->m_log->warn("Handled {} protocol stream from unknown peer",
                     protocol);
@@ -44,7 +44,7 @@ void Protocol::start() {
     });
 
     auto stream = std::make_shared<libp2p::connection::LoopbackStream>(m_host.getPeerInfo(), m_runner.getService());
-    m_runner.postTask(readingTask(std::move(stream)));
+    m_runner.dispatchTask(readingTask(std::move(stream)));
 }
 
 void Protocol::stop() {
@@ -111,50 +111,6 @@ cppcoro::task<> Protocol::incomingStreamTask(std::shared_ptr<Stream> stream) {
     } else {
         logger->trace("Handshake send to {}", stream->remotePeerId().value());
     }
-}
-
-cppcoro::task<Result<std::shared_ptr<Protocol::Stream>>> Protocol::newOutgoingStream(const PeerId peer_id) {
-    const auto logger = m_log;
-    auto new_stream_res = co_await resumeInCallback<Result<std::shared_ptr<Stream>>>([wp = weak_from_this(), peer_id](auto func) {
-        if (auto self = wp.lock()) {
-            self->m_host.newStream(
-                peer_id,
-                protocol, std::move(func));
-        } else {
-            func(ProtocolError::OwnerDestroyed);
-        }
-    });
-    if (!new_stream_res) {
-        logger->warn("Failed establishing grandpa connection to {}: {}",
-            peer_id, new_stream_res.error().message());
-        co_return new_stream_res.error();
-    }
-
-    auto stream = std::move(new_stream_res.value());
-    auto read_writer = std::make_shared<ScaleMessageReadWriter>(stream);
-    Roles roles;
-    roles.flags.light = 1;
-    const auto handshake_send_res = co_await read_writer->write(roles);
-    if (!handshake_send_res) {
-        stream->reset();
-        co_return handshake_send_res.error();
-    } else {
-        logger->trace("Handshake send to {}", peer_id);
-    }
-
-    const auto handshake_read_res = co_await read_writer->read<Roles>();
-    if (!handshake_read_res) {
-        stream->reset();
-        co_return handshake_read_res.error();
-    } else {
-        logger->trace("Handshake received from {}", peer_id);
-        if (!handshake_read_res.value().flags.full) {
-            stream->reset();
-            co_return nullptr;
-        }
-    }
-
-    co_return stream;
 }
 
 } // namespace plc::core::network::grandpa
