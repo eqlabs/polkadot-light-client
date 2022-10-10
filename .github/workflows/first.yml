@@ -79,6 +79,8 @@ jobs:
         chmod 400 ~/.ssh/libp2p.key
         echo "${SORALOG_SSH_KEY}" > ~/.ssh/soralog.key
         chmod 400 ~/.ssh/soralog.key
+        echo "${SORALOG_SSH_KEY}" > ~/.ssh/sqlite.key
+        chmod 400 ~/.ssh/sqlite.key
         echo Host libp2p                        > ~/.ssh/config
         echo   HostName github.com              >> ~/.ssh/config
         echo   IdentityFile ~/.ssh/libp2p.key   >> ~/.ssh/config
@@ -88,10 +90,15 @@ jobs:
         echo   HostName github.com              >> ~/.ssh/config
         echo   IdentityFile ~/.ssh/soralog.key  >> ~/.ssh/config
         echo   User git                         >> ~/.ssh/config
+        echo                                    >> ~/.ssh/config
+        echo Host sqlite                        >> ~/.ssh/config
+        echo   HostName github.com              >> ~/.ssh/config
+        echo   IdentityFile ~/.ssh/sqlite.key  >> ~/.ssh/config
+        echo   User git                         >> ~/.ssh/config
         eval `ssh-agent -s`
 
         mkdir build
         cd build
         # cmake ..
-        cmake -DSORALOG_GITHUB_HOST=soralog -DSQLITE_GITHUB_HOST=soralog -DLIBP2P_GITHUB_HOST=libp2p  ..
+        cmake -DSORALOG_GITHUB_HOST=soralog -DSQLITE_GITHUB_HOST=sqlite -DLIBP2P_GITHUB_HOST=libp2p  ..
         # make
