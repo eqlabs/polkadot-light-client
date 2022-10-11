@@ -3,6 +3,7 @@ add_library(plc_core
     src/chain/spec.cpp
     src/network/common/errors.cpp
     src/network/grandpa/protocol.cpp
+    src/network/light2/messages.cpp
     src/network/peer_manager.cpp
     src/network/scale/message_reader_writer.cpp
     src/runner/client_runner.cpp
