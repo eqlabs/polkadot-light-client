@@ -20,7 +20,7 @@ jobs:
           "cxx": "g++"
          }, {
           "cc": "clang",
-          "cxx": "clang"
+          "cxx": "clang++"
         }]
     steps:
     - uses: actions/checkout@v1
@@ -58,11 +58,17 @@ jobs:
         chmod +x llvm.sh
         sudo ./llvm.sh 15
         echo asdf before
+        which clang
+        which clang++
         clang --version
         clang++ --version
-        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-15 10
-        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 10
+        /usr/bin/clang --version
+        /usr/bin/clang++ --version
+        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang-15 20
+        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 20
         echo asdf after
+        which clang
+        which clang++
         clang --version
         clang++ --version
     - name: cmake
