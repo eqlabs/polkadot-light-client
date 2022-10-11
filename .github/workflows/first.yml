@@ -39,11 +39,11 @@ jobs:
       env:
         cache-name: conan-data
       with:
-        # caching node_modules
+        # cache conan data
         path: ~/.conan/data
-        key: ${{ matrix.compiler.cc }}-${{ env.cache-name }}
+        key: ${{ matrix.compiler.cc }}-plc-${{ env.cache-name }}
         restore-keys: |
-          ${{ matrix.compiler.cc }}-${{ env.cache-name }}
+          ${{ matrix.compiler.cc }}-plc-${{ env.cache-name }}
     - name: select gcc
       if: matrix.compiler.cc == 'gcc'
       run: |
@@ -74,10 +74,6 @@ jobs:
           conan profile update settings.compiler.libcxx=libstdc++11 default
         fi
 
-        # eval `ssh-agent -s`
-        # ssh-add - <<< '$LIBP2P_SSH_KEY'
-        # ssh-add - <<< '$SORALOG_SSH_KEY'
-
         mkdir -p ~/.ssh/
         echo "${LIBP2P_SSH_KEY}" > ~/.ssh/libp2p.key
         chmod 400 ~/.ssh/libp2p.key
@@ -103,6 +99,5 @@ jobs:
 
         mkdir build
         cd build
-        # cmake ..
         cmake -DSORALOG_GITHUB_HOST=soralog -DSQLITE_GITHUB_HOST=sqlite -DLIBP2P_GITHUB_HOST=libp2p  ..
-        # make
+        make
