@@ -19,8 +19,8 @@ jobs:
           "cc": "gcc",
           "cxx": "g++"
          }, {
-          "cc": "clang",
-          "cxx": "clang++"
+          "cc": "clang-15",
+          "cxx": "clang++-15"
         }]
     steps:
     - uses: actions/checkout@v1
@@ -74,9 +74,17 @@ jobs:
           conan profile update settings.compiler.libcxx=libstdc++11 default
         fi
         if [ "$CC" = "clang" ]; then
-          conan profile update settings.compiler=clang default
-          conan profile update settings.compiler.libcxx=clang++ default
-          conan profile update settings.compiler.version=15 default
+          echo asdf before
+          clang --version
+          clang++ --version
+          # conan profile update settings.compiler=clang default
+          # conan profile update settings.compiler.libcxx=clang++ default
+          # conan profile update settings.compiler.version=15 default
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-15 10
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 10
+          echo asdf after
+          clang --version
+          clang++ --version
         fi
 
         mkdir -p ~/.ssh/
