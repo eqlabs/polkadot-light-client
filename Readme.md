@@ -1,3 +1,3 @@
 # Polkadot light client
 
-Polcadot light client implementation
+Polkadot light client implementation
