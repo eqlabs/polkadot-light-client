@@ -14,12 +14,6 @@ include("${CMAKE_CURRENT_LIST_DIR}/cmake/utils.cmake")
 # the property is out of "if TESTING" scope due to addtest func is out too
 set_property(GLOBAL PROPERTY TEST_TARGETS)
 
-message(STATUS "asdf 2 DSORALOG_GITHUB_HOST=${SORALOG_GITHUB_HOST}")
-message(STATUS "asdf 3 DSQLITE_GITHUB_HOST=${SQLITE_GITHUB_HOST}")
-message(STATUS "asdf 4 DLIBP2P_GITHUB_HOST=${LIBP2P_GITHUB_HOST}")
-
-
-
 if (TESTING)
   add_3rdparty(GTest)
 endif()
