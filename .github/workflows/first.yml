@@ -53,31 +53,13 @@ jobs:
     - name: select clang
       if: matrix.compiler.cc == 'clang'
       run: |
-        # sudo apt-get install -y clang
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
         sudo ./llvm.sh 15
-        echo asdf before
-        ls -l /usr/bin/clang*
-        which clang
-        which clang++
-        clang --version
-        clang++ --version
-        /usr/bin/clang --version
-        /usr/bin/clang++ --version
-        which clang-15
-        clang-15 --version
-        which clang++-15
-        clang++-15 --version
         sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-15 20
         sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 20
         sudo update-alternatives --set clang /usr/bin/clang-15
         sudo update-alternatives --set clang++ /usr/bin/clang++-15
-        echo asdf after
-        which clang
-        which clang++
-        clang --version
-        clang++ --version
     - name: cmake
       env:
         CC: ${{ matrix.compiler.cc }}
