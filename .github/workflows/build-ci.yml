@@ -7,9 +7,6 @@ on:
   workflow_dispatch:
     branches:
     - github-action
-  push:
-    branches:
-    - github-action
 
 jobs:
   build:
