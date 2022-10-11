@@ -71,6 +71,8 @@ jobs:
         clang++-15 --version
         sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-15 20
         sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 20
+        sudo update-alternatives --set clang /usr/bin/clang-15
+        sudo update-alternatives --set clang++ /usr/bin/clang++-15
         echo asdf after
         which clang
         which clang++
