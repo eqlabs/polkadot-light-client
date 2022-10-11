@@ -60,6 +60,7 @@ jobs:
         CXX: ${{ matrix.compiler.cxx }}
         LIBP2P_SSH_KEY: ${{ secrets.LIBP2PDEP }}
         SORALOG_SSH_KEY: ${{ secrets.SORALOGDEP }}
+        SQLITE_SSH_KEY: ${{ secrets.SQLITEDEP }}
       run: |
         set -e
         conan profile new default
@@ -79,7 +80,7 @@ jobs:
         chmod 400 ~/.ssh/libp2p.key
         echo "${SORALOG_SSH_KEY}" > ~/.ssh/soralog.key
         chmod 400 ~/.ssh/soralog.key
-        echo "${SORALOG_SSH_KEY}" > ~/.ssh/sqlite.key
+        echo "${SQLITE_SSH_KEY}" > ~/.ssh/sqlite.key
         chmod 400 ~/.ssh/sqlite.key
         echo Host libp2p                        > ~/.ssh/config
         echo   HostName github.com              >> ~/.ssh/config
