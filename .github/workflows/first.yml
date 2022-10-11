@@ -53,7 +53,10 @@ jobs:
     - name: select clang
       if: matrix.compiler.cc == 'clang'
       run: |
-        sudo apt-get install -y clang
+        # sudo apt-get install -y clang
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh 15
     - name: cmake
       env:
         CC: ${{ matrix.compiler.cc }}
