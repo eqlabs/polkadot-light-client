@@ -6,6 +6,7 @@
 #include <libp2p/log/logger.hpp>
 #include <libp2p/log/configurator.hpp>
 
+#include "chain/spec.h"
 #include "runner/client_runner.h"
 #include "network/peer_manager.h"
 
@@ -33,6 +34,7 @@ groups:
         children:
         - name: core
           children:
+            - name: chain
             - name: network
             - name: runner
             - name: utils
@@ -72,6 +74,7 @@ groups:
         children:
         - name: core
           children:
+            - name: chain
             - name: network
             - name: runner
             - name: utils
@@ -129,13 +132,31 @@ int main(const int count, const char** args) {
     auto stop_handler = std::make_shared<plc::core::StopHandler>();
     auto runner = std::make_shared<runner::ClientRunner>(stop_handler);
     stop_handler->add(runner);
+    std::shared_ptr<network::PeerManager> connection_manager;
 
-    std::vector<std::string> peers;
-    for (int i = 1; i < count; ++i) {
-        peers.push_back(args[i]);
+    if (count == 2) {
+        auto result = plc::core::chain::Spec::loadFromFile(args[1]);
+        if (result.has_error()) {
+            exit(EXIT_FAILURE);
+        }
+        auto chainSpec = result.value();
+        connection_manager = std::make_shared<network::PeerManager>(runner, chainSpec.getBootNodes(), stop_handler);
+        stop_handler->add(connection_manager);
+
     }
-    auto peer_manager = std::make_shared<network::PeerManager>(runner, peers, stop_handler);
-    stop_handler->add(peer_manager);
+    else if (count > 2){
+        std::vector<std::string> peers;
+        for (int i = 1; i < count; ++i) {
+            peers.push_back(args[i]);
+        }
+        connection_manager = std::make_shared<network::PeerManager>(runner, peers, stop_handler);
+        stop_handler->add(connection_manager);
+    }
+    else {
+        std::cerr << "Too few arguments, needed at least 1 with chain spec file or 2 (or more) with peer addresses" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
     runner->run();
 
     mainLogger->info("Exiting application");

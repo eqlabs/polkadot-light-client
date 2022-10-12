@@ -4,3 +4,6 @@
 
 # Default build folder name
 build/*
+
+# QtCreator files
+*.user

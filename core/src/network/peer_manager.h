@@ -9,7 +9,6 @@
 #include <libp2p/network/connection_manager.hpp>
 
 #include "runner/client_runner.h"
-#include "utils/stoppable.h"
 
 namespace boost::asio {
     class io_context;
@@ -46,6 +45,9 @@ public:
     PeerManager(std::shared_ptr<runner::ClientRunner> runner,
         const std::vector<std::string>& boot_nodes,
         std::shared_ptr<plc::core::StopHandler> stop_handler);
+    PeerManager(std::shared_ptr<runner::ClientRunner> runner,
+        const std::vector<libp2p::multi::Multiaddress>& peers,
+        std::shared_ptr<plc::core::StopHandler> stop_handler);
     ~PeerManager();
     void stop() noexcept override;
 
@@ -70,6 +72,7 @@ private:
 
 private:
     void initProtocols(std::shared_ptr<boost::asio::io_context> io_context);
+    void startAndUpdateConnections(std::shared_ptr<runner::ClientRunner> runner);
     PeerState makePeerState() const;
     void onDiscoveredPeer(const libp2p::peer::PeerId& peer_id);
     void onConnectedPeer(const libp2p::peer::PeerId& peer_id);
@@ -79,7 +82,8 @@ private:
     void updateConnections();
 
 private:
-    Config m_config;
+    // -Wunused-private-field
+    // Config m_config;
     std::shared_ptr<libp2p::host::BasicHost> m_host;
     std::unique_ptr<libp2p::protocol::kademlia::Config> m_kademlia_config;
     std::shared_ptr<libp2p::protocol::kademlia::Kademlia> m_kademlia;
