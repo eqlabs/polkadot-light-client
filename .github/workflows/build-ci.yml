@@ -102,4 +102,12 @@ jobs:
         mkdir build
         cd build
         cmake -DSORALOG_GITHUB_HOST=soralog -DSQLITE_GITHUB_HOST=sqlite -DLIBP2P_GITHUB_HOST=libp2p  ..
-        make
+    - name: build
+      working-directory: ./build
+      run: |
+        make -j
+    - name: run tests
+      working-directory: ./build
+      run: |
+        make test
+
