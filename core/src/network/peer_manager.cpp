@@ -52,20 +52,22 @@ namespace plc::core::network {
 
 namespace {
 
-std::optional<libp2p::peer::PeerInfo> createPeerInfo(libp2p::multi::Multiaddress multiaddr) {
+std::optional<libp2p::peer::PeerInfo> createPeerInfo(libp2p::multi::Multiaddress multiaddr, libp2p::log::Logger logger) {
     if (auto peer_id = libp2p::peer::PeerId::fromBase58(multiaddr.getPeerId().value());
         peer_id.has_value()) {
         return libp2p::peer::PeerInfo{
             peer_id.value(),
             {multiaddr}
         };
+    } else {
+        logger->error("Error decoding multi-address from base58: {}", multiaddr.getPeerId().value());
     }
     return std::nullopt;
 }
 
-std::optional<libp2p::peer::PeerInfo> parsePeerInfo(std::string peer) {
+std::optional<libp2p::peer::PeerInfo> parsePeerInfo(std::string peer, libp2p::log::Logger logger) {
     if (auto multiaddr = libp2p::multi::Multiaddress::create(peer); multiaddr.has_value()) {
-        return createPeerInfo(multiaddr.value());
+        return createPeerInfo(multiaddr.value(), logger);
     } else {
         logger->error("Error creating multi-address from peer: {}", peer);
     }
@@ -83,7 +85,7 @@ PeerManager::PeerManager(std::shared_ptr<runner::ClientRunner> runner,
 
     m_kademlia->addPeer(m_host->getPeerInfo(), true);
     for (const auto& peer: peers) {
-        if (const auto peerInfo = parsePeerInfo(peer)) {
+        if (const auto peerInfo = parsePeerInfo(peer, m_log)) {
             m_kademlia->addPeer(*peerInfo, true);
         } else {
             m_log->error("Could not parse peer: {}", peer);
@@ -100,7 +102,7 @@ PeerManager::PeerManager(std::shared_ptr<runner::ClientRunner> runner,
 
     m_kademlia->addPeer(m_host->getPeerInfo(), true);
     for (const auto& peer: peers) {
-        if (const auto peerInfo = createPeerInfo(peer)) {
+        if (const auto peerInfo = createPeerInfo(peer, m_log)) {
             m_kademlia->addPeer(*peerInfo, true);
         }
     }
