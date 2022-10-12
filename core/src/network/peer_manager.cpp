@@ -64,9 +64,10 @@ std::optional<libp2p::peer::PeerInfo> createPeerInfo(libp2p::multi::Multiaddress
 }
 
 std::optional<libp2p::peer::PeerInfo> parsePeerInfo(std::string peer) {
-    // TODO: handle parse error
     if (auto multiaddr = libp2p::multi::Multiaddress::create(peer); multiaddr.has_value()) {
         return createPeerInfo(multiaddr.value());
+    } else {
+        logger->error("Error creating multi-address from peer: {}", peer);
     }
 
     return std::nullopt;
@@ -84,6 +85,8 @@ PeerManager::PeerManager(std::shared_ptr<runner::ClientRunner> runner,
     for (const auto& peer: peers) {
         if (const auto peerInfo = parsePeerInfo(peer)) {
             m_kademlia->addPeer(*peerInfo, true);
+        } else {
+            m_log->error("Could not parse peer: {}", peer);
         }
     }
     startAndUpdateConnections(runner);
