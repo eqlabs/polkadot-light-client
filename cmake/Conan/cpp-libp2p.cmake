@@ -4,6 +4,8 @@ set(CPP_LIBP2P_ROOT "${CMAKE_BINARY_DIR}/cpp-libp2p.cmake")
 file(MAKE_DIRECTORY "${CPP_LIBP2P_ROOT}")
 
 set(LIBP2P_GITHUB_HOST "github.com" CACHE STRING "Host for cpp-libp2p repo (maybe overriden to provide custom ssh key)")
+set(SQLITE_GITHUB_HOST "github.com" CACHE STRING "Host for sqlite repo (maybe overriden to provide custom ssh key)")
+set(SORALOG_GITHUB_HOST "github.com" CACHE STRING "Host for soralog repo (maybe overriden to provide custom ssh key)")
 
 # Configure external cpp-libp2p
 execute_process(
