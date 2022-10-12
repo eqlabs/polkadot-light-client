@@ -1,9 +1,7 @@
 #pragma once
 
 #include <deque>
-#include <libp2p/outcome/outcome.hpp>
 #include <libp2p/log/logger.hpp>
-#include "utils/move_on_copy.h"
 
 namespace plc::core {
     class StopHandler;
