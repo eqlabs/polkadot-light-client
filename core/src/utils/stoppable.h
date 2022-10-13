@@ -7,6 +7,7 @@ namespace plc::core {
     class StopHandler;
     class Stoppable {
     public:
+        virtual ~Stoppable() = default;
         virtual void stop() noexcept = 0;
     };
 
