@@ -109,7 +109,6 @@ PeerManager::PeerManager(std::shared_ptr<runner::ClientRunner> runner,
     startAndUpdateConnections(runner);
 }
 
-// TODO: gracefully stop all the connections
 PeerManager::~PeerManager() = default;
 
 static const libp2p::network::c_ares::Ares cares = {};
