@@ -3,6 +3,11 @@
 
 #include <soralog/impl/configurator_from_yaml.hpp>
 
+#include <boost/outcome/try.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/program_options.hpp>
+#include <iostream>
+
 #include <libp2p/log/logger.hpp>
 #include <libp2p/log/configurator.hpp>
 
@@ -11,6 +16,8 @@
 #include "network/peer_manager.h"
 
 namespace plc::app {
+
+using namespace boost::program_options;
 
 static const std::string replacement = "_PLCLOGFILE_";
 
@@ -84,16 +91,13 @@ groups:
   )";
 
 // pass in 'true' here to get demo logging lines, one of each class
-void prepareLogging() {
+void prepareLogging(std::string log_level, std::string log_file) {
     // prepare log system
-    // TODO: replace this with command line parameter when we have argument parsing happening
-    auto envfile = std::getenv(replacement.c_str());
+    printf("prepareLogging log_level %s\n", log_level.c_str());
+    printf("prepareLogging log_file %s\n", log_file.c_str());
     std::string config = simple_config;
-    if (envfile != nullptr) {
-        std::string logfile = envfile;
-        if (logfile.size() > 0) {
-            config = std::regex_replace(multisink_config, std::regex("(_PLCLOGFILE_)(.*)"), logfile);
-        }
+    if (log_file.size() > 0) {
+        config = std::regex_replace(multisink_config, std::regex("(_PLCLOGFILE_)(.*)"), log_file);
     }
 
     auto logging_system = std::make_shared<soralog::LoggingSystem>(
@@ -109,15 +113,58 @@ void prepareLogging() {
     }
 
     libp2p::log::setLoggingSystem(logging_system);
-    if (std::getenv("LOG_TRACE") != nullptr) {
-        libp2p::log::setLevelOfGroup("plc", soralog::Level::TRACE);
-    } else if (std::getenv("LOG_DEBUG") != nullptr) {
-        libp2p::log::setLevelOfGroup("plc", soralog::Level::DEBUG);
-    } else if (std::getenv("LOG_ERROR") != nullptr)  {
+    if (log_level.compare("off") == 0) {
+        libp2p::log::setLevelOfGroup("plc", soralog::Level::OFF);
+    } else if (log_level.compare("critical") == 0) {
+        libp2p::log::setLevelOfGroup("plc", soralog::Level::CRITICAL);
+    } else if (log_level.compare("error") == 0) {
         libp2p::log::setLevelOfGroup("plc", soralog::Level::ERROR);
+    } else if (log_level.compare("warn") == 0) {
+        libp2p::log::setLevelOfGroup("plc", soralog::Level::WARN);
+    } else if (log_level.compare("info") == 0) {
+        libp2p::log::setLevelOfGroup("plc", soralog::Level::INFO);
+    } else if (log_level.compare("verbose") == 0) {
+        libp2p::log::setLevelOfGroup("plc", soralog::Level::VERBOSE);
+    } else if (log_level.compare("debug") == 0) {
+        libp2p::log::setLevelOfGroup("plc", soralog::Level::DEBUG);
+    } else if (log_level.compare("trace") == 0) {
+        libp2p::log::setLevelOfGroup("plc", soralog::Level::TRACE);
     }
 }
 
+std::unordered_map<std::string,std::string> parseArgs(const int count, const char** args) {
+  try {
+    options_description desc{"Options", 120, 40};
+    desc.add_options()
+      ("help,h", "Help screen")
+      ("spec,s", value<std::string>()->default_value(""), "Chain spec file: mandatory")
+      ("log-file,f", value<std::string>()->default_value(""), "Logger file: optional, for multi-sink logging to both console and file")
+      ("log-level,l", value<std::string>()->default_value("info"), "Logger level: [ off | critical | error | warn | info | verbose | debug | trace ]");
+
+    variables_map vm;
+    store(parse_command_line(count, args, desc), vm);
+
+    if (vm.count("help")) {
+      std::cout << desc << '\n';
+      exit(EXIT_FAILURE);
+    }
+
+    auto spec = vm["spec"].as<std::string>();
+    if (spec.size() == 0) {
+      std::cout << "No chain spec file specified in command line" << std::endl;
+      std::cout << desc << std::endl;
+      exit(EXIT_FAILURE);
+    }
+    std::unordered_map<std::string,std::string> result;
+    result.emplace("log-level", vm["log-level"].as<std::string>());
+    result.emplace("log-file", vm["log-file"].as<std::string>());
+    result.emplace("spec", vm["spec"].as<std::string>());
+    return result;
+  } catch (const error &ex) {
+    std::cerr << ex.what() << '\n';
+    exit(EXIT_FAILURE);
+  }
+}
 
 
 } // namespace plc::app
@@ -126,7 +173,9 @@ int main(const int count, const char** args) {
     using namespace plc::app;
     using namespace plc::core;
 
-    prepareLogging();
+    auto varmap = parseArgs(count, args);
+
+    prepareLogging(varmap.at("log-level"), varmap.at("log-file"));
     auto mainLogger = libp2p::log::createLogger("main","plc");
 
     auto stop_handler = std::make_shared<plc::core::StopHandler>();
@@ -134,28 +183,20 @@ int main(const int count, const char** args) {
     stop_handler->add(runner);
     std::shared_ptr<network::PeerManager> connection_manager;
 
-    if (count == 2) {
-        auto result = plc::core::chain::Spec::loadFromFile(args[1]);
+    // if (count == 2) {
+        auto result = plc::core::chain::Spec::loadFromFile(varmap.at("spec"));
         if (result.has_error()) {
             exit(EXIT_FAILURE);
         }
         auto chainSpec = result.value();
         connection_manager = std::make_shared<network::PeerManager>(runner, chainSpec.getBootNodes(), stop_handler);
         stop_handler->add(connection_manager);
+    // }
 
-    }
-    else if (count > 2){
-        std::vector<std::string> peers;
-        for (int i = 1; i < count; ++i) {
-            peers.push_back(args[i]);
-        }
-        connection_manager = std::make_shared<network::PeerManager>(runner, peers, stop_handler);
-        stop_handler->add(connection_manager);
-    }
-    else {
-        std::cerr << "Too few arguments, needed at least 1 with chain spec file or 2 (or more) with peer addresses" << std::endl;
-        exit(EXIT_FAILURE);
-    }
+    // else {
+    //     std::cerr << "Too few arguments, needed at least 1 with chain spec file or 2 (or more) with peer addresses" << std::endl;
+    //     exit(EXIT_FAILURE);
+    // }
 
     runner->run();
 
