@@ -90,11 +90,18 @@ groups:
 # ----------------
   )";
 
-// pass in 'true' here to get demo logging lines, one of each class
+const static std::map<std::string,soralog::Level> log_levels = {
+    {"off", soralog::Level::OFF},
+    {"critical", soralog::Level::CRITICAL},
+    {"error", soralog::Level::ERROR},
+    {"warn", soralog::Level::WARN},
+    {"info", soralog::Level::INFO},
+    {"verbose", soralog::Level::VERBOSE},
+    {"debug", soralog::Level::DEBUG},
+    {"trace", soralog::Level::TRACE}
+};
+
 void prepareLogging(std::string log_level, std::string log_file) {
-    // prepare log system
-    printf("prepareLogging log_level %s\n", log_level.c_str());
-    printf("prepareLogging log_file %s\n", log_file.c_str());
     std::string config = simple_config;
     if (log_file.size() > 0) {
         config = std::regex_replace(multisink_config, std::regex("(_PLCLOGFILE_)(.*)"), log_file);
@@ -113,22 +120,12 @@ void prepareLogging(std::string log_level, std::string log_file) {
     }
 
     libp2p::log::setLoggingSystem(logging_system);
-    if (log_level.compare("off") == 0) {
-        libp2p::log::setLevelOfGroup("plc", soralog::Level::OFF);
-    } else if (log_level.compare("critical") == 0) {
-        libp2p::log::setLevelOfGroup("plc", soralog::Level::CRITICAL);
-    } else if (log_level.compare("error") == 0) {
-        libp2p::log::setLevelOfGroup("plc", soralog::Level::ERROR);
-    } else if (log_level.compare("warn") == 0) {
-        libp2p::log::setLevelOfGroup("plc", soralog::Level::WARN);
-    } else if (log_level.compare("info") == 0) {
-        libp2p::log::setLevelOfGroup("plc", soralog::Level::INFO);
-    } else if (log_level.compare("verbose") == 0) {
-        libp2p::log::setLevelOfGroup("plc", soralog::Level::VERBOSE);
-    } else if (log_level.compare("debug") == 0) {
-        libp2p::log::setLevelOfGroup("plc", soralog::Level::DEBUG);
-    } else if (log_level.compare("trace") == 0) {
-        libp2p::log::setLevelOfGroup("plc", soralog::Level::TRACE);
+
+    auto level = log_levels.find(log_level);
+    if (level != log_levels.end()) {
+        libp2p::log::setLevelOfGroup("plc", level->second);
+    } else {
+        std::cout << "Did not find log level " << log_level << " -- setting log level to default, info.\n";
     }
 }
 
@@ -183,20 +180,13 @@ int main(const int count, const char** args) {
     stop_handler->add(runner);
     std::shared_ptr<network::PeerManager> connection_manager;
 
-    // if (count == 2) {
-        auto result = plc::core::chain::Spec::loadFromFile(varmap.at("spec"));
-        if (result.has_error()) {
-            exit(EXIT_FAILURE);
-        }
-        auto chainSpec = result.value();
-        connection_manager = std::make_shared<network::PeerManager>(runner, chainSpec.getBootNodes(), stop_handler);
-        stop_handler->add(connection_manager);
-    // }
-
-    // else {
-    //     std::cerr << "Too few arguments, needed at least 1 with chain spec file or 2 (or more) with peer addresses" << std::endl;
-    //     exit(EXIT_FAILURE);
-    // }
+    auto result = plc::core::chain::Spec::loadFromFile(varmap.at("spec"));
+    if (result.has_error()) {
+        exit(EXIT_FAILURE);
+    }
+    auto chainSpec = result.value();
+    connection_manager = std::make_shared<network::PeerManager>(runner, chainSpec.getBootNodes(), stop_handler);
+    stop_handler->add(connection_manager);
 
     runner->run();
 
