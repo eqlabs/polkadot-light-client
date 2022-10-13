@@ -7,9 +7,9 @@ package plc.core.network.light2.proto;
 // A pair of arbitrary bytes.
 message Pair {
 	// The first element of the pair.
-	bytes fst = 1;
+	bytes first = 1;
 	// The second element of the pair.
-	bytes snd = 2;
+	bytes second = 2;
 }
 
 // Enumerate all possible light client request messages.
