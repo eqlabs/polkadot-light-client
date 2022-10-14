@@ -9,8 +9,9 @@ add_library(plc_core
     src/network/scale/message_reader_writer.cpp
     src/runner/client_runner.cpp
     src/runner/timer.cpp
+    src/utils/hex.cpp
     src/utils/stoppable.cpp
-    src/utils/hex.cpp)
+    src/utils/string_conversion.cpp)
 message(STATUS "dir = ${CMAKE_CURRENT_LIST_DIR}/src")
 target_include_directories(plc_core PUBLIC "${CMAKE_CURRENT_LIST_DIR}/src")
 target_link_libraries(plc_core

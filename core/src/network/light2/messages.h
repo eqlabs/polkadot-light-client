@@ -5,17 +5,19 @@
 #include <light.pb.h>
 
 #include "network/protobuf/utils.h"
+#include "utils/string_conversion.h"
+#include "utils/types.h"
 
 namespace plc::core::network::light2 {
 
 struct RemoteCallRequest {
-    std::string block;
+    BlockHash block;
     std::string method;
     std::string data;
 
     inline auto toProto() && {
         proto::RemoteCallRequest msg;
-        msg.set_block(std::move(block));
+        msg.set_block(toString(block));
         msg.set_method(std::move(method));
         msg.set_data(std::move(data));
 
@@ -29,20 +31,18 @@ struct RemoteCallResponse {
 
     std::string proof;
 
-    static inline RemoteCallResponse fromProto(ProtoMessageType&& msg) {
-        return {protobuf::takeFromPtr(msg.release_proof())};
+    static inline Result<RemoteCallResponse> fromProto(ProtoMessageType&& msg) {
+        return RemoteCallResponse{protobuf::takeFromPtr(msg.release_proof())};
     }
-
-    PLC_DEFINE_FROM_ONE_OF_MESSAGE(RemoteCallResponse, proto::Response, remote_call_response);
 };
 
 struct RemoteReadRequest {
-    std::string block;
+    BlockHash block;
     std::vector<std::string> keys;
 
     inline auto toProto() && {
         proto::RemoteReadRequest msg;
-        msg.set_block(std::move(block));
+        msg.set_block(toString(block));
         for (auto& key: keys) {
             msg.add_keys(std::move(key));
         }
@@ -58,21 +58,19 @@ struct RemoteReadResponse {
 
     std::string proof;
 
-    static inline RemoteReadResponse fromProto(ProtoMessageType&& msg) {
-        return {protobuf::takeFromPtr(msg.release_proof())};
+    static inline Result<RemoteReadResponse> fromProto(ProtoMessageType&& msg) {
+        return RemoteReadResponse{protobuf::takeFromPtr(msg.release_proof())};
     }
-
-    PLC_DEFINE_FROM_ONE_OF_MESSAGE(RemoteReadResponse, proto::Response, remote_read_response);
 };
 
 struct RemoteReadChildRequest {
-    std::string block;
+    BlockHash block;
     std::string storage_key;
     std::vector<std::string> keys;
 
     inline auto toProto() && {
         proto::RemoteReadChildRequest msg;
-        msg.set_block(std::move(block));
+        msg.set_block(toString(block));
         msg.set_storage_key(std::move(storage_key));
         for (auto& key: keys) {
             msg.add_keys(std::move(key));
@@ -83,11 +81,11 @@ struct RemoteReadChildRequest {
 };
 
 struct RemoteHeaderRequest {
-    std::string block;
+    BlockHash block;
 
     inline auto toProto() && {
         proto::RemoteHeaderRequest msg;
-        msg.set_block(std::move(block));
+        msg.set_block(toString(block));
 
         return msg;
     }
@@ -100,14 +98,12 @@ struct RemoteHeaderResponse {
     std::string header;
     std::string proof;
 
-    static inline RemoteHeaderResponse fromProto(proto::RemoteHeaderResponse&& msg) {
-        return {
+    static inline Result<RemoteHeaderResponse> fromProto(proto::RemoteHeaderResponse&& msg) {
+        return RemoteHeaderResponse{
             protobuf::takeFromPtr(msg.release_header()),
             protobuf::takeFromPtr(msg.release_proof()),
         };
     }
-
-    PLC_DEFINE_FROM_ONE_OF_MESSAGE(RemoteHeaderResponse, proto::Response, remote_header_response);
 };
 
 struct RemoteChangesRequest {
@@ -140,8 +136,8 @@ struct RemoteChangesResponse {
     std::vector<std::pair<std::string, std::string>> roots;
     std::string roots_proof;
 
-    static inline RemoteChangesResponse fromProto(ProtoMessageType&& msg) {
-        return {
+    static inline Result<RemoteChangesResponse> fromProto(ProtoMessageType&& msg) {
+        return RemoteChangesResponse{
             protobuf::takeFromPtr(msg.release_max()),
             protobuf::takeFromCollection(*msg.mutable_proof()),
             protobuf::takeFromCollection(*msg.mutable_roots(), [](auto& pair) {
@@ -151,8 +147,6 @@ struct RemoteChangesResponse {
             protobuf::takeFromPtr(msg.release_roots_proof()),
         };
     }
-
-    PLC_DEFINE_FROM_ONE_OF_MESSAGE(RemoteChangesResponse, proto::Response, remote_changes_response);
 };
 
 

@@ -7,6 +7,8 @@
 #include <stddef.h>
 #include <vector>
 
+#include "utils/result.h"
+
 namespace plc::core::network::protobuf {
 
 template <typename T>
@@ -23,7 +25,7 @@ concept ConvertibleToProtobuf = requires() {
 template <typename T>
 concept ConvertibleFromProtobuf = requires {
     typename T::ProtoMessageType;
-    { T::fromProto(std::declval<typename T::ProtoMessageType&&>()) } -> std::same_as<T>;
+    { T::fromProto(std::declval<typename T::ProtoMessageType&&>()) } -> std::same_as<Result<T>>;
 };
 
 void writeToVec(
@@ -41,19 +43,6 @@ void writeToVec(ConvertibleToProtobuf auto&& msg,
     std::vector<uint8_t>& buf) {
     writeToVec(std::move(msg).toProto(), buf);
 }
-
-// Unfortunately protobuf doesn't give a chance to create a generic solution for getting
-// the desired type
-#define PLC_DEFINE_FROM_ONE_OF_MESSAGE(ResultMessageType, GenericProtoMessageType, field_name) \
-inline std::optional<ResultMessageType> fromProto(GenericProtoMessageType&& msg) { \
-    if (auto* typed_message = msg.release_##field_name()) { \
-        std::unique_ptr<std::remove_pointer_t<decltype(typed_message)>> message_holder{typed_message}; \
-        return {fromProto(std::move(*message_holder))}; \
-    } else { \
-        return std::nullopt; \
-    } \
-}
-
 
 /// @brief This method is handy to extract values from protobuf objects
 /// extracted from release_XXX methods (see https://developers.google.com/protocol-buffers/docs/reference/cpp-generated)
