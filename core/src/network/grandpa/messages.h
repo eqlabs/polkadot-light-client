@@ -7,11 +7,10 @@
 #include <boost/variant/variant.hpp>
 
 #include "network/scale/streams.h"
+#include "utils/types.h"
 
 namespace plc::core::network::grandpa {
 
-using BlockNumber = uint32_t;
-using BlockHash = std::array<uint8_t, 32>;
 using Signature = std::array<uint8_t, 64>;
 using Id = std::array<uint8_t, 32>;
 

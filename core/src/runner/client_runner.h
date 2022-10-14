@@ -9,14 +9,16 @@
 
 #include "runner/timer.h"
 #include "utils/result.h"
+#include "utils/stoppable.h"
 
 namespace plc::core::runner {
 
-class ClientRunner {
+class ClientRunner final : public Stoppable {
 public:
-    ClientRunner() noexcept;
+    ClientRunner(std::shared_ptr<plc::core::StopHandler> stop_handler) noexcept;
 
     void run() noexcept;
+    void stop() noexcept override;
 
     void postFunc(std::invocable<> auto&& func) noexcept {
         m_io_service->post(std::forward<decltype(func)>(func));
@@ -25,7 +27,7 @@ public:
         m_io_service->dispatch(std::forward<decltype(func)>(func));
     }
 
-    // We have only the dispatch task method withut `postTask`
+    // We have only the dispatch task method without `postTask`
     // because cppcoro::task always suspends before execution.
     // That makes it impossible to "capture" members to local variables in a task method:
     // task<void> someTask() {
@@ -44,6 +46,8 @@ private:
     // we store it by shared pointer now
     std::shared_ptr<boost::asio::io_service> m_io_service;
     std::optional<boost::asio::io_service::work> m_work;
+    libp2p::log::Logger m_log = libp2p::log::createLogger("ClientRunner","runner");
+    std::shared_ptr<StopHandler> m_stop_handler;
 };
 
 } // plc::core::runner
