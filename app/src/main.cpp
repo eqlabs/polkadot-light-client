@@ -86,6 +86,12 @@ groups:
 # ----------------
   )";
 
+struct CommandLineArgs {
+    soralog::Level log_level;
+    std::string log_file;
+    std::string spec_file;
+};
+
 const static std::map<std::string,soralog::Level> log_levels = {
     {"off", soralog::Level::OFF},
     {"critical", soralog::Level::CRITICAL},
@@ -98,11 +104,11 @@ const static std::map<std::string,soralog::Level> log_levels = {
 };
 
 const static std::string help_label = "help";
-const static std::string spec_label = "spec";
+const static std::string spec_file_label = "spec-file";
 const static std::string log_file_label = "log-file";
 const static std::string log_level_label = "log-level";
 
-void prepareLogging(const std::string &log_level, const std::string &log_file) {
+void prepareLogging(soralog::Level &log_level, const std::string &log_file) {
     std::string config = simple_config;
     if (log_file.size() > 0) {
         config = std::regex_replace(multisink_config, std::regex("(_PLCLOGFILE_)(.*)"), log_file);
@@ -121,24 +127,16 @@ void prepareLogging(const std::string &log_level, const std::string &log_file) {
     }
 
     libp2p::log::setLoggingSystem(logging_system);
-
-    auto level = log_levels.find(log_level);
-    if (level != log_levels.end()) {
-        libp2p::log::setLevelOfGroup("plc", level->second);
-        std::cout << "Setting log level to " << log_level << '\n';
-    } else {
-        std::cout << "Did not find log level " << log_level << " -- setting log level to default, info.\n";
-        libp2p::log::setLevelOfGroup("plc", soralog::Level::INFO);
-    }
+    libp2p::log::setLevelOfGroup("plc", log_level);
 }
 
-std::unordered_map<std::string,std::string> parseArgs(const int &count, const char** &args) {
+CommandLineArgs parseArgs(const int &count, const char** &args) {
     using namespace boost::program_options;
     try {
         options_description desc{"Options", 120, 40};
         desc.add_options()
             ((help_label + ",h").c_str(), "Help screen")
-            ((spec_label + ",s").c_str(), value<std::string>()->default_value(""), "Chain spec file: mandatory")
+            ((spec_file_label + ",s").c_str(), value<std::string>()->default_value(""), "Chain spec file: mandatory")
             ((log_file_label + ",f").c_str(), value<std::string>()->default_value(""), "Logger file: optional, for multi-sink logging to both console and file")
             ((log_level_label + ",l").c_str(), value<std::string>()->default_value("info"), "Logger level: [ off | critical | error | warn | info | verbose | debug | trace ]");
 
@@ -147,20 +145,28 @@ std::unordered_map<std::string,std::string> parseArgs(const int &count, const ch
 
         if (vm.count(help_label)) {
             std::cout << desc << '\n';
-            exit(EXIT_FAILURE);
+            exit(EXIT_SUCCESS);
         }
 
-        auto spec = vm[spec_label].as<std::string>();
-        if (spec.size() == 0) {
+        CommandLineArgs result;
+        result.log_file = vm[log_file_label].as<std::string>();
+        result.spec_file = vm[spec_file_label].as<std::string>();
+        if (result.spec_file.size() == 0) {
             std::cout << "No chain spec file specified in command line" << std::endl;
             std::cout << desc << std::endl;
             exit(EXIT_FAILURE);
         }
 
-        std::unordered_map<std::string,std::string> result;
-        result.emplace(log_level_label, vm[log_level_label].as<std::string>());
-        result.emplace(log_file_label, vm[log_file_label].as<std::string>());
-        result.emplace(spec_label, vm[spec_label].as<std::string>());
+        result.log_level = soralog::Level::INFO;
+        auto log_level_param = vm[log_level_label].as<std::string>();
+        auto log_level_entry = log_levels.find(log_level_param);
+        if (log_level_entry != log_levels.end()) {
+            result.log_level = log_level_entry->second;
+            std::cout << "Setting log level to " << log_level_entry->first << '\n';
+        } else {
+            std::cout << "Did not find log level " << log_level_param << "\n";
+            exit(EXIT_FAILURE);
+        }
         return result;
     } catch (const error &ex) {
         std::cerr << ex.what() << '\n';
@@ -175,9 +181,9 @@ int main(const int count, const char** args) {
     using namespace plc::app;
     using namespace plc::core;
 
-    auto arg_map = parseArgs(count, args);
+    auto command_line_args = parseArgs(count, args);
 
-    prepareLogging(arg_map.at(log_level_label),arg_map.at(log_file_label));
+    prepareLogging(command_line_args.log_level, command_line_args.log_file);
     auto mainLogger = libp2p::log::createLogger("main","plc");
 
     auto stop_handler = std::make_shared<plc::core::StopHandler>();
@@ -185,7 +191,7 @@ int main(const int count, const char** args) {
     stop_handler->add(runner);
     std::shared_ptr<network::PeerManager> connection_manager;
 
-    auto result = plc::core::chain::Spec::loadFromFile(arg_map.at(spec_label));
+    auto result = plc::core::chain::Spec::loadFromFile(command_line_args.spec_file);
     if (result.has_error()) {
         exit(EXIT_FAILURE);
     }
