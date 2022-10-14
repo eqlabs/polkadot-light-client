@@ -3,7 +3,6 @@
 
 #include <soralog/impl/configurator_from_yaml.hpp>
 
-#include <boost/outcome/try.hpp>
 #include <boost/program_options.hpp>
 #include <iostream>
 
