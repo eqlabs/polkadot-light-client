@@ -65,6 +65,4 @@ cppcoro::task<Result<RemoteChangesResponse>> Protocol::send(RemoteChangesRequest
     co_return co_await send<RemoteChangesRequest, RemoteChangesResponse>(std::move(request), peerId);
 }
 
-
-
 } // namespace plc::core::network::light2

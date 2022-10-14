@@ -149,5 +149,4 @@ struct RemoteChangesResponse {
     }
 };
 
-
 } // namespace plc::core::network::light2
