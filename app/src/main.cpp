@@ -133,7 +133,7 @@ void prepareLogging(const std::string &log_level, const std::string &log_file) {
     }
 }
 
-std::unordered_map<std::string,std::string> parseArgs(const int count, const char** args) {
+std::unordered_map<std::string,std::string> parseArgs(const int &count, const char** &args) {
     using namespace boost::program_options;
     try {
         options_description desc{"Options", 120, 40};
