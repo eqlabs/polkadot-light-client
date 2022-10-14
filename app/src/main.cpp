@@ -126,7 +126,6 @@ void prepareLogging(const std::string &log_level, const std::string &log_file) {
     if (level != log_levels.end()) {
         libp2p::log::setLevelOfGroup("plc", level->second);
         std::cout << "Setting log level to " << log_level << '\n';
-
     } else {
         std::cout << "Did not find log level " << log_level << " -- setting log level to default, info.\n";
         libp2p::log::setLevelOfGroup("plc", soralog::Level::INFO);
