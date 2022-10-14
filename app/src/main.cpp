@@ -127,9 +127,12 @@ int main(const int count, const char** args) {
     using namespace plc::core;
 
     prepareLogging();
+    auto mainLogger = libp2p::log::createLogger("main","plc");
 
-    auto runner = runner::ClientRunner();
-    std::unique_ptr<network::PeerManager> connection_manager;
+    auto stop_handler = std::make_shared<plc::core::StopHandler>();
+    auto runner = std::make_shared<runner::ClientRunner>(stop_handler);
+    stop_handler->add(runner);
+    std::shared_ptr<network::PeerManager> connection_manager;
 
     if (count == 2) {
         auto result = plc::core::chain::Spec::loadFromFile(args[1]);
@@ -137,21 +140,26 @@ int main(const int count, const char** args) {
             exit(EXIT_FAILURE);
         }
         auto chainSpec = result.value();
-        connection_manager = std::make_unique<network::PeerManager>(runner, chainSpec.getBootNodes());
+        connection_manager = std::make_shared<network::PeerManager>(runner, chainSpec.getBootNodes(), stop_handler);
+        stop_handler->add(connection_manager);
+
     }
     else if (count > 2){
         std::vector<std::string> peers;
         for (int i = 1; i < count; ++i) {
             peers.push_back(args[i]);
         }
-        connection_manager = std::make_unique<network::PeerManager>(runner, peers);
+        connection_manager = std::make_shared<network::PeerManager>(runner, peers, stop_handler);
+        stop_handler->add(connection_manager);
     }
     else {
         std::cerr << "Too few arguments, needed at least 1 with chain spec file or 2 (or more) with peer addresses" << std::endl;
         exit(EXIT_FAILURE);
     }
 
-    runner.run();
+    runner->run();
+
+    mainLogger->info("Exiting application");
 
     return 0;
 }
