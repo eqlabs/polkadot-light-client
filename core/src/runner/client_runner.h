@@ -27,7 +27,7 @@ public:
         m_io_service->dispatch(std::forward<decltype(func)>(func));
     }
 
-    // We have only the dispatch task method withut `postTask`
+    // We have only the dispatch task method without `postTask`
     // because cppcoro::task always suspends before execution.
     // That makes it impossible to "capture" members to local variables in a task method:
     // task<void> someTask() {
