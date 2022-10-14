@@ -134,38 +134,39 @@ void prepareLogging(const std::string &log_level, const std::string &log_file) {
 }
 
 std::unordered_map<std::string,std::string> parseArgs(const int count, const char** args) {
-  using namespace boost::program_options;
-  try {
-    options_description desc{"Options", 120, 40};
-    desc.add_options()
-      ((help_label + ",h").c_str(), "Help screen")
-      ((spec_label + ",s").c_str(), value<std::string>()->default_value(""), "Chain spec file: mandatory")
-      ((log_file_label + ",f").c_str(), value<std::string>()->default_value(""), "Logger file: optional, for multi-sink logging to both console and file")
-      ((log_level_label + ",l").c_str(), value<std::string>()->default_value("info"), "Logger level: [ off | critical | error | warn | info | verbose | debug | trace ]");
+    using namespace boost::program_options;
+    try {
+        options_description desc{"Options", 120, 40};
+        desc.add_options()
+            ((help_label + ",h").c_str(), "Help screen")
+            ((spec_label + ",s").c_str(), value<std::string>()->default_value(""), "Chain spec file: mandatory")
+            ((log_file_label + ",f").c_str(), value<std::string>()->default_value(""), "Logger file: optional, for multi-sink logging to both console and file")
+            ((log_level_label + ",l").c_str(), value<std::string>()->default_value("info"), "Logger level: [ off | critical | error | warn | info | verbose | debug | trace ]");
 
-    variables_map vm;
-    store(parse_command_line(count, args, desc), vm);
+        variables_map vm;
+        store(parse_command_line(count, args, desc), vm);
 
-    if (vm.count(help_label)) {
-      std::cout << desc << '\n';
-      exit(EXIT_FAILURE);
+        if (vm.count(help_label)) {
+            std::cout << desc << '\n';
+            exit(EXIT_FAILURE);
+        }
+
+        auto spec = vm[spec_label].as<std::string>();
+        if (spec.size() == 0) {
+            std::cout << "No chain spec file specified in command line" << std::endl;
+            std::cout << desc << std::endl;
+            exit(EXIT_FAILURE);
+        }
+
+        std::unordered_map<std::string,std::string> result;
+        result.emplace(log_level_label, vm[log_level_label].as<std::string>());
+        result.emplace(log_file_label, vm[log_file_label].as<std::string>());
+        result.emplace(spec_label, vm[spec_label].as<std::string>());
+        return result;
+    } catch (const error &ex) {
+        std::cerr << ex.what() << '\n';
+        exit(EXIT_FAILURE);
     }
-
-    auto spec = vm[spec_label].as<std::string>();
-    if (spec.size() == 0) {
-      std::cout << "No chain spec file specified in command line" << std::endl;
-      std::cout << desc << std::endl;
-      exit(EXIT_FAILURE);
-    }
-    std::unordered_map<std::string,std::string> result;
-    result.emplace(log_level_label, vm[log_level_label].as<std::string>());
-    result.emplace(log_file_label, vm[log_file_label].as<std::string>());
-    result.emplace(spec_label, vm[spec_label].as<std::string>());
-    return result;
-  } catch (const error &ex) {
-    std::cerr << ex.what() << '\n';
-    exit(EXIT_FAILURE);
-  }
 }
 
 
