@@ -1,6 +1,6 @@
 # TODO: we don't have Conan package for cpp-libp2p for now
 # So we add it as an external project.
-set(CPP_LIBP2P_ROOT "${CMAKE_BINARY_DIR}/cpp-libp2p.cmake")
+set(CPP_LIBP2P_ROOT "${CMAKE_BINARY_DIR}/cpp-libp2p")
 file(MAKE_DIRECTORY "${CPP_LIBP2P_ROOT}")
 
 set(LIBP2P_GITHUB_HOST "github.com" CACHE STRING "Host for cpp-libp2p repo (maybe overriden to provide custom ssh key)")
