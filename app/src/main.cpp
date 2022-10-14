@@ -103,7 +103,7 @@ const static std::string spec_label = "spec";
 const static std::string log_file_label = "log-file";
 const static std::string log_level_label = "log-level";
 
-void prepareLogging(std::string log_level, std::string log_file) {
+void prepareLogging(const std::string &log_level, const std::string &log_file) {
     std::string config = simple_config;
     if (log_file.size() > 0) {
         config = std::regex_replace(multisink_config, std::regex("(_PLCLOGFILE_)(.*)"), log_file);
@@ -126,8 +126,11 @@ void prepareLogging(std::string log_level, std::string log_file) {
     auto level = log_levels.find(log_level);
     if (level != log_levels.end()) {
         libp2p::log::setLevelOfGroup("plc", level->second);
+        std::cout << "Setting log level to " << log_level << '\n';
+
     } else {
         std::cout << "Did not find log level " << log_level << " -- setting log level to default, info.\n";
+        libp2p::log::setLevelOfGroup("plc", soralog::Level::INFO);
     }
 }
 
