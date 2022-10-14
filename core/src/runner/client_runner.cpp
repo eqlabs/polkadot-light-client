@@ -11,7 +11,8 @@
 namespace plc::core::runner {
 
 
-ClientRunner::ClientRunner() noexcept : m_io_service(std::make_shared<boost::asio::io_service>()) {
+ClientRunner::ClientRunner(std::shared_ptr<plc::core::StopHandler> stop_handler) noexcept : m_stop_handler(stop_handler),
+m_io_service(std::make_shared<boost::asio::io_service>()) {
 }
 
 namespace {
@@ -32,7 +33,10 @@ struct FireAndForget {
         }
 
         void unhandled_exception() noexcept {
-          // TODO: need error handling here
+          auto logger = libp2p::log::createLogger("FireAndForget","network");
+          logger->error("unhandled_exception");
+          // Here I'm attempting a graceful exit
+          // TODO : get access to the stop handler from client runner
           std::terminate();
         }
     };
@@ -49,8 +53,9 @@ FireAndForget fireAndForget(cppcoro::task<void>&& task) noexcept {
 
 } // namespace
 
+
+
 void ClientRunner::run() noexcept {
-    // TODO: implement proper stop logic
     m_work.emplace(*m_io_service);
 
     m_io_service->run();
@@ -60,6 +65,11 @@ void ClientRunner::dispatchTask(cppcoro::task<void>&& task) noexcept {
     m_io_service->dispatch([task = MoveOnCopy<cppcoro::task<void>>{std::move(task)}]() mutable {
         fireAndForget(task.take());
     });
+}
+
+void ClientRunner::stop() noexcept {
+    m_log->debug("client runner: stop");
+    m_io_service->stop();
 }
 
 std::shared_ptr<boost::asio::io_service> ClientRunner::getService() const noexcept {

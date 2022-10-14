@@ -54,21 +54,24 @@ namespace plc::core::network {
 
 namespace {
 
-std::optional<libp2p::peer::PeerInfo> createPeerInfo(libp2p::multi::Multiaddress multiaddr) {
+std::optional<libp2p::peer::PeerInfo> createPeerInfo(libp2p::multi::Multiaddress multiaddr, libp2p::log::Logger logger) {
     if (auto peer_id = libp2p::peer::PeerId::fromBase58(multiaddr.getPeerId().value());
         peer_id.has_value()) {
         return libp2p::peer::PeerInfo{
             peer_id.value(),
             {multiaddr}
         };
+    } else {
+        logger->error("Error decoding multi-address from base58: {}", multiaddr.getPeerId().value());
     }
     return std::nullopt;
 }
 
-std::optional<libp2p::peer::PeerInfo> parsePeerInfo(std::string peer) {
-    // TODO: handle parse error
+std::optional<libp2p::peer::PeerInfo> parsePeerInfo(std::string peer, libp2p::log::Logger logger) {
     if (auto multiaddr = libp2p::multi::Multiaddress::create(peer); multiaddr.has_value()) {
-        return createPeerInfo(multiaddr.value());
+        return createPeerInfo(multiaddr.value(), logger);
+    } else {
+        logger->error("Error creating multi-address from peer: {}", peer);
     }
 
     return std::nullopt;
@@ -93,33 +96,38 @@ static constexpr size_t max_connections = 20;
 
 } // namespace
 
-PeerManager::PeerManager(runner::ClientRunner& runner,
-    const std::vector<std::string>& peers) : m_runner{runner} {
-    initProtocols(runner.getService());
+PeerManager::PeerManager(std::shared_ptr<runner::ClientRunner> runner,
+    const std::vector<std::string>& peers,
+    std::shared_ptr<plc::core::StopHandler> stop_handler) :
+    m_stop_handler(stop_handler) {
+    initProtocols(runner->getService());
 
     m_kademlia->addPeer(m_host->getPeerInfo(), true);
     for (const auto& peer: peers) {
-        if (const auto peerInfo = parsePeerInfo(peer)) {
+        if (const auto peerInfo = parsePeerInfo(peer, m_log)) {
+            m_kademlia->addPeer(*peerInfo, true);
+        } else {
+            m_log->error("Could not parse peer: {}", peer);
+        }
+    }
+    startAndUpdateConnections(runner);
+}
+
+PeerManager::PeerManager(std::shared_ptr<runner::ClientRunner> runner,
+    const std::vector<libp2p::multi::Multiaddress> &peers,
+    std::shared_ptr<plc::core::StopHandler> stop_handler) :
+    m_stop_handler(stop_handler) {
+    initProtocols(runner->getService());
+
+    m_kademlia->addPeer(m_host->getPeerInfo(), true);
+    for (const auto& peer: peers) {
+        if (const auto peerInfo = createPeerInfo(peer, m_log)) {
             m_kademlia->addPeer(*peerInfo, true);
         }
     }
     startAndUpdateConnections(runner);
 }
 
-PeerManager::PeerManager(runner::ClientRunner &runner,
-                         const std::vector<libp2p::multi::Multiaddress> &peers) : m_runner{runner} {
-    initProtocols(runner.getService());
-
-    m_kademlia->addPeer(m_host->getPeerInfo(), true);
-    for (const auto& peer: peers) {
-        if (const auto peerInfo = createPeerInfo(peer)) {
-            m_kademlia->addPeer(*peerInfo, true);
-        }
-    }
-    startAndUpdateConnections(runner);
-}
-
-// TODO: gracefully stop all the connections
 PeerManager::~PeerManager() = default;
 
 static const libp2p::network::c_ares::Ares cares = {};
@@ -234,12 +242,12 @@ void PeerManager::initProtocols(std::shared_ptr<boost::asio::io_context> io_cont
     });
 }
 
-void PeerManager::startAndUpdateConnections(runner::ClientRunner &runner) {
+void PeerManager::startAndUpdateConnections(std::shared_ptr<runner::ClientRunner> runner) {
     m_identify->start();
     m_kademlia->start();
     m_grandpa->start();
     m_timer = std::make_unique<runner::PeriodicTimer>(
-        runner.makePeriodicTimer(std::chrono::milliseconds(200), [this]() {
+        runner->makePeriodicTimer(std::chrono::milliseconds(200), [this]() {
         updateConnections();
     }));
     updateConnections();
@@ -341,6 +349,17 @@ void PeerManager::disconnect(const libp2p::peer::PeerId& peer_id) {
     }
     if (peer_id != m_host->getId()) {
         m_host->disconnect(peer_id);
+    }
+}
+
+void PeerManager::stop() noexcept {
+    m_log->debug("peer manager: stop");
+    for (auto& [peer, state]: m_peers_info) {
+        if (state.state == ConnectionState::Connected) {
+            state.action = ConnectionAction::Disconnecting;
+            m_log->debug("  disconnecting from {}", peer.toHex());
+            m_host->disconnect(peer);
+        }
     }
 }
 

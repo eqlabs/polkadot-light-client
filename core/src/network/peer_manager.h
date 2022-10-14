@@ -41,18 +41,21 @@ class Protocol;
 
 } // namespace grandpa
 
-class PeerManager final {
+class PeerManager final : public Stoppable {
 public:
     struct Config {
         size_t max_peers_to_connect;
     };
 
 public:
-    PeerManager(runner::ClientRunner& runner,
-        const std::vector<std::string>& boot_nodes);
-    PeerManager(runner::ClientRunner& runner,
-        const std::vector<libp2p::multi::Multiaddress>& peers);
+    PeerManager(std::shared_ptr<runner::ClientRunner> runner,
+        const std::vector<std::string>& boot_nodes,
+        std::shared_ptr<plc::core::StopHandler> stop_handler);
+    PeerManager(std::shared_ptr<runner::ClientRunner> runner,
+        const std::vector<libp2p::multi::Multiaddress>& peers,
+        std::shared_ptr<plc::core::StopHandler> stop_handler);
     ~PeerManager();
+    void stop() noexcept override;
 
 private:
     enum class ConnectionState {
@@ -75,7 +78,7 @@ private:
 
 private:
     void initProtocols(std::shared_ptr<boost::asio::io_context> io_context);
-    void startAndUpdateConnections(runner::ClientRunner& runner);
+    void startAndUpdateConnections(std::shared_ptr<runner::ClientRunner> runner);
     PeerState makePeerState() const;
     void onDiscoveredPeer(const libp2p::peer::PeerId& peer_id);
     void onConnectedPeer(const libp2p::peer::PeerId& peer_id);
@@ -101,6 +104,7 @@ private:
     size_t m_current_tick = 0;
     std::unique_ptr<runner::PeriodicTimer> m_timer;
     libp2p::log::Logger m_log = libp2p::log::createLogger("PeerManager","network");
+    std::shared_ptr<StopHandler> m_stop_handler;
 };
 
 } // namespace plc::core::network
