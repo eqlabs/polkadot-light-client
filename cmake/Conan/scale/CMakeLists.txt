@@ -5,7 +5,7 @@ include(ExternalProject)
 
 set(INSTALL_DIR "${CMAKE_BINARY_DIR}/install")
 ExternalProject_Add(cpp-libp2p
-    GIT_REPOSITORY     "git@github.com:eqlabs/scale-codec-cpp.git"
+    GIT_REPOSITORY     "git@${GITHUB_HOST}:eqlabs/scale-codec-cpp.git"
     GIT_TAG            "master"
     GIT_SHALLOW        TRUE
     DOWNLOAD_DIR       "${CMAKE_BINARY_DIR}/download"
