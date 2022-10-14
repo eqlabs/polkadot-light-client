@@ -77,8 +77,8 @@ private:
     };
 
 private:
-    void initProtocols(std::shared_ptr<boost::asio::io_context> io_context);
-    void startAndUpdateConnections(std::shared_ptr<runner::ClientRunner> runner);
+    void initProtocols();
+    void startAndUpdateConnections();
     PeerState makePeerState() const;
     void onDiscoveredPeer(const libp2p::peer::PeerId& peer_id);
     void onConnectedPeer(const libp2p::peer::PeerId& peer_id);
@@ -89,7 +89,7 @@ private:
     void updateConnections();
 
 private:
-    runner::ClientRunner& m_runner;
+    std::shared_ptr<runner::ClientRunner> m_runner;
     // -Wunused-private-field
     // Config m_config;
     std::shared_ptr<libp2p::host::BasicHost> m_host;
