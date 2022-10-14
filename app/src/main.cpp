@@ -4,7 +4,6 @@
 #include <soralog/impl/configurator_from_yaml.hpp>
 
 #include <boost/outcome/try.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/program_options.hpp>
 #include <iostream>
 
@@ -16,8 +15,6 @@
 #include "network/peer_manager.h"
 
 namespace plc::app {
-
-using namespace boost::program_options;
 
 static const std::string replacement = "_PLCLOGFILE_";
 
@@ -101,6 +98,11 @@ const static std::map<std::string,soralog::Level> log_levels = {
     {"trace", soralog::Level::TRACE}
 };
 
+const static std::string help_label = "help";
+const static std::string spec_label = "spec";
+const static std::string log_file_label = "log-file";
+const static std::string log_level_label = "log-level";
+
 void prepareLogging(std::string log_level, std::string log_file) {
     std::string config = simple_config;
     if (log_file.size() > 0) {
@@ -130,32 +132,33 @@ void prepareLogging(std::string log_level, std::string log_file) {
 }
 
 std::unordered_map<std::string,std::string> parseArgs(const int count, const char** args) {
+  using namespace boost::program_options;
   try {
     options_description desc{"Options", 120, 40};
     desc.add_options()
-      ("help,h", "Help screen")
-      ("spec,s", value<std::string>()->default_value(""), "Chain spec file: mandatory")
-      ("log-file,f", value<std::string>()->default_value(""), "Logger file: optional, for multi-sink logging to both console and file")
-      ("log-level,l", value<std::string>()->default_value("info"), "Logger level: [ off | critical | error | warn | info | verbose | debug | trace ]");
+      ((help_label + ",h").c_str(), "Help screen")
+      ((spec_label + ",s").c_str(), value<std::string>()->default_value(""), "Chain spec file: mandatory")
+      ((log_file_label + ",f").c_str(), value<std::string>()->default_value(""), "Logger file: optional, for multi-sink logging to both console and file")
+      ((log_level_label + ",l").c_str(), value<std::string>()->default_value("info"), "Logger level: [ off | critical | error | warn | info | verbose | debug | trace ]");
 
     variables_map vm;
     store(parse_command_line(count, args, desc), vm);
 
-    if (vm.count("help")) {
+    if (vm.count(help_label)) {
       std::cout << desc << '\n';
       exit(EXIT_FAILURE);
     }
 
-    auto spec = vm["spec"].as<std::string>();
+    auto spec = vm[spec_label].as<std::string>();
     if (spec.size() == 0) {
       std::cout << "No chain spec file specified in command line" << std::endl;
       std::cout << desc << std::endl;
       exit(EXIT_FAILURE);
     }
     std::unordered_map<std::string,std::string> result;
-    result.emplace("log-level", vm["log-level"].as<std::string>());
-    result.emplace("log-file", vm["log-file"].as<std::string>());
-    result.emplace("spec", vm["spec"].as<std::string>());
+    result.emplace(log_level_label, vm[log_level_label].as<std::string>());
+    result.emplace(log_file_label, vm[log_file_label].as<std::string>());
+    result.emplace(spec_label, vm[spec_label].as<std::string>());
     return result;
   } catch (const error &ex) {
     std::cerr << ex.what() << '\n';
@@ -170,9 +173,9 @@ int main(const int count, const char** args) {
     using namespace plc::app;
     using namespace plc::core;
 
-    auto varmap = parseArgs(count, args);
+    auto arg_map = parseArgs(count, args);
 
-    prepareLogging(varmap.at("log-level"), varmap.at("log-file"));
+    prepareLogging(arg_map.at(log_level_label),arg_map.at(log_file_label));
     auto mainLogger = libp2p::log::createLogger("main","plc");
 
     auto stop_handler = std::make_shared<plc::core::StopHandler>();
@@ -180,7 +183,7 @@ int main(const int count, const char** args) {
     stop_handler->add(runner);
     std::shared_ptr<network::PeerManager> connection_manager;
 
-    auto result = plc::core::chain::Spec::loadFromFile(varmap.at("spec"));
+    auto result = plc::core::chain::Spec::loadFromFile(arg_map.at(spec_label));
     if (result.has_error()) {
         exit(EXIT_FAILURE);
     }
