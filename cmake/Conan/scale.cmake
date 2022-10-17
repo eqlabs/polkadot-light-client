@@ -3,9 +3,11 @@
 set(SCALE_ROOT "${CMAKE_BINARY_DIR}/scale")
 file(MAKE_DIRECTORY "${SCALE_ROOT}")
 
+set(SCALE_GITHUB_HOST "github.com" CACHE STRING "Host for scale-codec-cpp repo (maybe overriden to provide custom ssh key)")
+
 # Configure external scale
 execute_process(
-    COMMAND ${CMAKE_COMMAND} "${CMAKE_CURRENT_LIST_DIR}/scale" -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+    COMMAND ${CMAKE_COMMAND} "${CMAKE_CURRENT_LIST_DIR}/scale" -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE} -DGITHUB_HOST=${SCALE_GITHUB_HOST}
     WORKING_DIRECTORY "${SCALE_ROOT}"
 )
 

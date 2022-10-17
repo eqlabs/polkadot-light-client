@@ -41,7 +41,7 @@ class Protocol;
 
 namespace light2 {
 class Protocol;
-}
+} // namespace light2
 
 class PeerManager final : public Stoppable {
 public:
