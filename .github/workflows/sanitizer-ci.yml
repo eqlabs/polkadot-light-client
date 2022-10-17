@@ -57,7 +57,7 @@ jobs:
         path: ~/.conan/data
         key: ${{ matrix.compiler.cc }}-san-${{ env.cache-name }}-${{ matrix.flag.san }}
         restore-keys: |
-          ${{ matrix.compiler.cc }}-san-${{ env.cache-name }}
+          ${{ matrix.compiler.cc }}-san-${{ env.cache-name }}-${{ matrix.flag.san }}
     - name: select gcc
       if: matrix.compiler.cc == 'gcc'
       run: |
