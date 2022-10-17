@@ -26,8 +26,8 @@ jobs:
         #   "cxx": "clang++"
         # }]
         compiler: [{
-          "cc": "gcc",
-          "cxx": "g++"
+          "cc": "clang",
+          "cxx": "clang++"
          }]
         flag: [
           {"san": "ASAN"},
