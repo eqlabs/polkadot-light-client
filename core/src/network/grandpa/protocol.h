@@ -17,12 +17,6 @@ class ClientRunner;
 
 } // namespace plc::core::runner
 
-namespace plc::core::network {
-
-class ScaleMessageReadWriter;
-
-} // namespace plc::core::network
-
 namespace plc::core::network::grandpa {
 
 class Observer {

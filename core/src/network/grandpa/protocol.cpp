@@ -5,7 +5,7 @@
 #include "network/common/errors.h"
 #include "network/common/roles.h"
 #include "network/common/format_peer_id.h"
-#include "network/scale_reader_writer.h"
+#include "network/scale/message_reader_writer.h"
 #include "runner/client_runner.h"
 #include "utils/callback_to_coro.h"
 
@@ -55,7 +55,7 @@ void Protocol::stop() {
 }
 
 cppcoro::task<void> Protocol::readingTask(std::shared_ptr<Stream> stream) {
-    auto read_writer = std::make_shared<ScaleMessageReadWriter>(std::move(stream));
+    auto read_writer = std::make_shared<scale::MessageReadWriter>(std::move(stream));
     auto wp = weak_from_this();
     while (true) {
         auto grandpa_message_res = co_await read_writer->read<Message>();
@@ -86,7 +86,7 @@ cppcoro::task<void> Protocol::readingTask(std::shared_ptr<Stream> stream) {
 
 cppcoro::task<> Protocol::incomingStreamTask(std::shared_ptr<Stream> stream) {
     assert(stream->remotePeerId());
-    auto read_writer = std::make_shared<ScaleMessageReadWriter>(stream);
+    auto read_writer = std::make_shared<scale::MessageReadWriter>(stream);
     const auto logger = m_log;
     const auto handshake_read_res = co_await read_writer->read<Roles>();
     if (!handshake_read_res) {
