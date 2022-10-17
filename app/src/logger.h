@@ -6,6 +6,6 @@
 
 namespace plc::app {
 
-    void prepareLogging(soralog::Level &log_level, const std::string &log_file);
+    void prepareLogging(soralog::Level log_level, const std::string &log_file);
 
 } // namespace plc::app

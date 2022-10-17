@@ -82,7 +82,7 @@ groups:
 # ----------------
   )";
 
-void prepareLogging(soralog::Level &log_level, const std::string &log_file) {
+void prepareLogging(const soralog::Level log_level, const std::string &log_file) {
     std::string config = simple_config;
     if (log_file.size() > 0) {
         config = std::regex_replace(multisink_config, std::regex("(_PLCLOGFILE_)(.*)"), log_file);

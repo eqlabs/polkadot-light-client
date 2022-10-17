@@ -32,7 +32,7 @@ const static std::string spec_file_label = "spec-file";
 const static std::string log_file_label = "log-file";
 const static std::string log_level_label = "log-level";
 
-CommandLineArgs parseArgs(const int &count, const char** &args) {
+CommandLineArgs parseArgs(const int count, const char** &args) {
     using namespace boost::program_options;
     try {
         options_description desc{"Options", 120, 40};
