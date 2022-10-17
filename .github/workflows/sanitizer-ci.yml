@@ -1,0 +1,136 @@
+name: Build
+
+on:
+  workflow_dispatch:
+    branches:
+    - sanitizer-ci
+  push:
+    branches:
+    - sanitizer-ci
+  # 4 pm vienna
+  # schedule:
+  #   - cron: "14 0 * * *"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest]
+        # compiler: [{
+        #   "cc": "gcc",
+        #   "cxx": "g++"
+        #  }, {
+        #   "cc": "clang",
+        #   "cxx": "clang++"
+        # }]
+        compiler: [{
+          "cc": "gcc",
+          "cxx": "g++"
+         }]
+        flag: [
+          {"san": "ASAN"},
+          {"san": "LSAN"},
+          {"san": "MSAN"},
+          {"san": "TSAN"},
+          {"san": "USAN"}
+        ]
+    steps:
+    - uses: actions/checkout@v1
+      name: checkout
+      with:
+        clean: true
+        fetch-depth: 1
+    - name: install dependencies
+      run: |
+        set -e
+        sudo apt-get update || true
+        sudo apt-get install -y apt-utils build-essential libssl-dev cmake python3 python3-pip
+        sudo pip install conan
+    - name: Cache Conan Data
+      uses: actions/cache@v3
+      env:
+        cache-name: conan-data
+      with:
+        # cache conan data
+        path: ~/.conan/data
+        key: ${{ matrix.compiler.cc }}-san-${{ env.cache-name }}-${{ matrix.flag.san }}
+        restore-keys: |
+          ${{ matrix.compiler.cc }}-san-${{ env.cache-name }}
+    - name: select gcc
+      if: matrix.compiler.cc == 'gcc'
+      run: |
+        sudo apt install gcc-11 g++-11
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 --slave /usr/bin/g++ g++ /usr/bin/g++-11 --slave /usr/bin/gcov gcov /usr/bin/gcov-11
+        sudo update-alternatives --set gcc /usr/bin/gcc-11
+    - name: select clang
+      if: matrix.compiler.cc == 'clang'
+      run: |
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh 15
+        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-15 20
+        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 20
+        sudo update-alternatives --set clang /usr/bin/clang-15
+        sudo update-alternatives --set clang++ /usr/bin/clang++-15
+    - name: cmake
+      env:
+        CC: ${{ matrix.compiler.cc }}
+        CXX: ${{ matrix.compiler.cxx }}
+        LIBP2P_SSH_KEY: ${{ secrets.LIBP2PDEP }}
+        SORALOG_SSH_KEY: ${{ secrets.SORALOGDEP }}
+        SQLITE_SSH_KEY: ${{ secrets.SQLITEDEP }}
+        SCALE_SSH_KEY: ${{ secrets.SCALEDEP }}
+      run: |
+        set -e
+        conan profile new default
+        conan profile update settings.arch=x86_64 default
+        conan profile update settings.os=Linux default
+        if [ "$CC" = "gcc" ]; then
+          conan profile update settings.compiler=gcc default
+          conan profile update settings.compiler.libcxx=libstdc++11 default
+        fi
+        mkdir -p ~/.ssh/
+        echo "${LIBP2P_SSH_KEY}" > ~/.ssh/libp2p.key
+        chmod 400 ~/.ssh/libp2p.key
+        echo "${SORALOG_SSH_KEY}" > ~/.ssh/soralog.key
+        chmod 400 ~/.ssh/soralog.key
+        echo "${SQLITE_SSH_KEY}" > ~/.ssh/sqlite.key
+        chmod 400 ~/.ssh/sqlite.key
+        echo "${SCALE_SSH_KEY}" > ~/.ssh/scale.key
+        chmod 400 ~/.ssh/scale.key
+        echo Host libp2p                        > ~/.ssh/config
+        echo   HostName github.com              >> ~/.ssh/config
+        echo   IdentityFile ~/.ssh/libp2p.key   >> ~/.ssh/config
+        echo   User git                         >> ~/.ssh/config
+        echo                                    >> ~/.ssh/config
+        echo Host soralog                       >> ~/.ssh/config
+        echo   HostName github.com              >> ~/.ssh/config
+        echo   IdentityFile ~/.ssh/soralog.key  >> ~/.ssh/config
+        echo   User git                         >> ~/.ssh/config
+        echo                                    >> ~/.ssh/config
+        echo Host sqlite                        >> ~/.ssh/config
+        echo   HostName github.com              >> ~/.ssh/config
+        echo   IdentityFile ~/.ssh/sqlite.key   >> ~/.ssh/config
+        echo   User git                         >> ~/.ssh/config
+        echo                                    >> ~/.ssh/config
+        echo Host scale                         >> ~/.ssh/config
+        echo   HostName github.com              >> ~/.ssh/config
+        echo   IdentityFile ~/.ssh/scale.key    >> ~/.ssh/config
+        echo   User git                         >> ~/.ssh/config
+        eval `ssh-agent -s`
+
+        mkdir build
+        cd build
+        echo asdf::cmake -DSAN=${{ matrix.flag.san }}-DSORALOG_GITHUB_HOST=soralog -DSQLITE_GITHUB_HOST=sqlite -DLIBP2P_GITHUB_HOST=libp2p -DSCALE_GITHUB_HOST=scale ..
+        cmake -DSAN=${{ matrix.flag.san }}-DSORALOG_GITHUB_HOST=soralog -DSQLITE_GITHUB_HOST=sqlite -DLIBP2P_GITHUB_HOST=libp2p -DSCALE_GITHUB_HOST=scale ..
+    - name: build
+      working-directory: ./build
+      run: |
+        make -j$(nproc)
+    - name: run tests
+      working-directory: ./build
+      run: |
+        make test
+
