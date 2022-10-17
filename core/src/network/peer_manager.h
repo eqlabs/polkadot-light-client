@@ -35,6 +35,12 @@ namespace event {
 
 namespace plc::core::network {
 
+namespace grandpa {
+
+class Protocol;
+
+} // namespace grandpa
+
 class PeerManager final : public Stoppable {
 public:
     struct Config {
@@ -71,17 +77,19 @@ private:
     };
 
 private:
-    void initProtocols(std::shared_ptr<boost::asio::io_context> io_context);
-    void startAndUpdateConnections(std::shared_ptr<runner::ClientRunner> runner);
+    void initProtocols();
+    void startAndUpdateConnections();
     PeerState makePeerState() const;
     void onDiscoveredPeer(const libp2p::peer::PeerId& peer_id);
     void onConnectedPeer(const libp2p::peer::PeerId& peer_id);
     void connect(const libp2p::peer::PeerId& peer_id);
     void disconnect(const libp2p::peer::PeerId& peer_id);
     void updateTick(PeerState& state);
+    size_t getConnectionsCount() const noexcept;
     void updateConnections();
 
 private:
+    std::shared_ptr<runner::ClientRunner> m_runner;
     // -Wunused-private-field
     // Config m_config;
     std::shared_ptr<libp2p::host::BasicHost> m_host;
@@ -89,6 +97,7 @@ private:
     std::shared_ptr<libp2p::protocol::kademlia::Kademlia> m_kademlia;
     std::shared_ptr<libp2p::protocol::Identify> m_identify;
     std::shared_ptr<libp2p::protocol::Ping> m_ping;
+    std::shared_ptr<grandpa::Protocol> m_grandpa;
     std::unordered_map<libp2p::peer::PeerId, PeerState> m_peers_info;
     std::vector<libp2p::event::Handle> m_event_handlers;
 

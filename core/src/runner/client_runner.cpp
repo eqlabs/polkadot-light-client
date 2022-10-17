@@ -61,15 +61,15 @@ void ClientRunner::run() noexcept {
     m_io_service->run();
 }
 
+void ClientRunner::dispatchTask(cppcoro::task<void>&& task) noexcept {
+    m_io_service->dispatch([task = MoveOnCopy<cppcoro::task<void>>{std::move(task)}]() mutable {
+        fireAndForget(task.take());
+    });
+}
+
 void ClientRunner::stop() noexcept {
     m_log->debug("client runner: stop");
     m_io_service->stop();
-}
-
-void ClientRunner::postTask(cppcoro::task<void>&& task) noexcept {
-    m_io_service->post([task = MoveOnCopy<cppcoro::task<void>>{std::move(task)}]() mutable {
-        fireAndForget(task.take());
-    });
 }
 
 std::shared_ptr<boost::asio::io_service> ClientRunner::getService() const noexcept {
