@@ -15,10 +15,8 @@ execute_process(
 include(ProcessorCount)
 ProcessorCount(CPU_COUNT)
 execute_process(
-    COMMAND git submodule init
-    COMMAND git submodule update
     COMMAND ${CMAKE_COMMAND} --build "${BINARYEN_ROOT}" --parallel ${CPU_COUNT}
 )
 
-find_package(binaryen CONFIG REQUIRED PATHS "${BINARYEN_ROOT}/install/lib/cmake/binaryen")
+link_directories("${BINARYEN_ROOT}/install/lib")
 include_directories(BEFORE SYSTEM "${BINARYEN_ROOT}/install/include")
