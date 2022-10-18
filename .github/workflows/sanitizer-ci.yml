@@ -31,9 +31,9 @@ jobs:
          }]
         flag: [
           # {"san": "ASAN"},
-          {"san": "LSAN"}
+          {"san": "LSAN"},
           # {"san": "MSAN"},
-          # {"san": "TSAN"},
+          {"san": "TSAN"}
           # {"san": "USAN"}
         ]
     steps:
