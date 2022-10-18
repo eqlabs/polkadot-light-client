@@ -2,11 +2,9 @@ name: Sanitizer-Build
 
 on:
   workflow_dispatch:
-    branches:
-    - sanitizer-ci
   # 14:00 UTC, Tuesdays
   schedule:
-    - cron: "0 14 * * 2"
+    cron: "0 14 * * 2"
 
 jobs:
   build:
