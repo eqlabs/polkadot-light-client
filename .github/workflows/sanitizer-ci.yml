@@ -27,7 +27,7 @@ jobs:
           {"san": "LSAN"},
           # not supported yet by gcc or clang
           # {"san": "MSAN"},
-          # {"san": "TSAN"},
+          {"san": "TSAN"},
           {"san": "USAN"}
         ]
     steps:
