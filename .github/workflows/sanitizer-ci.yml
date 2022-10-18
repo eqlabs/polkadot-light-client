@@ -7,9 +7,9 @@ on:
   push:
     branches:
     - sanitizer-ci
-  # 4 pm vienna
-  # schedule:
-  #   - cron: "14 0 * * *"
+  # 14:00 UTC, Tuesdays
+  schedule:
+    - cron: "0 14 * * 2"
 
 jobs:
   build:
@@ -18,22 +18,16 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-latest]
-        # compiler: [{
-        #   "cc": "gcc",
-        #   "cxx": "g++"
-        #  }, {
-        #   "cc": "clang",
-        #   "cxx": "clang++"
-        # }]
         compiler: [{
           "cc": "gcc",
           "cxx": "g++"
          }]
         flag: [
-          # {"san": "ASAN"},
+          {"san": "ASAN"},
           {"san": "LSAN"},
+          # not supported yet by gcc or clang
           # {"san": "MSAN"},
-          # {"san": "TSAN"}
+          # {"san": "TSAN"},
           {"san": "USAN"}
         ]
     steps:
@@ -64,16 +58,6 @@ jobs:
         sudo apt install gcc-11 g++-11
         sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 --slave /usr/bin/g++ g++ /usr/bin/g++-11 --slave /usr/bin/gcov gcov /usr/bin/gcov-11
         sudo update-alternatives --set gcc /usr/bin/gcc-11
-    # - name: select clang
-    #   if: matrix.compiler.cc == 'clang'
-    #   run: |
-    #     wget https://apt.llvm.org/llvm.sh
-    #     chmod +x llvm.sh
-    #     sudo ./llvm.sh 15
-    #     sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-15 20
-    #     sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 20
-    #     sudo update-alternatives --set clang /usr/bin/clang-15
-    #     sudo update-alternatives --set clang++ /usr/bin/clang++-15
     - name: cmake
       env:
         CC: ${{ matrix.compiler.cc }}
