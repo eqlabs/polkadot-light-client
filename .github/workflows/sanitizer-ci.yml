@@ -1,6 +1,9 @@
 name: Sanitizer-Build
 
 on:
+  push:
+    branches:
+    - sanitizer-ci
   workflow_dispatch:
     branches:
     - sanitizer-ci
