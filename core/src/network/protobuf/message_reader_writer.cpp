@@ -7,7 +7,7 @@ namespace plc::core::network::protobuf {
 MessageReadWriter::MessageReadWriter(
     std::shared_ptr<libp2p::basic::ReadWriter> read_writer)
     : m_read_writer(
-        std::make_shared<libp2p::basic::MessageReadWriterUvarint>(
+        std::make_shared<libp2p::basic::ProtobufMessageReadWriter>(
             std::move(read_writer))) {}
 
 } // namespace plc::core::network::protobuf

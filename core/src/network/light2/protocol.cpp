@@ -7,7 +7,7 @@
 namespace plc::core::network::light2 {
 
 // TODO: use prefix from chainspec
-const libp2p::peer::Protocol Protocol::protocol = "dot/light/2";
+const libp2p::peer::Protocol Protocol::protocol = "/dot/light/2";
 
 Protocol::Protocol(
     libp2p::Host& host,
@@ -55,14 +55,6 @@ cppcoro::task<Result<RemoteReadResponse>> Protocol::send(RemoteReadRequest&& req
 
 cppcoro::task<Result<RemoteReadResponse>> Protocol::send(RemoteReadChildRequest&& request, const PeerId& peerId) {
     co_return co_await send<RemoteReadChildRequest, RemoteReadResponse>(std::move(request), peerId);
-}
-
-cppcoro::task<Result<RemoteHeaderResponse>> Protocol::send(RemoteHeaderRequest&& request, const PeerId& peerId) {
-    co_return co_await send<RemoteHeaderRequest, RemoteHeaderResponse>(std::move(request), peerId);
-}
-
-cppcoro::task<Result<RemoteChangesResponse>> Protocol::send(RemoteChangesRequest&& request, const PeerId& peerId) {
-    co_return co_await send<RemoteChangesRequest, RemoteChangesResponse>(std::move(request), peerId);
 }
 
 } // namespace plc::core::network::light2

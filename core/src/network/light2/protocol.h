@@ -40,8 +40,6 @@ public:
     task<Result<RemoteCallResponse>> send(RemoteCallRequest&& request, const PeerId& peerId);
     task<Result<RemoteReadResponse>> send(RemoteReadRequest&& request, const PeerId& peerId);
     task<Result<RemoteReadResponse>> send(RemoteReadChildRequest&& request, const PeerId& peerId);
-    task<Result<RemoteHeaderResponse>> send(RemoteHeaderRequest&& request, const PeerId& peerId);
-    task<Result<RemoteChangesResponse>> send(RemoteChangesRequest&& request, const PeerId& peerId);
 
 private:
     template <protobuf::ConvertibleToProtobuf Request, protobuf::ConvertibleFromProtobuf Response>
