@@ -117,18 +117,18 @@ struct RemoteChangesRequest {
     inline auto toProto() && {
         proto::RemoteChangesRequest msg;
         msg.set_first(std::move(first));
-        msg.set_first(std::move(last));
-        msg.set_first(std::move(min));
-        msg.set_first(std::move(max));
-        msg.set_first(std::move(storage_key));
-        msg.set_first(std::move(key));
+        msg.set_last(std::move(last));
+        msg.set_min(std::move(min));
+        msg.set_max(std::move(max));
+        msg.set_storage_key(std::move(storage_key));
+        msg.set_key(std::move(key));
 
         return msg;
     }
 };
 
 struct RemoteChangesResponse {
-    static constexpr auto message_index = 3;
+    static constexpr auto message_index = 4;
     using ProtoMessageType = proto::RemoteChangesResponse;
 
     std::string max;
