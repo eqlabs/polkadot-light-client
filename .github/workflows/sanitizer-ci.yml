@@ -1,11 +1,11 @@
 name: Sanitizer-Build
 
 on:
+  schedule:
+    - cron: "0 17 * * 4"
   workflow_dispatch:
     branches:
     - sanitizer-ci
-  schedule:
-    - cron: "30 16 * * 4"
 
 jobs:
   build:
