@@ -36,10 +36,12 @@ namespace event {
 namespace plc::core::network {
 
 namespace grandpa {
-
 class Protocol;
-
 } // namespace grandpa
+
+namespace light2 {
+class Protocol;
+} // namespace light2
 
 class PeerManager final : public Stoppable {
 public:
@@ -98,6 +100,7 @@ private:
     std::shared_ptr<libp2p::protocol::Identify> m_identify;
     std::shared_ptr<libp2p::protocol::Ping> m_ping;
     std::shared_ptr<grandpa::Protocol> m_grandpa;
+    std::shared_ptr<light2::Protocol> m_light;
     std::unordered_map<libp2p::peer::PeerId, PeerState> m_peers_info;
     std::vector<libp2p::event::Handle> m_event_handlers;
 
