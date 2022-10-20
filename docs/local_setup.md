@@ -1,10 +1,12 @@
-# Mainting a local setup
+# Running a local setup
 
 It is possible to launch a full node locally on a test chain and connect to it via light client to debug the communication on both sides.
 
-## Install Rust tools
+## Prerequisites
 
 If you don't have Rust tools please install it (see the manual [here](https://www.rust-lang.org/tools/install))
+
+Also you may need to install protoc if you don't have one (installation instructions [here](http://google.github.io/proto-lens/installing-protoc.html))
 
 ## Clone and build polkadot full node
 
@@ -40,7 +42,7 @@ This will start a full node listening a TCP port 11111 locally. Please find a st
 
 > Local node identity is: 12D3KooWAeL3xWc7qGEXT96MLyYRentGnXa1sbh9B2xgnFYyY2rt
 
-That is you node identity. To make light node being able to find full node you need to add it to the list of boot nodes in the chain spec file:
+That is your node identity. To make light node being able to find full node you need to add it to the list of boot nodes in the chain spec file:
 
 > "bootNodes": [
 >   "/ip4/127.0.0.1/tcp/11111/p2p/12D3KooWAeL3xWc7qGEXT96MLyYRentGnXa1sbh9B2xgnFYyY2rt"
@@ -56,7 +58,7 @@ polkadot_light_client <PATH TO CHAIN SPEC FILE>
 
 ## Debugging full node
 
-You can use visual studio code with [rust tools](https://code.visualstudio.com/docs/languages/rust) installed to debug full node in case when you want to know why the full node rejects connection or smth else. Here is a `.vscode/launch.json`'s content with a debug config that attaches `polkadot` process:
+You can use visual studio code with [rust tools](https://code.visualstudio.com/docs/languages/rust) installed to debug full node in case when you want to know why the full node rejects connection or smth else. Here is a `.vscode/launch.json`'s content with a debug config that attaches to the `polkadot` process:
 
 ```
 {
@@ -87,4 +89,4 @@ multistream-select = {opt-level = 0}
 
 Also please note that many things are happening not in polkadot project code but in the dependencies. So it is reasonable to add that third parties to the workspace directly (their sources can be found in a cargo directory `~/.cargo/`).
 
-Apart from debugging `polkadot` has goog diagnostics in `trace` log level messages (`debug` seems to be completely useless). You can enable it by adding `-ltrace` in commandline. I advise also redirecting stderr to a file in this case (`2>log.txt`).
+Apart from debugging `polkadot` has good diagnostics in `trace` log level messages (`debug` seems to be completely useless). You can enable it by adding `-ltrace` in commandline. I advise also redirecting stderr to a file in this case (`2>log.txt`).
