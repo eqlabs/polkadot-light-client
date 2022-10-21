@@ -25,7 +25,7 @@ cppcoro::task<Result<Response>> Protocol::send(Request&& request_ref, const Peer
     // open a new outgoing stream
     auto request = std::move(request_ref); // capture request parameter
     auto stream_res = co_await resumeInCallback<Result<std::shared_ptr<Stream>>>(
-        [peerId, &host = m_host](auto&& func) {
+        [&peerId, &host = m_host](auto&& func) {
             host.newStream(
                 peerId,
                 protocol,
