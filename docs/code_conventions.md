@@ -213,10 +213,10 @@ It's also recommended to group:
 ## [R] Coroutines usage
 C++ coroutines are powerful and flexible mechanism for asynchronous programming however they also bring many places for potential bugs, so they should be used with care. Use-after-free errors are the most frequent ones. Here are some advices how to avoid them.
 
-1. Test your code under address sanitizer
+### Test your code under address sanitizer
 Run cmake with `-DSAN=ASAN`. Address sanitizer is very good at finding and explaining where the object is accessed and when it was freed in case of error in runtime
 
-2. Be careful with passing parameters and accessing members in a "root" coroutine method
+### Be careful with passing parameters and accessing members in a "root" coroutine method
 ```
 // Bad
 cppcoro::task<void> Class::foo(Param& param) {
@@ -267,7 +267,7 @@ cppcoro::task<void> Class::foo(Param& param) {
   ```
   The marker of the "root" coroutine is the task type (`cppcoro::task<void>`). In any other case a coroutine should have task type that may return an error (`cppcoro::task<Result<X>>`, where `X` may be `void`)
 
-3. If you use lambda for a root coroutine do not capture anything:
+### If you use lambda for a root coroutine do not capture anything:
 ```
 // Bad
 auto task = [foo]() -> cppcoro::task<void> {
@@ -289,7 +289,7 @@ runner.dispatchTask(std::move(task));
 ```
 Some more advanced workarounds can be found [here](https://devblogs.microsoft.com/oldnewthing/20211103-00/?p=105870)
 
-4. The quite similar situation is applicable to the lambdas the are passed to the `resumeInCallback` function. The difference is that you cannot capture anything **by value**:
+### The quite similar situation is applicable to the lambdas the are passed to the `resumeInCallback` function. The difference is that you cannot capture anything **by value**:
 ```
     // Bad
     auto read_res = co_await resumeInCallback<MessageReadWriter::ReadCallback>(
@@ -298,7 +298,7 @@ Some more advanced workarounds can be found [here](https://devblogs.microsoft.co
     });
 ```
 
-Instead capture by references variables that are stored in the coroutine frame:
+Instead capture variables by references that are stored in the coroutine frame:
 ```
     // Good
     auto reader_writer = m_read_writer;
