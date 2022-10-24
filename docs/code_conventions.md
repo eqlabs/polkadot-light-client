@@ -209,3 +209,101 @@ It's also recommended to group:
 ## [R] Macros
  - Avoid using macros if possible. If possible prefer `constexpr` variables and functions, metaprogramming and other language features
  - If using macros is unavoidable use `PLC_` prefix for all project macros
+
+## [R] Coroutines usage
+C++ coroutines are powerful and flexible mechanism for asynchronous programming however they also bring many places for potential bugs, so they should be used with care. Use-after-free errors are the most frequent ones. Here are some advices how to avoid them.
+
+### Test your code under address sanitizer
+Run cmake with `-DSAN=ASAN`. Address sanitizer is very good at finding and explaining where the object is accessed and when it was freed in case of error in runtime
+
+### Be careful with passing parameters and accessing members in a "root" coroutine method
+```
+// Bad
+cppcoro::task<void> Class::foo(Param& param) {
+   param.bar() // At the time coroutine is executed param object may not be alive
+   auto x = co_await some_async_method();
+   m_member.set_x(x) // this pointer may not be valid at this point
+}
+
+```
+  - Pass parameters to a root coroutine method by value or shared pointer if they don't have "global" lifetime.
+  ```
+  cppcoro::task<void> Class::foo(Param param)
+  ```
+  or
+  ```
+  cppcoro::task<void> Class::foo(std::shared_ptr<Param> param)
+  ```
+  - Save weak pointer to `this` or necessary members before the first suspension point:
+  ```
+  cppcoro::task<void> Class::foo(Param param) {
+      auto log = m_log;
+      auto x = co_await some_async_method();
+      log->info("some message");
+  }
+  ```
+  or
+  ```
+  cppcoro::task<void> Class::foo(Param param) {
+      auto wp = weak_from_this(); // only valid if Class inherits from enable_shared_from_this
+      auto x = co_await some_async_method();
+      if (auto self = wp.lock()) {
+          self->m_log->info("some message");
+      }
+  }
+  ```
+  This is applicable for "root" coroutines only (the ones that will be passed to `ClientRunner::dispatchTask` method). If one coroutine is co_awaiting another one it's safe to pass objects that are stored in the parent coroutine frame by reference because parent coroutine lifetime is not less than the called one:
+  ```
+  cppcoro::task<void> Class::foo() {
+    Param param;
+    // Passing param by reference here is safe
+    auto res = co_await bar(param);
+    ...
+  }
+
+  cppcoro::task<Result<void>> Class::bar(Param& param) {
+    ...
+  }
+  ```
+  The marker of the "root" coroutine is the task type (`cppcoro::task<void>`). In any other case a coroutine should have task type that may return an error (`cppcoro::task<Result<X>>`, where `X` may be `void`)
+
+### If you use lambda for a root coroutine do not capture anything:
+```
+// Bad
+auto task = [foo]() -> cppcoro::task<void> {
+    // some async code
+    ...
+}();
+
+runner.dispatchTask(std::move(task));
+```
+Lambda object is an anonymous object which will be invalid at the time of coroutine execution. This effect is described in [this article](https://devblogs.microsoft.com/oldnewthing/20190116-00/?p=100715). The most simple workaround is to pass objects as parameters (by value or smart pointer as it was shown above):
+```
+// Good
+auto task = [](Foo foo) -> cppcoro::task<void> {
+    // some async code
+    ...
+}(std::move(foo));
+
+runner.dispatchTask(std::move(task));
+```
+Some more advanced workarounds can be found [here](https://devblogs.microsoft.com/oldnewthing/20211103-00/?p=105870)
+
+### The quite similar situation is applicable to the lambdas the are passed to the `resumeInCallback` function. The difference is that you cannot capture anything **by value**:
+```
+    // Bad
+    auto read_res = co_await resumeInCallback<MessageReadWriter::ReadCallback>(
+        [reader_writer = m_read_writer](auto func) {
+            reader_writer->read(std::move(func));
+    });
+```
+
+Instead capture variables by references that are stored in the coroutine frame:
+```
+    // Good
+    auto reader_writer = m_read_writer;
+    auto read_res = co_await resumeInCallback<MessageReadWriter::ReadCallback>(
+        [&reader_writer](auto func) {
+            reader_writer->read(std::move(func));
+    });
+```
