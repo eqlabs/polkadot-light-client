@@ -6,6 +6,7 @@
 #include "chain/spec.h"
 #include "runner/client_runner.h"
 #include "network/peer_manager.h"
+#include "network/json_rpc.h"
 #include "logger.h"
 
 namespace plc::app {
@@ -100,6 +101,8 @@ int main(const int count, const char** args) {
     auto chainSpec = result.value();
     connection_manager = std::make_shared<network::PeerManager>(runner, chainSpec.getBootNodes(), stop_handler);
     stop_handler->add(connection_manager);
+
+    network::startJsonRpcServer(runner);
 
     runner->run();
 

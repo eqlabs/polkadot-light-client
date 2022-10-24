@@ -5,6 +5,7 @@ add_library(plc_core
     src/network/grandpa/protocol.cpp
     src/network/light2/protocol.cpp
     src/network/peer_manager.cpp
+    src/network/json_rpc.cpp
     src/network/protobuf/message_reader_writer.cpp
     src/network/scale/message_reader_writer.cpp
     src/runner/client_runner.cpp
