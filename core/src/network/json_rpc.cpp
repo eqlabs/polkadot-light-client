@@ -4,6 +4,7 @@
 
 #include <boost/asio/io_context.hpp>
 
+
 #include <libp2p/basic/scheduler/scheduler_impl.hpp>
 #include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
 #include <libp2p/crypto/aes_ctr/aes_ctr_impl.hpp>
@@ -51,27 +52,123 @@
 #include "utils/propagate.h"
 #include "utils/result.h"
 
-#include "network/packio/msgpack_rpc/msgpack_rpc.h"
 #include "network/packio/packio.h"
 #include "network/packio/extra/websocket.h"
 
+using packio::arg;
+using packio::nl_json_rpc::completion_handler;
+using packio::nl_json_rpc::make_client;
+using packio::nl_json_rpc::make_server;
+using packio::nl_json_rpc::rpc;
+
+libp2p::log::Logger jsonrpcLogger;
+
 namespace plc::core::network {
+    // using packio::msgpack_rpc::make_client;
+    // using packio::msgpack_rpc::make_server;
 
-
-    using packio::msgpack_rpc::make_client;
-    using packio::msgpack_rpc::make_server;
     using packio::net::ip::make_address;
 
     using awaitable_tcp_stream = decltype(packio::net::use_awaitable_t<>::as_default_on(
         std::declval<boost::beast::tcp_stream>()));
     using websocket = packio::extra::
-        websocket_adapter<boost::beast::websocket::stream<awaitable_tcp_stream>, true>;
+        websocket_adapter<boost::beast::websocket::stream<awaitable_tcp_stream>, false>;
     using ws_acceptor =
         packio::extra::websocket_acceptor_adapter<packio::net::ip::tcp::acceptor, websocket>;
 
     
     void startJsonRpcServer(std::shared_ptr<runner::ClientRunner> runner) {
-        auto io_context = runner->getService();
+        jsonrpcLogger = libp2p::log::createLogger("JSON-RPC","network");
+        auto io = runner->getService();
+
+        std::string raw_ip_address = "127.0.0.1";
+        // std::string raw_ip_address = "localhost";
+        unsigned short port_num = 2584;
+
+        // Used to store information about error that happens
+        // while parsing the raw IP-address.
+        boost::system::error_code ec;
+        // Step 2. Using IP protocol version independent address
+        // representation.
+        boost::asio::ip::address ip_address =
+        boost::asio::ip::address::from_string(raw_ip_address, ec);
+
+        if (ec.value() != 0) {
+            // Provided IP address is invalid. Breaking execution.
+            std::cout 
+            << "Failed to parse the IP address. Error code = "
+            << ec.value() << ". Message: " << ec.message();
+            return; // ec.value();
+        }
+
+        // Step 3.
+        boost::asio::ip::tcp::endpoint bind_ep(ip_address, port_num);
+
+        // auto server = make_server(packio::net::ip::tcp::acceptor{*io, bind_ep});
+        auto server = make_server(ws_acceptor{*io, bind_ep});
+
+        // auto client = make_client(packio::net::ip::tcp::socket{io});
+
+        // Declare a synchronous callback with named arguments
+        server->dispatcher()->add(
+            "add", {"a", "b"}, [](int a, int b) -> int { 
+                printf("add: a is %d, b is %d\n", a, b);
+                return a + b; 
+                });
+
+        // server->dispatcher()->add_async(
+        // "multiply", {"a", "b"}, [io](completion_handler complete, int a, int b) {
+        //     // Call the completion handler later
+        //         printf("multiply a is %d, b is %d\n", a, b);
+        //     packio::net::post(
+        //         *io, [a, b, complete = std::move(complete)]() mutable {
+        //             complete(a * b);
+        //         });
+        // });
+
+    server->dispatcher()->add_coro(
+        "pow", *io, [](int a, int b) -> packio::net::awaitable<int> {
+            printf("pow: a is %d, b is %d\n", a, b);
+            co_return std::pow(a, b);
+        });
+    // server->dispatcher()->add_coro(
+    //     "fibonacci", *io, [&](int n) -> packio::net::awaitable<int> {
+    //         if (n <= 1) {
+    //             co_return n;
+    //         }
+
+    //         // auto r1 = co_await client->async_call("fibonacci", std::tuple{n - 1});
+    //         // auto r2 = co_await client->async_call("fibonacci", std::tuple{n - 2});
+
+    //         co_return r1.result.as<int>() + r2.result.as<int>();
+    //     });
+
+
+
+        // Declare an asynchronous callback with named arguments
+        server->dispatcher()->add_async(
+            "multiply", {"a", "b"}, [io](completion_handler complete, int a, int b) {
+                // Call the completion handler later
+                printf("multiply a is %d, b is %d\n", a, b);
+                packio::net::post(
+                    *io, [a, b, complete = std::move(complete)]() mutable {
+                        complete(a * b);
+                    });
+            });
+        // Declare a coroutine with unnamed arguments
+        server->dispatcher()->add_coro(
+            "pow", *io, [](int a, int b) -> packio::net::awaitable<int> {
+                printf("pow a is %d, b is %d\n", a, b);
+                co_return std::pow(a, b);
+            });
+
+        // Connect the client
+        // client->socket().connect(server->acceptor().local_endpoint());
+        // Accept connections
+        server->async_serve_forever();
+
+
+
 
     }
 

@@ -175,7 +175,9 @@ private:
                             return;
                         }
 
-                        PACKIO_TRACE("write: {}", length);
+                        PACKIO_INFO("buffer {}", message_ptr);
+                        PACKIO_INFO("buffer {}", std::string(*message_ptr));
+                        PACKIO_TRACE("C write: {}", length);
                         (void)length;
                     }));
         });
