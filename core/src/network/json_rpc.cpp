@@ -55,11 +55,11 @@
 #include "network/packio/packio.h"
 #include "network/packio/extra/websocket.h"
 
-using packio::arg;
-using packio::nl_json_rpc::completion_handler;
-using packio::nl_json_rpc::make_client;
-using packio::nl_json_rpc::make_server;
-using packio::nl_json_rpc::rpc;
+// using packio::arg;
+using packio::json_rpc::completion_handler;
+// using packio::json_rpc::make_client;
+using packio::json_rpc::make_server;
+// using packio::json_rpc::rpc;
 
 libp2p::log::Logger jsonrpcLogger;
 

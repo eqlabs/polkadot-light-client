@@ -2,9 +2,11 @@ cmake_minimum_required(VERSION 3.12)
 
 project(polkadot_light_client)
 set (CMAKE_CXX_STANDARD 20)
+
+# We only use boost json with packio
 set (PACKIO_HAS_MSGPACK 0)
-set (PACKIO_HAS_NLOHMANN_JSON 1)
-set (PACKIO_HAS_BOOST_JSON 0)
+set (PACKIO_HAS_NLOHMANN_JSON 0)
+set (PACKIO_HAS_BOOST_JSON 1)
 
 
 option(TESTING "Build tests" ON)
@@ -33,9 +35,6 @@ add_3rdparty(cpp-libp2p)
 add_3rdparty(cppcoro)
 add_3rdparty(scale)
 add_3rdparty(Protobuf)
-# add_3rdparty(packio)
-# add_3rdparty(msgpack)
-add_3rdparty(nlohmann)
 
 add_subdirectory(core)
 add_subdirectory(app)
