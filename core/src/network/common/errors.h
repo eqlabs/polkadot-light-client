@@ -6,6 +6,8 @@ namespace plc::core::network {
 
 enum class ProtocolError {
     OwnerDestroyed = 1,
+    InvalidResponse = 2,
+    ProtobufParsingFailed = 3,
 };
 
 } // namespace plc::core::network

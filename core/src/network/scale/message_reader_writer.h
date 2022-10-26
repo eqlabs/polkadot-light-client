@@ -24,8 +24,9 @@ public:
 
     template <typename MsgType>
     cppcoro::task<Result<MsgType>> read() const {
+        auto reader_writer = m_read_writer;
         auto read_res = co_await resumeInCallback<P2PMessageReadWriter::ReadCallback>(
-            [reader_writer = m_read_writer](auto func) {
+            [&reader_writer](auto func) {
                 reader_writer->read(std::move(func)); 
         });
 
@@ -51,9 +52,10 @@ public:
             co_return encoded_msg_res.error();
         }
 
+        auto reader_writer = m_read_writer;
         co_return co_await resumeInCallback<Result<size_t>>(
-            [reader_writer = m_read_writer, msg = std::move(encoded_msg_res.value())](auto func) {
-                reader_writer->write(msg, std::move(func));
+            [&reader_writer, &encoded_msg_res](auto func) {
+                reader_writer->write(encoded_msg_res.value(), std::move(func));
         });
     }
 
