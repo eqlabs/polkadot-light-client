@@ -460,4 +460,16 @@ void PeerManager::updateConnections() {
     }
 }
 
+std::vector<libp2p::peer::PeerId> PeerManager::getPeersInfo() const {
+    std::vector<libp2p::peer::PeerId> peers;
+    for (auto [peer, state]: m_peers_info) {
+        peers.push_back(peer);
+    }
+    return peers;
+}
+
+std::shared_ptr<libp2p::host::BasicHost> PeerManager::getHost() const {
+    return m_host;
+}
+
 } // namespace plc::core::network

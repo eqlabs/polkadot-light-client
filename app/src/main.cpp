@@ -1,12 +1,17 @@
 #include <iostream>
 
+#include <cppcoro/sync_wait.hpp>
 #include <boost/program_options.hpp>
+#include <libp2p/host/basic_host/basic_host.hpp>
 #include <iostream>
 
 #include "chain/spec.h"
 #include "runner/client_runner.h"
 #include "network/peer_manager.h"
 #include "logger.h"
+#include "network/light2/protocol.h"
+#include "network/grandpa/protocol.h"
+#include "utils/hex.h"
 
 namespace plc::app {
 
@@ -76,6 +81,44 @@ CommandLineArgs parseArgs(const int count, const char** &args) {
     }
 }
 
+class Obs: public plc::core::network::grandpa::Observer {
+public:
+    void onMessage(const libp2p::peer::PeerId &peer_id, const plc::core::network::grandpa::Message& message) override {
+
+    }
+};
+
+cppcoro::task<void> send(std::shared_ptr<plc::core::network::light2::Protocol> light2, plc::core::network::light2::RemoteReadRequest req, libp2p::peer::PeerId peer) {
+    auto result = co_await light2->send(std::move(req), peer);
+
+    if (result.has_error()) {
+        std::cout << "error: " << result.error() << std::endl;
+    }
+    else {
+        auto val = result.value();
+        volatile int x = 2;
+    }
+    co_return;
+}
+
+cppcoro::task<void> test2(std::shared_ptr<plc::core::network::PeerManager> connection_manager, std::shared_ptr<plc::core::runner::ClientRunner> runner) {
+    std::shared_ptr<Obs> obs = std::make_shared<Obs>();
+
+    auto host = connection_manager->getHost();
+    auto grandpa = plc::core::network::grandpa::Protocol(*host, *runner, obs);
+    auto light2 = std::make_shared<plc::core::network::light2::Protocol>(*host, *runner);
+    auto block_hash = plc::core::unhexWith0xToBlockHash("0x1611aaf014ea221866a309dda02dd97633782d6d6fe0925eaaef9952105da89b");
+    //{0x16, 0x11, 0xaa,0xf0,0x14,0xea,0x22,0x18,0x66,0xa3,0x09,0xdd,0xa0,0x2d,0xd9,0x76,0x33,0x78,0x2d,0x6d,0x6f,0xe0,0x92,0x5e,0xaa,0xef,0x99,0x52,0x10,0x5d,0xa8,0x9b};
+
+    plc::core::network::light2::RemoteReadRequest req = {block_hash.value(), {":code"}};    
+
+    for (auto peer: connection_manager->getPeersInfo()) {
+        std::cout << "Peer: " << peer.toBase58() << std::endl;
+        co_await send(light2, req, peer);
+    }
+    co_return;
+}
+
 
 } // namespace plc::app
 
@@ -101,6 +144,13 @@ int main(const int count, const char** args) {
     connection_manager = std::make_shared<network::PeerManager>(runner, chainSpec.getBootNodes(), stop_handler);
     stop_handler->add(connection_manager);
 
+    bool finished = false;
+    auto timer = runner->makePeriodicTimer(std::chrono::milliseconds(2000), [&finished, connection_manager, runner]() {
+        if (!finished) {
+            runner->dispatchTask(test2(connection_manager, runner));
+            finished = true;
+        }
+    });
     runner->run();
 
     mainLogger->info("Exiting application");
