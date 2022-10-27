@@ -6,7 +6,7 @@
 #include "chain/spec.h"
 #include "runner/client_runner.h"
 #include "network/peer_manager.h"
-#include "network/json_rpc.h"
+#include "network/json_rpc_server.h"
 #include "logger.h"
 
 namespace plc::app {

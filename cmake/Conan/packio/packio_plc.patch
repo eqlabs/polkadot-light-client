@@ -1,5 +1,5 @@
 diff --git a/include/packio/internal/log.h b/include/packio/internal/log.h
-index 1de6fb1..c264b69 100644
+index 1de6fb1..ac0fb09 100644
 --- a/include/packio/internal/log.h
 +++ b/include/packio/internal/log.h
 @@ -5,19 +5,15 @@
@@ -21,7 +21,7 @@ index 1de6fb1..c264b69 100644
 -#define PACKIO_ERROR(...) (void)0
 -#endif
 +#include <libp2p/log/logger.hpp>
-+#include "network/json_rpc.h"
++#include "network/json_rpc_server.h"
 +
 +using namespace plc::core::network;
 +
