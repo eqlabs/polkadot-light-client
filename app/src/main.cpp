@@ -102,7 +102,7 @@ int main(const int count, const char** args) {
     connection_manager = std::make_shared<network::PeerManager>(runner, chainSpec.getBootNodes(), stop_handler);
     stop_handler->add(connection_manager);
 
-    network::startJsonRpcServer(runner);
+    auto json_rpc_server = std::make_shared<network::JsonRpcServer>("127.0.0.1", 2584, runner->getService());
 
     runner->run();
 
