@@ -55,18 +55,9 @@ bool JsonRpcServer::connect() {
     boost::asio::ip::tcp::endpoint bind_ep(ip_address, m_port);
 
     m_packio_server = packio::json_rpc::make_server(ws_acceptor{*m_io_service, bind_ep});
-    
-    
-    m_packio_server->dispatcher()->add_coro(
-        "pow", *m_io_service, [](int a, int b) -> packio::net::awaitable<int> {
-            printf("pow: a is %d, b is %d\n", a, b);
-            co_return std::pow(a, b);
-        });
-
     m_packio_server->async_serve_forever();
 
     return true;
 }
-
 
 } // namespace plc::core::network

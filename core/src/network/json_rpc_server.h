@@ -37,6 +37,8 @@ public:
         std::shared_ptr<boost::asio::io_service> io);
     ~JsonRpcServer();
     bool connect();
+    std::shared_ptr<boost::asio::io_service> getIoService() { return m_io_service; }
+    packio_server getServer() { return m_packio_server; }
     void stop() noexcept override;
 
 private:

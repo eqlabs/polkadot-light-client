@@ -103,6 +103,22 @@ int main(const int count, const char** args) {
     stop_handler->add(connection_manager);
 
     auto json_rpc_server = std::make_shared<network::JsonRpcServer>("127.0.0.1", 2584, runner->getService());
+    auto packio_server = json_rpc_server->getServer();
+    packio_server->dispatcher()->add_coro(
+        "add", *json_rpc_server->getIoService(), [](int a, int b) -> packio::net::awaitable<int> {
+            printf("add: a is %d, b is %d\n", a, b);
+            co_return a + b;
+        });
+    packio_server->dispatcher()->add_coro(
+        "multiply", *json_rpc_server->getIoService(), [](int a, int b) -> packio::net::awaitable<int> {
+            printf("multiply: a is %d, b is %d\n", a, b);
+            co_return a * b;
+        });
+    packio_server->dispatcher()->add_coro(
+        "pow", *json_rpc_server->getIoService(), [](int a, int b) -> packio::net::awaitable<int> {
+            printf("pow: a is %d, b is %d\n", a, b);
+            co_return std::pow(a, b);
+        });
 
     runner->run();
 
