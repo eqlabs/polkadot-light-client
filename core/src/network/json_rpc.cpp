@@ -45,6 +45,9 @@
 #include <libp2p/transport/impl/upgrader_impl.hpp>
 #include <libp2p/transport/tcp/tcp_transport.hpp>
 
+#include <packio/packio.h>
+#include <packio/extra/websocket.h>
+
 #include "network/common/format_peer_id.h"
 #include "network/grandpa/protocol.h"
 #include "network/light2/protocol.h"
@@ -52,8 +55,6 @@
 #include "utils/propagate.h"
 #include "utils/result.h"
 
-#include "network/packio/packio.h"
-#include "network/packio/extra/websocket.h"
 
 // using packio::arg;
 using packio::json_rpc::completion_handler;

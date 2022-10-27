@@ -1,0 +1,13 @@
+diff --git a/include/packio/json_rpc/rpc.h b/include/packio/json_rpc/rpc.h
+index 80ac6c1..e9f81dd 100644
+--- a/include/packio/json_rpc/rpc.h
++++ b/include/packio/json_rpc/rpc.h
+@@ -14,7 +14,7 @@
+ #include "../internal/log.h"
+ #include "../internal/rpc.h"
+ #include "converters.h"
+-#include "hash.h"
++// #include "hash.h"
+ 
+ namespace packio {
+ namespace json_rpc {
