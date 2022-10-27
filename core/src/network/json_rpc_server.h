@@ -21,17 +21,14 @@ namespace boost::asio {
     class io_context;
 } // namespace boost::asio
 
-
-namespace plc::core::network {
-
 using packio_server = std::shared_ptr<packio::server<packio::json_rpc::rpc, packio::extra::websocket_acceptor_adapter
     <boost::asio::basic_socket_acceptor<boost::asio::ip::tcp>, packio::extra::websocket_adapter
     <boost::beast::websocket::stream<boost::beast::basic_stream<boost::asio::ip::tcp, boost::asio::use_awaitable_t
     <>::executor_with_default<boost::asio::any_io_executor>>, true>, false>>>>;
 
-class JsonRpcServer final : public Stoppable {
-public:
+namespace plc::core::network {
 
+class JsonRpcServer final : public Stoppable {
 public:
     JsonRpcServer(std::string ip_address, uint16_t port,
         std::shared_ptr<boost::asio::io_service> io);
@@ -40,8 +37,6 @@ public:
     std::shared_ptr<boost::asio::io_service> getIoService() { return m_io_service; }
     packio_server getServer() { return m_packio_server; }
     void stop() noexcept override;
-
-private:
 
 private:
     libp2p::log::Logger m_log = libp2p::log::createLogger("JsonRpcServer","network");
