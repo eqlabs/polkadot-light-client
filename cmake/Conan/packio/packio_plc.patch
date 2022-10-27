@@ -1,8 +1,8 @@
 diff --git a/include/packio/internal/log.h b/include/packio/internal/log.h
-index 1de6fb1..ac0fb09 100644
+index 1de6fb1..fafa71d 100644
 --- a/include/packio/internal/log.h
 +++ b/include/packio/internal/log.h
-@@ -5,19 +5,15 @@
+@@ -5,19 +5,14 @@
  #ifndef PACKIO_LOG_H
  #define PACKIO_LOG_H
  
@@ -20,16 +20,15 @@ index 1de6fb1..ac0fb09 100644
 -#define PACKIO_WARN(...) (void)0
 -#define PACKIO_ERROR(...) (void)0
 -#endif
-+#include <libp2p/log/logger.hpp>
-+#include "network/json_rpc_server.h"
++#include "utils/packio_logger.h"
 +
-+using namespace plc::core::network;
++using namespace plc::core;
 +
-+#define PACKIO_TRACE(...) JsonRpcServer::getLogger()->trace(__VA_ARGS__)
-+#define PACKIO_DEBUG(...) JsonRpcServer::getLogger()->debug(__VA_ARGS__)
-+#define PACKIO_INFO(...) JsonRpcServer::getLogger()->info(__VA_ARGS__)
-+#define PACKIO_WARN(...) JsonRpcServer::getLogger()->warn(__VA_ARGS__)
-+#define PACKIO_ERROR(...) JsonRpcServer::getLogger()->error(__VA_ARGS__)
++#define PACKIO_TRACE(...) PackIoLogger::getLogger()->trace(__VA_ARGS__)
++#define PACKIO_DEBUG(...) PackIoLogger::getLogger()->debug(__VA_ARGS__)
++#define PACKIO_INFO(...) PackIoLogger::getLogger()->info(__VA_ARGS__)
++#define PACKIO_WARN(...) PackIoLogger::getLogger()->warn(__VA_ARGS__)
++#define PACKIO_ERROR(...) PackIoLogger::getLogger()->error(__VA_ARGS__)
  
  #endif // PACKIO_LOG_H
 diff --git a/include/packio/json_rpc/rpc.h b/include/packio/json_rpc/rpc.h
