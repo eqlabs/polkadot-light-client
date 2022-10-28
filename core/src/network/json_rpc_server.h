@@ -28,14 +28,13 @@ using packio_server = std::shared_ptr<packio::server<packio::json_rpc::rpc, pack
 
 namespace plc::core::network {
 
-class JsonRpcServer final : public Stoppable {
+class JsonRpcServer final {
 public:
     JsonRpcServer(std::string ip_address, uint16_t port,
         std::shared_ptr<boost::asio::io_service> io);
-    ~JsonRpcServer();
+    ~JsonRpcServer() = default;
     std::shared_ptr<boost::asio::io_service> const getIoService() { return m_io_service; }
     const packio_server getServer() const { return m_packio_server; }
-    void stop() noexcept override;
     bool isConnected() const { return m_connected; }
 
 private:

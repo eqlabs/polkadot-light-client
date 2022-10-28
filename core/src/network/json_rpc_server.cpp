@@ -17,15 +17,6 @@ JsonRpcServer::JsonRpcServer(std::string ip_address, uint16_t port,
    connect();
 }
 
-JsonRpcServer::~JsonRpcServer() {
-    m_log->info("JsonRpcServer destructor");
-}
-
-void JsonRpcServer::stop() noexcept {
-    // TODO: not sure yet how to stop the server
-    m_log->info("JSON-RPC server: stop");
-}
-
 void JsonRpcServer::connect() {
 
     using awaitable_tcp_stream = decltype(packio::net::use_awaitable_t<>::as_default_on(
