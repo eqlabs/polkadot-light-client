@@ -17,9 +17,8 @@ JsonRpcServer::JsonRpcServer(std::string ip_address, uint16_t port,
    connect();
 }
 
-
 JsonRpcServer::~JsonRpcServer() {
-
+    m_log->info("JsonRpcServer destructor");
 }
 
 void JsonRpcServer::stop() noexcept {

@@ -127,6 +127,7 @@ int main(const int count, const char** args) {
                 printf("pow: a is %d, b is %d\n", a, b);
                 co_return std::pow(a, b);
             });
+        stop_handler->add(json_rpc_server);
     }
     runner->run();
 
