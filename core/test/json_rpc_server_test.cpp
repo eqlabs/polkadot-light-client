@@ -1,10 +1,8 @@
 #include <gtest/gtest.h>
 
-#include <stdlib.h>
 #include <iostream>
 #include <fstream>
 #include <thread>
-#include <chrono>
 
 #include "network/json_rpc_server.h"
 
@@ -31,6 +29,7 @@ TEST_F(JsonRpcServerTest, ShouldReturnCorrectResponse) {
     std::shared_ptr<boost::asio::io_service> io = std::make_shared<boost::asio::io_service>();
 
     auto json_rpc_server = std::make_shared<network::JsonRpcServer>("127.0.0.1", 2584, io);
+    EXPECT_TRUE(json_rpc_server->isConnected());
     auto packio_server = json_rpc_server->getServer();
     packio_server->dispatcher()->add_coro(
         "add", *json_rpc_server->getIoService(), [](int a, int b) -> packio::net::awaitable<int> {
@@ -49,11 +48,8 @@ TEST_F(JsonRpcServerTest, ShouldReturnCorrectResponse) {
         io->run();
     });
 
-    // expect result=89
     system("cd ./nodeutils && node json-rpc-client.js '{\"jsonrpc\": \"2.0\",\"id\": 12, \"method\": \"add\", \"params\": [55,34]}' > ./rpc_test.txt");
-    // expect result=99
     system("cd ./nodeutils && node json-rpc-client.js '{\"jsonrpc\": \"2.0\",\"id\": 12, \"method\": \"multiply\", \"params\": [11,9]}' >> ./rpc_test.txt");
-    // expect result=4096
     system("cd ./nodeutils && node json-rpc-client.js '{\"jsonrpc\": \"2.0\",\"id\": 12, \"method\": \"pow\", \"params\": [64,2]}' >> ./rpc_test.txt");
 
     std::ifstream t("./nodeutils/rpc_test.txt");
@@ -74,4 +70,10 @@ TEST_F(JsonRpcServerTest, ShouldReturnCorrectResponse) {
     io->stop();
     io_thread.join();
 
+}
+
+TEST_F(JsonRpcServerTest, ShouldNotConnected) {
+    std::shared_ptr<boost::asio::io_service> io = std::make_shared<boost::asio::io_service>();
+    auto json_rpc_server = std::make_shared<network::JsonRpcServer>("158.69.117.69", 2584, io);
+    EXPECT_FALSE(json_rpc_server->isConnected());
 }
