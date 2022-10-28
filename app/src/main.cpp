@@ -102,13 +102,7 @@ int main(const int count, const char** args) {
     connection_manager = std::make_shared<network::PeerManager>(runner, chainSpec.getBootNodes(), stop_handler);
     stop_handler->add(connection_manager);
 
-    auto he = gethostbyname ("cc1-1.parity.tech");
     std::string ip_address = "127.0.0.1";
-    // if (he != NULL) {
-    //     ip_address =  (inet_ntoa (*((struct in_addr *) he->h_addr_list[0])));
-    //     mainLogger->info("ip_address {}", ip_address);
-    // }
-
     auto json_rpc_server = std::make_shared<network::JsonRpcServer>(ip_address, 2584, runner->getService());
     if (json_rpc_server->isConnected()) {
         auto packio_server = json_rpc_server->getServer();
