@@ -24,16 +24,9 @@ JsonRpcServer::~JsonRpcServer() {
 
 void JsonRpcServer::stop() noexcept {
     m_log->debug("JSON-RPC server: stop");
-    // for (auto& [peer, state]: m_peers_info) {
-    //     if (state.state == ConnectionState::Connected) {
-    //         state.action = ConnectionAction::Disconnecting;
-    //         m_log->debug("  disconnecting from {}", peer.toHex());
-    //         m_host->disconnect(peer);
-    //     }
-    // }
 }
 
-bool JsonRpcServer::connect() {
+void JsonRpcServer::connect() {
 
     using awaitable_tcp_stream = decltype(packio::net::use_awaitable_t<>::as_default_on(
         std::declval<boost::beast::tcp_stream>()));
@@ -44,20 +37,25 @@ bool JsonRpcServer::connect() {
 
     boost::system::error_code ec;
     boost::asio::ip::address ip_address =
-    boost::asio::ip::address::from_string(m_ip_address, ec);
+        boost::asio::ip::address::from_string(m_ip_address, ec);
 
     if (ec.value() != 0) {
-        // Provided IP address is invalid. Breaking execution.
         m_log->error("Failed to parse the IP address. Error code = {}, Message: {}", ec.value(), ec.message());
-        return false; // ec.value();
+        return;
     }
 
+    m_log->info("create bind_ep address {} port {}", ip_address, m_port);
     boost::asio::ip::tcp::endpoint bind_ep(ip_address, m_port);
 
-    m_packio_server = packio::json_rpc::make_server(ws_acceptor{*m_io_service, bind_ep});
+    m_log->info("about to make_server");
+    try {
+        m_packio_server = packio::json_rpc::make_server(ws_acceptor{*m_io_service, bind_ep});
+    } catch (boost::wrapexcept<boost::system::system_error> e) {
+        m_log->info("could not connect to server");
+        return;
+    }
     m_packio_server->async_serve_forever();
-
-    return true;
+    m_connected = true;
 }
 
 } // namespace plc::core::network

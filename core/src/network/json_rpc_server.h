@@ -33,17 +33,19 @@ public:
     JsonRpcServer(std::string ip_address, uint16_t port,
         std::shared_ptr<boost::asio::io_service> io);
     ~JsonRpcServer();
-    bool connect();
     std::shared_ptr<boost::asio::io_service> getIoService() { return m_io_service; }
     packio_server getServer() { return m_packio_server; }
     void stop() noexcept override;
+    bool isConnected() { return m_connected; }
 
 private:
+    void connect();
     libp2p::log::Logger m_log = libp2p::log::createLogger("JsonRpcServer","network");
     std::shared_ptr<boost::asio::io_service> m_io_service;
     std::string m_ip_address;
     uint16_t m_port;
     packio_server m_packio_server;
+    bool m_connected;
 };
 
 } // namespace plc::core::network
