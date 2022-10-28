@@ -23,7 +23,8 @@ JsonRpcServer::~JsonRpcServer() {
 }
 
 void JsonRpcServer::stop() noexcept {
-    m_log->debug("JSON-RPC server: stop");
+    // TODO: not sure yet how to stop the server
+    m_log->info("JSON-RPC server: stop");
 }
 
 void JsonRpcServer::connect() {
@@ -44,14 +45,12 @@ void JsonRpcServer::connect() {
         return;
     }
 
-    m_log->info("create bind_ep address {} port {}", ip_address, m_port);
     boost::asio::ip::tcp::endpoint bind_ep(ip_address, m_port);
 
-    m_log->info("about to make_server");
     try {
         m_packio_server = packio::json_rpc::make_server(ws_acceptor{*m_io_service, bind_ep});
     } catch (boost::wrapexcept<boost::system::system_error> e) {
-        m_log->info("could not connect to server");
+        m_log->error("could not make connection for JSON-RPC server");
         return;
     }
     m_packio_server->async_serve_forever();
