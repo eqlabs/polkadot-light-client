@@ -1,4 +1,9 @@
 
+# We only use boost json with packio
+set (PACKIO_HAS_MSGPACK 0)
+set (PACKIO_HAS_NLOHMANN_JSON 0)
+set (PACKIO_HAS_BOOST_JSON 1)
+
 execute_process(
     COMMAND git clone https://github.com/qchateau/packio.git
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}

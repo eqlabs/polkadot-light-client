@@ -3,12 +3,6 @@ cmake_minimum_required(VERSION 3.12)
 project(polkadot_light_client)
 set (CMAKE_CXX_STANDARD 20)
 
-# We only use boost json with packio
-set (PACKIO_HAS_MSGPACK 0)
-set (PACKIO_HAS_NLOHMANN_JSON 0)
-set (PACKIO_HAS_BOOST_JSON 1)
-
-
 option(TESTING "Build tests" ON)
 option(SAN "Enable sanitizer" OFF)
 
