@@ -1,3 +1,16 @@
+diff --git a/include/packio/client.h b/include/packio/client.h
+index 80bce35..9f6d58e 100644
+--- a/include/packio/client.h
++++ b/include/packio/client.h
+@@ -260,7 +260,7 @@ private:
+                     assert(self->strand_.running_in_this_thread());
+ 
+                     if (ec) {
+-                        PACKIO_WARN("read error: {}", ec.message());
++                        PACKIO_WARN("read: {}", ec.message());
+                         self->reading_ = false;
+                         if (ec != net::error::operation_aborted)
+                             self->close();
 diff --git a/include/packio/internal/log.h b/include/packio/internal/log.h
 index 1de6fb1..fafa71d 100644
 --- a/include/packio/internal/log.h
@@ -44,3 +57,16 @@ index 80ac6c1..e9f81dd 100644
  
  namespace packio {
  namespace json_rpc {
+diff --git a/include/packio/server_session.h b/include/packio/server_session.h
+index a2e56b0..2238abc 100644
+--- a/include/packio/server_session.h
++++ b/include/packio/server_session.h
+@@ -96,7 +96,7 @@ private:
+                     assert(self->strand_.running_in_this_thread());
+ 
+                     if (ec) {
+-                        PACKIO_WARN("read error: {}", ec.message());
++                        PACKIO_WARN("read: {}", ec.message());
+                         self->close_connection();
+                         return;
+                     }
