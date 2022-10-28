@@ -5,17 +5,13 @@
 #include <vector>
 #include <unordered_map>
 
-// #include <packio/packio.h>
-// #include <packio/extra/websocket.h>
-
+#include <packio/packio.h>
+#include <packio/extra/websocket.h>
 
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/network/connection_manager.hpp>
 
 #include "runner/client_runner.h"
-
-#include <packio/packio.h>
-#include <packio/extra/websocket.h>
 
 namespace boost::asio {
     class io_context;
