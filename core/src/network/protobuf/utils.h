@@ -33,10 +33,8 @@ void writeToVec(
     std::vector<uint8_t>& buf) {
     const auto old_size = buf.size();
     const auto new_size = old_size + msg.ByteSizeLong();
-    buf.reserve(new_size);
-    msg.SerializeToArray(&buf[old_size], msg.ByteSizeLong());
-
     buf.resize(new_size);
+    msg.SerializeToArray(&buf[old_size], msg.ByteSizeLong());
 }
 
 void writeToVec(ConvertibleToProtobuf auto&& msg,
