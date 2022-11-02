@@ -28,8 +28,7 @@ TEST_F(JsonRpcServerTest, ShouldReturnCorrectResponse) {
 
     std::shared_ptr<boost::asio::io_service> io = std::make_shared<boost::asio::io_service>();
 
-    auto json_rpc_server = std::make_shared<network::JsonRpcServer>("127.0.0.1", 2584, io);
-    EXPECT_TRUE(json_rpc_server->isConnected());
+    auto json_rpc_server = std::make_shared<network::JsonRpcServer>(2584, io);
     auto packio_server = json_rpc_server->getServer();
     packio_server->dispatcher()->add_coro(
         "add", *json_rpc_server->getIoService(), [](int a, int b) -> packio::net::awaitable<int> {
@@ -70,10 +69,4 @@ TEST_F(JsonRpcServerTest, ShouldReturnCorrectResponse) {
     io->stop();
     io_thread.join();
 
-}
-
-TEST_F(JsonRpcServerTest, ShouldNotConnected) {
-    std::shared_ptr<boost::asio::io_service> io = std::make_shared<boost::asio::io_service>();
-    auto json_rpc_server = std::make_shared<network::JsonRpcServer>("158.69.117.69", 2584, io);
-    EXPECT_FALSE(json_rpc_server->isConnected());
 }
