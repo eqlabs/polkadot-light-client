@@ -26,21 +26,17 @@ namespace plc::core::network {
 
 class JsonRpcServer final {
 public:
-    JsonRpcServer(std::string ip_address, uint16_t port,
-        std::shared_ptr<boost::asio::io_service> io);
+    JsonRpcServer(uint16_t port, std::shared_ptr<boost::asio::io_service> io);
     ~JsonRpcServer() = default;
     std::shared_ptr<boost::asio::io_service> const getIoService() { return m_io_service; }
     const packio_server getServer() const { return m_packio_server; }
-    bool isConnected() const { return m_connected; }
 
 private:
     void connect();
     libp2p::log::Logger m_log = libp2p::log::createLogger("JsonRpcServer","network");
     const std::shared_ptr<boost::asio::io_service> m_io_service;
-    const std::string m_ip_address;
     const uint16_t m_port;
     packio_server m_packio_server;
-    bool m_connected;
 };
 
 } // namespace plc::core::network
