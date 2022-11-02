@@ -5,6 +5,8 @@
 #include <vector>
 #include <unordered_map>
 
+#include <boost/asio.hpp>
+#include <boost/asio/use_awaitable.hpp>
 #include <packio/packio.h>
 #include <packio/extra/websocket.h>
 
