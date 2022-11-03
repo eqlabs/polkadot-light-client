@@ -1,0 +1,36 @@
+#include "runtime/module.h"
+
+#include <wasm-binary.h>
+#include <wasm-features.h>
+
+OUTCOME_CPP_DEFINE_CATEGORY(plc::core::runtime, Module::Error, e) {
+    using E = plc::core::runtime::Module::Error;
+    switch (e) {
+    case E::ParsingError:
+        return "Error while trying to parse the runtime code";
+    }
+    return "Unknown error";
+}
+
+namespace plc::core::runtime {
+
+Result<void> Module::parseCode(const ByteBuffer &code) {
+    m_module = std::make_unique<wasm::Module>();
+    wasm::WasmBinaryBuilder parser(
+        *m_module,
+        wasm::FeatureSet(),
+        reinterpret_cast<std::vector<char> const&>(code));
+
+    try {
+        m_log->debug("Parsing runtime code");
+        parser.read();
+    } catch (wasm::ParseException &e) {
+        std::ostringstream msg;
+        e.dump(msg);
+        m_log->error("Parsing runtime code error {}", msg.str());
+        return Error::ParsingError;
+    }
+    return libp2p::outcome::success();
+}
+
+} //namespace plc::core::runtime

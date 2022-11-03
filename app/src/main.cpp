@@ -11,6 +11,8 @@
 #include "logger.h"
 #include "network/light2/protocol.h"
 #include "network/grandpa/protocol.h"
+#include "runtime/module.h"
+#include "runtime/service.h"
 #include "utils/hex.h"
 
 namespace plc::app {
@@ -96,7 +98,12 @@ cppcoro::task<void> send(std::shared_ptr<plc::core::network::light2::Protocol> l
     }
     else {
         auto val = result.value();
-        volatile int x = 2;
+        auto module = plc::core::runtime::Module();
+        plc::core::ByteBuffer buf;
+        for (auto i = 0; i < val.proof.size(); ++i) {
+            buf.push_back(val.proof[i]);
+        }
+        module.parseCode(buf);
     }
     co_return;
 }
@@ -115,6 +122,16 @@ cppcoro::task<void> test2(std::shared_ptr<plc::core::network::PeerManager> conne
     for (auto peer: connection_manager->getPeersInfo()) {
         std::cout << "Peer: " << peer.toBase58() << std::endl;
         co_await send(light2, req, peer);
+    }
+    co_return;
+}
+
+cppcoro::task<void>test(std::shared_ptr<plc::core::network::PeerManager> connection_manager, std::shared_ptr<plc::core::runtime::Service> service) {
+    auto block_hash = plc::core::unhexWith0xToBlockHash("0x1611aaf014ea221866a309dda02dd97633782d6d6fe0925eaaef9952105da89b");
+    
+    for (auto peer: connection_manager->getPeersInfo()) {
+        std::cout << "Peer: " << peer.toBase58() << std::endl;
+        co_await service->loadRuntimeForBlock(peer, block_hash.value());
     }
     co_return;
 }
@@ -140,14 +157,17 @@ int main(const int count, const char** args) {
     if (result.has_error()) {
         exit(EXIT_FAILURE);
     }
-    auto chainSpec = result.value();
-    connection_manager = std::make_shared<network::PeerManager>(runner, chainSpec.getBootNodes(), stop_handler);
+    auto chain_spec = std::make_shared<plc::core::chain::Spec>(result.value());
+    connection_manager = std::make_shared<network::PeerManager>(runner, chain_spec->getBootNodes(), stop_handler);
     stop_handler->add(connection_manager);
 
+    auto service = std::make_shared<plc::core::runtime::Service>(chain_spec, connection_manager, runner);
+    service->loadInitialRuntime();
+
     bool finished = false;
-    auto timer = runner->makePeriodicTimer(std::chrono::milliseconds(2000), [&finished, connection_manager, runner]() {
+    auto timer = runner->makePeriodicTimer(std::chrono::milliseconds(2000), [&finished, connection_manager, runner, service]() {
         if (!finished) {
-            runner->dispatchTask(test2(connection_manager, runner));
+            runner->dispatchTask(test(connection_manager, service));
             finished = true;
         }
     });

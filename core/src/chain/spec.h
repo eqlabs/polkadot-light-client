@@ -29,10 +29,10 @@ using BlockId = boost::variant<BlockHash, BlockNumber>;
 class Spec final {
 public:
     enum class Error {
-      MissingEntry = 1,
-      MissingPeerId,
-      ParserError,
-      NotImplemented
+        MissingEntry = 1,
+        MissingPeerId,
+        ParserError,
+        NotImplemented
     };
 
     static Result<Spec> loadFromFile(const std::string &file_path);

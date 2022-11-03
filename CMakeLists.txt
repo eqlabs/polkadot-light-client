@@ -29,6 +29,7 @@ add_3rdparty(cppcoro)
 add_3rdparty(scale)
 add_3rdparty(Protobuf)
 add_3rdparty(binaryen)
+add_3rdparty(zstd)
 
 add_subdirectory(core)
 add_subdirectory(app)

@@ -20,3 +20,4 @@ execute_process(
 
 link_directories("${BINARYEN_ROOT}/install/lib")
 include_directories(BEFORE SYSTEM "${BINARYEN_ROOT}/install/include")
+include_directories(BEFORE SYSTEM "${BINARYEN_ROOT}/src/src")
