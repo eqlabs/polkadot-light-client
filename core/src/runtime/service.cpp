@@ -33,16 +33,14 @@ constexpr uint8_t zstd_prefix[zstd_prefix_size] = {0x52, 0xBC, 0x53, 0x76, 0x46,
 // https://github.com/paritytech/substrate/blob/polkadot-v0.9.8/primitives/maybe-compressed-blob/src/lib.rs#L35
 constexpr size_t code_blob_bomb_limit = 50 * 1024 * 1024;
 
-Result<void> Service::loadInitialRuntime() {
+Result<void> Service::loadGenesisRuntime() {
     auto genesis = m_spec->getGenesis();
 
     for (auto [k, v]: genesis) {        
         if (auto str = hex(k); str == code_hex) {
             auto genesisRuntime = v;
-            ByteBuffer res;
-            uncompressCodeIfNeeded(genesisRuntime, res);
 
-            return m_module.parseCode(res);
+            return processRuntime(genesisRuntime);
         }
     }
     return Error::MissingInitialRuntime;
@@ -69,11 +67,23 @@ cppcoro::task<Result<void>> Service::loadRuntimeForBlock(libp2p::peer::PeerId pe
         for (auto i = 0; i < val.proof.size(); ++i) {
             buf.push_back(val.proof[i]);
         }
-        ByteBuffer res;
-        uncompressCodeIfNeeded(buf, res);
 
-        co_return m_module.parseCode(res);
+        co_return processRuntime(buf);
     }
+}
+
+Result<void> Service::processRuntime(const ByteBuffer &runtime) {
+    ByteBuffer res;
+    OUTCOME_TRY(uncompressCodeIfNeeded(runtime, res));
+    OUTCOME_TRY(m_module->parseCode(res));
+
+    m_module_instance = std::make_shared<wasm::ModuleInstance>(*m_module->getWasmModule(), &m_shell_interface);
+    m_executor->init(m_module_instance);
+
+    //trying to launch core_version api method
+    auto coreVersionResult = m_api->coreVersion();
+            
+    return libp2p::outcome::success();
 }
 
 Result<void> Service::uncompressCodeIfNeeded(const ByteBuffer &in, ByteBuffer &out) {

@@ -3,7 +3,7 @@
 #include <string>
 
 #include <libp2p/log/logger.hpp>
-#include <wasm.h>
+#include <wasm-binary.h>
 
 #include "utils/result.h"
 #include "utils/types.h"
@@ -17,9 +17,11 @@ public:
     };
     Result<void> parseCode(const ByteBuffer &code);
 
+    std::shared_ptr<wasm::Module> getWasmModule() {
+        return m_module;
+    }
 private:
-    std::unique_ptr<wasm::Module> m_module;
-
+    std::shared_ptr<wasm::Module> m_module;
     libp2p::log::Logger m_log = libp2p::log::createLogger("Module", "runtime");
 };
 

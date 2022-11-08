@@ -162,15 +162,15 @@ int main(const int count, const char** args) {
     stop_handler->add(connection_manager);
 
     auto service = std::make_shared<plc::core::runtime::Service>(chain_spec, connection_manager, runner);
-    service->loadInitialRuntime();
+    service->loadGenesisRuntime();
 
     bool finished = false;
-    auto timer = runner->makePeriodicTimer(std::chrono::milliseconds(2000), [&finished, connection_manager, runner, service]() {
-        if (!finished) {
-            runner->dispatchTask(test(connection_manager, service));
-            finished = true;
-        }
-    });
+    // auto timer = runner->makePeriodicTimer(std::chrono::milliseconds(2000), [&finished, connection_manager, runner, service]() {
+    //     if (!finished) {
+    //         runner->dispatchTask(test(connection_manager, service));
+    //         finished = true;
+    //     }
+    // });
     runner->run();
 
     mainLogger->info("Exiting application");
