@@ -79,7 +79,7 @@ Result<void> Service::processRuntime(const ByteBuffer &runtime) {
     OUTCOME_TRY(uncompressCodeIfNeeded(runtime, res));
     OUTCOME_TRY(m_module->parseCode(res));
 
-    m_module_instance = std::make_shared<wasm::ModuleInstance>(*m_module->getWasmModule(), &m_shell_interface);
+    m_module_instance = std::make_shared<wasm::ModuleInstance>(*m_module->getWasmModule(), &m_external_interface);
     m_executor->init(m_module_instance);
 
     //trying to launch core_version api method

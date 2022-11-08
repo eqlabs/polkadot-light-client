@@ -3,13 +3,13 @@
 #include <libp2p/log/logger.hpp>
 
 #include <wasm-features.h>
-#include <shell-interface.h>
 
 #include "chain/spec.h"
 #include "network/peer_manager.h"
 #include "runner/client_runner.h"
 #include "runtime/api.h"
 #include "runtime/executor.h"
+#include "runtime/external_interface.h"
 #include "runtime/module.h"
 
 namespace plc::core::runtime {
@@ -46,7 +46,7 @@ private:
     std::shared_ptr<Executor> m_executor;
     std::shared_ptr<Api> m_api;
 
-    wasm::ShellExternalInterface m_shell_interface;
+    ExternalInterface m_external_interface;
     std::shared_ptr<wasm::ModuleInstance> m_module_instance;
 
     libp2p::log::Logger m_log = libp2p::log::createLogger("Module", "runtime");
