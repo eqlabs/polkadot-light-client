@@ -49,6 +49,8 @@ Result<void> Service::loadGenesisRuntime() {
 cppcoro::task<Result<void>> Service::loadRuntimeForBlock(libp2p::peer::PeerId peer, BlockHash block) {
     auto host = m_connection_manager->getHost();
     auto light2 = plc::core::network::light2::Protocol(*host, *m_runner);
+
+    //Only for testing purposes, but seems obtaining the runtime from full node doesn't work. Yet...
     auto block_hash = plc::core::unhexWith0xToBlockHash("0x1611aaf014ea221866a309dda02dd97633782d6d6fe0925eaaef9952105da89b");
     //{0x16, 0x11, 0xaa,0xf0,0x14,0xea,0x22,0x18,0x66,0xa3,0x09,0xdd,0xa0,0x2d,0xd9,0x76,0x33,0x78,0x2d,0x6d,0x6f,0xe0,0x92,0x5e,0xaa,0xef,0x99,0x52,0x10,0x5d,0xa8,0x9b};
 
