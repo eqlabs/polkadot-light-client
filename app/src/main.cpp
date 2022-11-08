@@ -1,17 +1,10 @@
 #include <iostream>
-
-#include <cppcoro/sync_wait.hpp>
 #include <boost/program_options.hpp>
-#include <libp2p/host/basic_host/basic_host.hpp>
-#include <iostream>
 
 #include "chain/spec.h"
 #include "runner/client_runner.h"
 #include "network/peer_manager.h"
 #include "logger.h"
-#include "network/light2/protocol.h"
-#include "network/grandpa/protocol.h"
-#include "runtime/module.h"
 #include "runtime/service.h"
 #include "utils/hex.h"
 
