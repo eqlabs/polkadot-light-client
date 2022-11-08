@@ -61,8 +61,7 @@ cppcoro::task<Result<void>> Service::loadRuntimeForBlock(libp2p::peer::PeerId pe
 
     if (result.has_error()) {
         co_return Error::ObtainingRuntimeError;
-    }
-    else {
+    } else {
         auto val = result.value();
 
         plc::core::ByteBuffer buf;
@@ -83,7 +82,7 @@ Result<void> Service::processRuntime(const ByteBuffer &runtime) {
     m_executor->init(m_module_instance);
 
     //trying to launch core_version api method
-    auto coreVersionResult = m_api->coreVersion();
+    // auto coreVersionResult = m_api->coreVersion();
             
     return libp2p::outcome::success();
 }

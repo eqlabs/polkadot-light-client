@@ -464,7 +464,7 @@ void PeerManager::updateConnections() {
 
 std::vector<libp2p::peer::PeerId> PeerManager::getPeersInfo() const {
     std::vector<libp2p::peer::PeerId> peers;
-    for (auto [peer, state]: m_peers_info) {
+    for (auto [peer, _]: m_peers_info) {
         peers.push_back(peer);
     }
     return peers;
