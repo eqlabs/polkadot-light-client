@@ -1,0 +1,6 @@
+// Schema definition for sync/2 messages.
+
+syntax = "proto3";
+
+package plc.core.network.sync2.proto;
+
