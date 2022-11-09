@@ -19,10 +19,6 @@ OUTCOME_CPP_DEFINE_CATEGORY(plc::core::runtime, Module::Error, e) {
 namespace plc::core::runtime {
 
 Result<void> Module::parseCode(const ByteBuffer &code) {
-    std::string s;
-    s.resize(code.size());
-    std::memcpy(s.data(), code.data(), code.size());
-
     m_module = std::make_shared<wasm::Module>();
     wasm::WasmBinaryBuilder parser(
         *m_module,
