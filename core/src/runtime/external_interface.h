@@ -17,7 +17,7 @@ public:
 
     void registerImports();
 
-    wasm::Literals callImport(wasm::Function* import, wasm::LiteralList& arguments) override;
+    wasm::Literal callImport(wasm::Function* import, wasm::LiteralList& arguments) override;
 
 private:
     std::shared_ptr<plc::core::host::Api> m_host_api;

@@ -2,7 +2,6 @@
 
 #include <libp2p/log/logger.hpp>
 
-#include <wasm-features.h>
 
 #include "chain/spec.h"
 #include "network/peer_manager.h"

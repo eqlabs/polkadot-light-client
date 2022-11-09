@@ -29,7 +29,7 @@ public:
         wasm::LiteralList arguments = {wasm::Literal{0}, wasm::Literal{0}};
         auto result = m_module_instance->callExport(wasm::Name{name.data()}, arguments);
 
-        return libp2p::outcome::success(Ptr(result[0].geti64()));
+        return libp2p::outcome::success(Ptr(result.geti64()));
     }
 
 private:
