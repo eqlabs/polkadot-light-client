@@ -187,10 +187,8 @@ handle_request(
 
 http_session::
 http_session(
-    tcp::socket socket,
-    std::shared_ptr<shared_state> const& state)
+    tcp::socket socket)
     : socket_(std::move(socket))
-    , state_(state)
 {
 }
 
@@ -239,12 +237,12 @@ on_read(error_code ec, std::size_t)
     {
         // Create a WebSocket session by transferring the socket
         std::make_shared<websocket_session>(
-            std::move(socket_), state_)->run(std::move(req_));
+            std::move(socket_))->run(std::move(req_));
         return;
     }
 
     // Send the response
-    handle_request(state_->doc_root(), std::move(req_),
+    handle_request(".", std::move(req_),
         [this](auto&& response)
         {
             // The lifetime of the message has to extend

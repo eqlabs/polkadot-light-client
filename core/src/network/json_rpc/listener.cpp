@@ -10,21 +10,20 @@
 #include "listener.hpp"
 #include "http_session.hpp"
 #include <iostream>
+#include "utils/ws_logger.h"
 
 listener::
 listener(
     net::io_context& ioc,
-    tcp::endpoint endpoint,
-    std::shared_ptr<shared_state> const& state)
+    tcp::endpoint endpoint)
     : acceptor_(ioc)
     , socket_(ioc)
-    , state_(state)
 {
     error_code ec;
 
     // Open the acceptor
     acceptor_.open(endpoint.protocol(), ec);
-    printf("JKL: listener open\n");
+    plc::core::WsLogger::getLogger()->warn("JKL: listener open");
     if(ec)
     {
         fail(ec, "open");
@@ -86,14 +85,13 @@ void
 listener::
 on_accept(error_code ec)
 {
-    printf("JKL: listener on_accept\n");
+    plc::core::WsLogger::getLogger()->warn("JKL: listener on_accept");
     if(ec)
         return fail(ec, "accept");
     else
         // Launch a new session for this connection
         std::make_shared<http_session>(
-            std::move(socket_),
-            state_)->run();
+            std::move(socket_))->run();
 
     // Accept another connection
     acceptor_.async_accept(

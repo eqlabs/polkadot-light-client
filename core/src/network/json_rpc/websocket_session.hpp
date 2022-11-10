@@ -12,15 +12,16 @@
 
 #include "net.hpp"
 #include "beast.hpp"
-#include "shared_state.hpp"
 
 #include <cstdlib>
 #include <memory>
 #include <string>
 #include <vector>
 #include <iostream>
+
+#include "utils/ws_logger.h"
+
 // Forward declaration
-class shared_state;
 
 /** Represents an active WebSocket connection to the server
 */
@@ -28,7 +29,6 @@ class websocket_session : public std::enable_shared_from_this<websocket_session>
 {
     beast::flat_buffer buffer_;
     websocket::stream<tcp::socket> ws_;
-    std::shared_ptr<shared_state> state_;
     std::vector<std::shared_ptr<std::string const>> queue_;
 
     void fail(error_code ec, char const* what);
@@ -38,8 +38,7 @@ class websocket_session : public std::enable_shared_from_this<websocket_session>
 
 public:
     websocket_session(
-        tcp::socket socket,
-        std::shared_ptr<shared_state> const& state);
+        tcp::socket socket);
 
     ~websocket_session();
 
@@ -57,6 +56,7 @@ void
 websocket_session::
 run(http::request<Body, http::basic_fields<Allocator>> req)
 {
+    plc::core::WsLogger::getLogger()->warn("websocket_session::run");
     // Accept the websocket handshake
     ws_.async_accept(
         req,

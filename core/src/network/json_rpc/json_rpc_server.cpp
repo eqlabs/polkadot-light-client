@@ -5,7 +5,6 @@
 #include <boost/asio/io_context.hpp>
 
 #include "listener.hpp"
-#include "shared_state.hpp"
 #include <boost/asio/signal_set.hpp>
 
 namespace plc::core::network::json_rpc {
@@ -35,8 +34,7 @@ void JsonRpcServer::connect() {
     // Create and launch a listening port
     std::make_shared<listener>(
         *m_io_service,
-        bind_ep,
-        std::make_shared<shared_state>("."))->run();
+        bind_ep)->run();
 
 }
 

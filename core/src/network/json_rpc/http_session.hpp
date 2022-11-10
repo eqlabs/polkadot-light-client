@@ -12,7 +12,6 @@
 
 #include "net.hpp"
 #include "beast.hpp"
-#include "shared_state.hpp"
 #include <cstdlib>
 #include <memory>
 
@@ -22,7 +21,6 @@ class http_session : public std::enable_shared_from_this<http_session>
 {
     tcp::socket socket_;
     beast::flat_buffer buffer_;
-    std::shared_ptr<shared_state> state_;
     http::request<http::string_body> req_;
 
     void fail(error_code ec, char const* what);
@@ -32,8 +30,7 @@ class http_session : public std::enable_shared_from_this<http_session>
 
 public:
     http_session(
-        tcp::socket socket,
-        std::shared_ptr<shared_state> const& state);
+        tcp::socket socket);
 
     void run();
 };
