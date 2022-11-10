@@ -1,8 +1,10 @@
+#pragma once
+
 #include <libp2p/log/logger.hpp>
 
 
 namespace plc::core {
-    class PackIoLogger
+    class WsLogger
     {
         public:
             static libp2p::log::Logger getLogger();

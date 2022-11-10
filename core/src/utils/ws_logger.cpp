@@ -2,11 +2,11 @@
 
 namespace plc::core {
 
-    libp2p::log::Logger PackIoLogger::m_log = {};
+    libp2p::log::Logger WsLogger::m_log = {};
 
-    libp2p::log::Logger PackIoLogger::getLogger() {
+    libp2p::log::Logger WsLogger::getLogger() {
         if (m_log == nullptr) {
-            m_log = libp2p::log::createLogger("PackIo JSON-RPC","network");
+            m_log = libp2p::log::createLogger("WsLogger","network");
         }
         return m_log;
     }
