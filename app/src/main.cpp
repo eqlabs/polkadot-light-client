@@ -6,6 +6,7 @@
 #include "chain/spec.h"
 #include "runner/client_runner.h"
 #include "network/peer_manager.h"
+#include "network/json_rpc/json_rpc_server.h"
 #include "logger.h"
 
 namespace plc::app {
@@ -100,6 +101,35 @@ int main(const int count, const char** args) {
     auto chainSpec = result.value();
     connection_manager = std::make_shared<network::PeerManager>(runner, chainSpec.getBootNodes(), stop_handler);
     stop_handler->add(connection_manager);
+
+    auto json_rpc_server = std::make_shared<network::json_rpc::JsonRpcServer>(2584, runner->getService());
+    // json_rpc_server->connect();
+    // auto packio_server = json_rpc_server->getServer();
+
+    // packio_server->dispatcher()->add_coro(
+    //     "add", *json_rpc_server->getIoService(), [](int a, int b) -> packio::net::awaitable<int> {
+    //         printf("add: a is %d, b is %d\n", a, b);
+    //         co_return a + b;
+    //     });
+
+    // packio_server->dispatcher()->add_async(
+    //     "multiply", {"a", "b"}, [io = json_rpc_server->getIoService(), logger = mainLogger](packio::json_rpc::completion_handler complete, int a, int b) {
+    //         // Call the completion handler later
+    //         packio::net::post(
+    //             *io, [a, b, complete = std::move(complete), logger]() mutable {
+    //                 logger->warn("multiply a {} b {}", a, b)
+    //                 complete(a * b);
+    //             });
+    //     });
+
+    // packio_server->dispatcher()->add_coro(
+    //     "pow", *json_rpc_server->getIoService(), [](int a, int b) -> packio::net::awaitable<int> {
+    //         // mainLogger->warn("pow: a is {}, b is {}, session {}", a, b, (void*)session_ptr.get());
+    //         // mainLogger->warn("pow: a is {}, b is {}", a, b);
+    //         printf("pow: a is %d, b is %d\n", a, b);
+    //         // mainLogger->info("info");
+    //         co_return std::pow(a, b);
+    //     });
 
     runner->run();
 

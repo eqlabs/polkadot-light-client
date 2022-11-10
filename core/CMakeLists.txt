@@ -5,13 +5,17 @@ add_library(plc_core
     src/network/grandpa/protocol.cpp
     src/network/light2/protocol.cpp
     src/network/peer_manager.cpp
-    src/network/json_rpc_server.cpp
+    src/network/json_rpc/http_session.cpp
+    src/network/json_rpc/listener.cpp
+    src/network/json_rpc/shared_state.cpp
+    src/network/json_rpc/websocket_session.cpp
+    src/network/json_rpc/json_rpc_server.cpp
     src/network/protobuf/message_reader_writer.cpp
     src/network/scale/message_reader_writer.cpp
     src/runner/client_runner.cpp
     src/runner/timer.cpp
     src/utils/hex.cpp
-    src/utils/packio_logger.cpp
+    src/utils/ws_logger.cpp
     src/utils/stoppable.cpp
     src/utils/string_conversion.cpp)
 message(STATUS "dir = ${CMAKE_CURRENT_LIST_DIR}/src")
