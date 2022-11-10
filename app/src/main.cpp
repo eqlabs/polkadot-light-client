@@ -103,6 +103,8 @@ int main(const int count, const char** args) {
     stop_handler->add(connection_manager);
 
     auto json_rpc_server = std::make_shared<network::json_rpc::JsonRpcServer>(2584, runner->getService());
+    mainLogger->warn("got shared ptr for server");
+    json_rpc_server->connect();
     // json_rpc_server->connect();
     // auto packio_server = json_rpc_server->getServer();
 

@@ -10,6 +10,7 @@
 #include "http_session.h"
 #include "websocket_session.h"
 #include <iostream>
+#include "utils/ws_logger.h"
 
 //------------------------------------------------------------------------------
 
@@ -236,8 +237,10 @@ on_read(error_code ec, std::size_t)
     if(websocket::is_upgrade(req_))
     {
         // Create a WebSocket session by transferring the socket
+        plc::core::WsLogger::getLogger()->warn("http_session::on_read: upgrade to websocket");
         std::make_shared<websocket_session>(
             std::move(socket_))->run(std::move(req_));
+        plc::core::WsLogger::getLogger()->warn("http_session::on_read: done upgrade to websocket");
         return;
     }
 
