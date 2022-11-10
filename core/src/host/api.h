@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+
 #include <libp2p/log/logger.hpp>
 #include <literal.h>
 
@@ -13,7 +15,7 @@ namespace plc::core::host {
 
 class Api final {
 public:
-    Api() = default;
+    Api();
 
     void setMemory(std::shared_ptr<plc::core::runtime::Memory> memory) {
         m_memory = memory;
@@ -27,7 +29,11 @@ public:
     libp2p::log::Logger m_log = libp2p::log::createLogger("Module", "host");
 
 private:
+    void ensureArgumentsSize(int argsSize, int size) {
+        BOOST_ASSERT(argsSize == size);
+    }
     std::shared_ptr<plc::core::runtime::Memory> m_memory;
+    std::map<soralog::Level, int> m_wasm_log_level_map;
 };
 
 } //namespace plc::core::host

@@ -5,6 +5,9 @@
 
 #include <libp2p/log/logger.hpp>
 
+#include "runtime/ptr.h"
+#include "utils/types.h"
+
 namespace plc::core::runtime {
 
 // Alignment for pointers, same with substrate:
@@ -15,21 +18,24 @@ constexpr static uint32_t max_memory_size = std::numeric_limits<uint32_t>::max()
 
 class MemoryAllocator final {
 public:
-    MemoryAllocator(uint32_t heap_base, std::function<void(size_t)> resize_handle) 
+    MemoryAllocator(WasmSize heap_base, std::function<void(size_t)> resize_handle) 
         : m_offset(heap_base), m_size(initial_memory_size), m_resize_handle(resize_handle) {}
 
-    uint32_t allocate(uint32_t size);
-    std::optional<uint32_t> deallocate(uint32_t ptr);
+    WasmPtr allocate(WasmSize size);
+    std::optional<WasmSize> deallocate(WasmPtr ptr);
+    bool checkAddress(Ptr ptr) {
+        return m_offset > ptr.m_addr && m_offset - ptr.m_addr >= ptr.m_size;
+    }
 
 private:
-    uint32_t freealloc(uint32_t size);
-    uint32_t growAlloc(uint32_t size);
-    void resize(uint32_t new_size);
+    WasmPtr freealloc(WasmSize size);
+    WasmPtr growAlloc(WasmSize size);
+    void resize(WasmSize new_size);
 
-    uint32_t m_offset;
+    WasmSize m_offset;
     size_t m_size;
-    std::unordered_map<uint32_t, uint32_t> m_allocated;
-    std::map<uint32_t, uint32_t> m_deallocated;
+    std::unordered_map<WasmPtr, WasmSize> m_allocated;
+    std::map<WasmPtr, WasmSize> m_deallocated;
     
     libp2p::log::Logger m_log = libp2p::log::createLogger("Module", "runtime");
 

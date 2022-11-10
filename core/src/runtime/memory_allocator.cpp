@@ -11,7 +11,7 @@ inline constexpr uint32_t roundUp(uint32_t t) {
 }
 
 
-uint32_t MemoryAllocator::allocate(uint32_t size) {
+WasmPtr MemoryAllocator::allocate(WasmSize size) {
     if (size == 0) {
         return 0;
     }
@@ -36,7 +36,7 @@ uint32_t MemoryAllocator::allocate(uint32_t size) {
     return res;
 }
 
-std::optional<uint32_t> MemoryAllocator::deallocate(uint32_t ptr) {
+std::optional<WasmSize> MemoryAllocator::deallocate(WasmPtr ptr) {
     auto a_it = m_allocated.find(ptr);
     if (a_it == m_allocated.end()) {
         return std::nullopt;
@@ -75,15 +75,15 @@ std::optional<uint32_t> MemoryAllocator::deallocate(uint32_t ptr) {
     return size;
 }
 
-uint32_t MemoryAllocator::freealloc(uint32_t size) {
+WasmPtr MemoryAllocator::freealloc(WasmSize size) {
     if (size == 0) {
         return 0;
     }
 
     size = roundUp(size);
 
-    auto min_chunk_size = std::numeric_limits<uint32_t>::max();
-    uint32_t ptr = 0;
+    auto min_chunk_size = std::numeric_limits<WasmSize>::max();
+    WasmPtr ptr = 0;
     for (const auto &[chunk_ptr, chunk_size] : m_deallocated) {
         BOOST_ASSERT(chunk_size > 0);
         if (chunk_size >= size and chunk_size < min_chunk_size) {
@@ -94,11 +94,11 @@ uint32_t MemoryAllocator::freealloc(uint32_t size) {
                 }
         }
     }
-    // if (ptr == 0) {
-    //   // if did not find available space among deallocated memory chunks,
-    //   // then grow memory and allocate in new space
-    //   return growAlloc(size);
-    // }
+    if (ptr == 0) {
+        // if did not find available space among deallocated memory chunks,
+        // then grow memory and allocate in new space
+        return growAlloc(size);
+    }
 
     const auto node = m_deallocated.extract(ptr);
     BOOST_ASSERT_MSG(!node.empty(),
@@ -115,8 +115,7 @@ uint32_t MemoryAllocator::freealloc(uint32_t size) {
     return ptr;
 }
 
-uint32_t MemoryAllocator::growAlloc(uint32_t size) {
-    // check that we do not exceed max memory size
+WasmPtr MemoryAllocator::growAlloc(WasmSize size) {
     if (max_memory_size - m_offset < size) {
         m_log->error("Memory size exceeded when growing it on {} bytes, offset was 0x{:x}", size, m_offset);
         return 0;
@@ -134,10 +133,7 @@ uint32_t MemoryAllocator::growAlloc(uint32_t size) {
     return allocate(size);
 }
 
-void MemoryAllocator::resize(uint32_t new_size) {
-    /**
-     * We use this condition to avoid deallocated_ pointers fixup
-     */
+void MemoryAllocator::resize(WasmSize new_size) {
     BOOST_ASSERT(m_offset <= max_memory_size - new_size);
     if (new_size >= m_size) {
         m_size = new_size;

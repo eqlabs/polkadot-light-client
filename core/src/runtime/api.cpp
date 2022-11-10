@@ -1,7 +1,7 @@
 #include "api.h"
 
 namespace plc::core::runtime {
-    Result<Ptr> Api::coreVersion() {
-        return m_executor->call("Core_version");
+    Result<Version> Api::coreVersion() {
+        return m_executor->call<Version>("Core_version");
     }
 } //namespace plc::core::runtime

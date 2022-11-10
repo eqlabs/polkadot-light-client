@@ -7,6 +7,7 @@
 
 #include "host/api.h"
 #include "runtime/memory.h"
+#include "utils/types.h"
 
 namespace plc::core::runtime {
 
@@ -19,7 +20,10 @@ public:
     }
 
     void registerImports();
-    void initMemory(uint32_t heap_base);
+    void initMemory(WasmSize heap_base);
+    std::shared_ptr<plc::core::runtime::Memory> getMemory() {
+        return m_memory;
+    }
 
     wasm::Literals callImport(wasm::Function* import, wasm::LiteralList& arguments) override;
 

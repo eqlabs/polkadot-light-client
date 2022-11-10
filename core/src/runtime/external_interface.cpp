@@ -14,7 +14,7 @@ void ExternalInterface::registerImports() {
     REGISTER_HOST_API_FUNCTION(ext_allocator_free_version_1);
 }
 
-void ExternalInterface::initMemory(uint32_t heap_base) {
+void ExternalInterface::initMemory(WasmSize heap_base) {
     m_memory = std::make_shared<plc::core::runtime::Memory>(&memory, heap_base);
     m_host_api->setMemory(m_memory);
 }
