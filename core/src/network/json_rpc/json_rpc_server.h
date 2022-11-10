@@ -32,15 +32,14 @@ public:
     void run();
 
 private:
-    tcp::acceptor acceptor_;
-    tcp::socket socket_;
-
     void fail(error_code ec, char const* what);
-    void on_accept(error_code ec);
-
+    void onAccept(error_code ec);
+ 
     libp2p::log::Logger m_log = libp2p::log::createLogger("JsonRpcServer","network");
     const std::shared_ptr<boost::asio::io_service> m_io_service;
     const uint16_t m_port;
+    tcp::acceptor m_acceptor;
+    tcp::socket m_socket;
 };
 
 } // namespace plc::core::network

@@ -6,7 +6,6 @@ add_library(plc_core
     src/network/light2/protocol.cpp
     src/network/peer_manager.cpp
     src/network/json_rpc/http_session.cpp
-    src/network/json_rpc/listener.cpp
     src/network/json_rpc/websocket_session.cpp
     src/network/json_rpc/json_rpc_server.cpp
     src/network/json_rpc/json_rpc_client.cpp

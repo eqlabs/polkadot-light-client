@@ -9,51 +9,12 @@
 
 #include "http_session.h"
 #include "websocket_session.h"
-#include <iostream>
 #include "utils/ws_logger.h"
 
-//------------------------------------------------------------------------------
-
-// Return a reasonable mime type based on the extension of a file.
-boost::beast::string_view
-mime_type(boost::beast::string_view path)
-{
-    using boost::beast::iequals;
-    auto const ext = [&path]
-    {
-        auto const pos = path.rfind(".");
-        if(pos == boost::beast::string_view::npos)
-            return boost::beast::string_view{};
-        return path.substr(pos);
-    }();
-    if(iequals(ext, ".htm"))  return "text/html";
-    if(iequals(ext, ".html")) return "text/html";
-    if(iequals(ext, ".php"))  return "text/html";
-    if(iequals(ext, ".css"))  return "text/css";
-    if(iequals(ext, ".txt"))  return "text/plain";
-    if(iequals(ext, ".js"))   return "application/javascript";
-    if(iequals(ext, ".json")) return "application/json";
-    if(iequals(ext, ".xml"))  return "application/xml";
-    if(iequals(ext, ".swf"))  return "application/x-shockwave-flash";
-    if(iequals(ext, ".flv"))  return "video/x-flv";
-    if(iequals(ext, ".png"))  return "image/png";
-    if(iequals(ext, ".jpe"))  return "image/jpeg";
-    if(iequals(ext, ".jpeg")) return "image/jpeg";
-    if(iequals(ext, ".jpg"))  return "image/jpeg";
-    if(iequals(ext, ".gif"))  return "image/gif";
-    if(iequals(ext, ".bmp"))  return "image/bmp";
-    if(iequals(ext, ".ico"))  return "image/vnd.microsoft.icon";
-    if(iequals(ext, ".tiff")) return "image/tiff";
-    if(iequals(ext, ".tif"))  return "image/tiff";
-    if(iequals(ext, ".svg"))  return "image/svg+xml";
-    if(iequals(ext, ".svgz")) return "image/svg+xml";
-    return "application/text";
-}
 
 // Append an HTTP rel-path to a local filesystem path.
 // The returned path is normalized for the platform.
-std::string
-path_cat(
+std::string path_cat(
     boost::beast::string_view base,
     boost::beast::string_view path)
 {
@@ -162,11 +123,10 @@ handle_request(
     auto const size = body.size();
 
     // Respond to HEAD request
-    if(req.method() == http::verb::head)
-    {
+    if(req.method() == http::verb::head) {
         http::response<http::empty_body> res{http::status::ok, req.version()};
         res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-        res.set(http::field::content_type, mime_type(path));
+        res.set(http::field::content_type, "application/text");
         res.content_length(size);
         res.keep_alive(req.keep_alive());
         return send(std::move(res));
@@ -178,7 +138,7 @@ handle_request(
         std::make_tuple(std::move(body)),
         std::make_tuple(http::status::ok, req.version())};
     res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-    res.set(http::field::content_type, mime_type(path));
+    res.set(http::field::content_type, "application/text");
     res.content_length(size);
     res.keep_alive(req.keep_alive());
     return send(std::move(res));
@@ -186,121 +146,92 @@ handle_request(
 
 //------------------------------------------------------------------------------
 
-http_session::
-http_session(
+http_session::http_session(
     tcp::socket socket)
-    : socket_(std::move(socket))
-{
+    : m_socket(std::move(socket)) {
 }
 
-void
-http_session::
-run()
-{
+void http_session::run() {
     // Read a request
-    http::async_read(socket_, buffer_, req_,
+    http::async_read(m_socket, m_buffer, m_req,
         [self = shared_from_this()]
             (error_code ec, std::size_t bytes)
         {
-            self->on_read(ec, bytes);
+            self->onRead(ec, bytes);
         });
 }
 
 // Report a failure
-void
-http_session::
-fail(error_code ec, char const* what)
-{
+void http_session::fail(error_code ec, char const* what) {
     // Don't report on canceled operations
-    if(ec == net::error::operation_aborted)
+    if(ec == net::error::operation_aborted) {
         return;
+    }
 
-    std::cerr << what << ": " << ec.message() << "\n";
+    plc::core::WsLogger::getLogger()->warn("http_session::fail {}: {}", what, ec.message());
 }
 
-void
-http_session::
-on_read(error_code ec, std::size_t)
-{
+void http_session::onRead(error_code ec, std::size_t) {
     // This means they closed the connection
-    if(ec == http::error::end_of_stream)
-    {
-        socket_.shutdown(tcp::socket::shutdown_send, ec);
+    if(ec == http::error::end_of_stream) {
+        m_socket.shutdown(tcp::socket::shutdown_send, ec);
         return;
     }
 
     // Handle the error, if any
-    if(ec)
+    if(ec) {
         return fail(ec, "read");
+    }
 
     // See if it is a WebSocket Upgrade
-    if(websocket::is_upgrade(req_))
-    {
+    if(websocket::is_upgrade(m_req)) {
         // Create a WebSocket session by transferring the socket
-        plc::core::WsLogger::getLogger()->warn("http_session::on_read: upgrade to websocket");
+        plc::core::WsLogger::getLogger()->warn("http_session::onRead: upgrade to websocket");
         std::make_shared<websocket_session>(
-            std::move(socket_))->run(std::move(req_));
-        plc::core::WsLogger::getLogger()->warn("http_session::on_read: done upgrade to websocket");
+            std::move(m_socket))->run(std::move(m_req));
+        plc::core::WsLogger::getLogger()->warn("http_session::onRead: done upgrade to websocket");
         return;
     }
 
     // Send the response
-    handle_request(".", std::move(req_),
-        [this](auto&& response)
-        {
-            // The lifetime of the message has to extend
-            // for the duration of the async operation so
-            // we use a shared_ptr to manage it.
-            using response_type = typename std::decay<decltype(response)>::type;
-            auto sp = std::make_shared<response_type>(std::forward<decltype(response)>(response));
+    handle_request(".", std::move(m_req), [this](auto&& response) {
+        // The lifetime of the message has to extend
+        // for the duration of the async operation so
+        // we use a shared_ptr to manage it.
+        using response_type = typename std::decay<decltype(response)>::type;
+        auto sp = std::make_shared<response_type>(std::forward<decltype(response)>(response));
 
-#if 0
-            // NOTE This causes an ICE in gcc 7.3
-            // Write the response
-            http::async_write(this->socket_, *sp,
-				[self = shared_from_this(), sp](
-					error_code ec, std::size_t bytes)
-				{
-					self->on_write(ec, bytes, sp->need_eof()); 
-				});
-#else
-            // Write the response
-            auto self = shared_from_this();
-            http::async_write(this->socket_, *sp,
-				[self, sp](
-					error_code ec, std::size_t bytes)
-				{
-					self->on_write(ec, bytes, sp->need_eof()); 
-				});
-#endif
-        });
+        // Write the response
+        auto self = shared_from_this();
+        http::async_write(this->m_socket, *sp,
+            [self, sp](error_code ec, std::size_t bytes) {
+                self->onWrite(ec, bytes, sp->need_eof()); 
+            });
+    });
 }
 
-void
-http_session::
-on_write(error_code ec, std::size_t, bool close)
-{
+void http_session::onWrite(error_code ec, std::size_t, bool close) {
     // Handle the error, if any
-    if(ec)
+    if(ec) {
         return fail(ec, "write");
+    }
 
-    if(close)
-    {
+    if(close) {
         // This means we should close the connection, usually because
         // the response indicated the "Connection: close" semantic.
-        socket_.shutdown(tcp::socket::shutdown_send, ec);
+        m_socket.shutdown(tcp::socket::shutdown_send, ec);
         return;
     }
 
     // Clear contents of the request message,
     // otherwise the read behavior is undefined.
-    req_ = {};
+    m_req = {};
 
     // Read another request
-    http::async_read(socket_, buffer_, req_,
+    http::async_read(m_socket, m_buffer, m_req,
         [self = shared_from_this()]
             (error_code ec, std::size_t bytes)
         {
-            self->on_read(ec, bytes);
+            self->onRead(ec, bytes);
         });
 }

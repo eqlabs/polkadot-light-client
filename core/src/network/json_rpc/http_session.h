@@ -17,31 +17,28 @@
 
 
 namespace beast = boost::beast;
-namespace http = boost::beast::http;            // from <boost/beast/http.hpp>
-namespace websocket = boost::beast::websocket;  // from <boost/beast/websocket.hpp>
+namespace http = boost::beast::http;
+namespace websocket = boost::beast::websocket;
 
 
-namespace net = boost::asio;                    // namespace asio
-using tcp = net::ip::tcp;                       // from <boost/asio/ip/tcp.hpp>
-using error_code = boost::system::error_code;   // from <boost/system/error_code.hpp>
+namespace net = boost::asio;
+using tcp = net::ip::tcp;
+using error_code = boost::system::error_code;
 
 /** Represents an established HTTP connection
 */
 class http_session : public std::enable_shared_from_this<http_session>
 {
-    tcp::socket socket_;
-    beast::flat_buffer buffer_;
-    http::request<http::string_body> req_;
+    tcp::socket m_socket;
+    beast::flat_buffer m_buffer;
+    http::request<http::string_body> m_req;
 
     void fail(error_code ec, char const* what);
-    void on_read(error_code ec, std::size_t);
-    void on_write(
-        error_code ec, std::size_t, bool close);
+    void onRead(error_code ec, std::size_t);
+    void onWrite(error_code ec, std::size_t, bool close);
 
 public:
-    http_session(
-        tcp::socket socket);
-
+    http_session(tcp::socket socket);
     void run();
 };
 
