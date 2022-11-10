@@ -9,6 +9,7 @@ add_library(plc_core
     src/network/json_rpc/listener.cpp
     src/network/json_rpc/websocket_session.cpp
     src/network/json_rpc/json_rpc_server.cpp
+    src/network/json_rpc/json_rpc_client.cpp
     src/network/protobuf/message_reader_writer.cpp
     src/network/scale/message_reader_writer.cpp
     src/runner/client_runner.cpp
