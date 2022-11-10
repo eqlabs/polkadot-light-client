@@ -7,8 +7,8 @@
 // Official repository: https://github.com/vinniefalco/CppCon2018
 //
 
-#include "listener.hpp"
-#include "http_session.hpp"
+#include "listener.h"
+#include "http_session.h"
 #include <iostream>
 #include "utils/ws_logger.h"
 

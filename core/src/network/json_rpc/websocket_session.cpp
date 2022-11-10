@@ -7,7 +7,7 @@
 // Official repository: https://github.com/vinniefalco/CppCon2018
 //
 
-#include "websocket_session.hpp"
+#include "websocket_session.h"
 #include "utils/ws_logger.h"
 
 

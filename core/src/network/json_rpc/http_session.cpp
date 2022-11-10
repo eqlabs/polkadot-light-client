@@ -7,8 +7,8 @@
 // Official repository: https://github.com/vinniefalco/CppCon2018
 //
 
-#include "http_session.hpp"
-#include "websocket_session.hpp"
+#include "http_session.h"
+#include "websocket_session.h"
 #include <iostream>
 
 //------------------------------------------------------------------------------

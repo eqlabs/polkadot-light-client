@@ -12,7 +12,7 @@
 #include <libp2p/network/connection_manager.hpp>
 
 
-#include "websocket_session.hpp"
+#include "websocket_session.h"
 
 namespace boost::asio {
     class io_context;
