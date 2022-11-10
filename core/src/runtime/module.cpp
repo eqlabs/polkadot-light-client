@@ -22,7 +22,7 @@ Result<void> Module::parseCode(const ByteBuffer &code) {
     std::memcpy(s.data(), code.data(), code.size());
 
     m_module = std::make_shared<wasm::Module>();
-    wasm::WasmBinaryBuilder parser(*m_module, reinterpret_cast<std::vector<char> const&>(code), false);
+    wasm::WasmBinaryBuilder parser(*m_module, reinterpret_cast<std::vector<char> const&>(code));
 
     try {
         m_log->debug("Parsing runtime code");

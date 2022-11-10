@@ -28,6 +28,7 @@ public:
                 m_module = std::make_shared<Module>();
                 m_executor = std::make_shared<Executor>();
                 m_api = std::make_shared<Api>(m_executor);
+                m_host_api = std::make_shared<plc::core::host::Api>();
             }
 
     Result<void> loadGenesisRuntime();
@@ -43,9 +44,10 @@ private:
 
     std::shared_ptr<Module> m_module;
     std::shared_ptr<Executor> m_executor;
-    std::shared_ptr<Api> m_api;
+    std::shared_ptr<Api> m_api;    
+    std::shared_ptr<plc::core::host::Api> m_host_api;
 
-    ExternalInterface m_external_interface;
+    std::shared_ptr<ExternalInterface> m_external_interface;
     std::shared_ptr<wasm::ModuleInstance> m_module_instance;
 
     libp2p::log::Logger m_log = libp2p::log::createLogger("Module", "runtime");

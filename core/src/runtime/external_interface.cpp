@@ -4,22 +4,30 @@ namespace plc::core::runtime {
 
 const static wasm::Name env = "env";
 
+#define REGISTER_HOST_API_FUNCTION(name) \
+    m_imports[#name] = &plc::core::host::Api::name
+
 void ExternalInterface::registerImports() {
+    REGISTER_HOST_API_FUNCTION(ext_logging_max_level_version_1);
+    REGISTER_HOST_API_FUNCTION(ext_logging_log_version_1);
+    REGISTER_HOST_API_FUNCTION(ext_allocator_malloc_version_1);
+    REGISTER_HOST_API_FUNCTION(ext_allocator_free_version_1);
 }
 
-wasm::Literal ExternalInterface::callImport(wasm::Function* import, wasm::LiteralList& arguments) {
-    if (import->module == env) {
-        // auto it = m_imports.find(import->base.c_str(), m_imports.hash_function(), m_imports.key_eq());        
-        // if (it != m_imports.end()) {
+void ExternalInterface::initMemory(uint32_t heap_base) {
+    m_memory = std::make_shared<plc::core::runtime::Memory>(&memory, heap_base);
+    m_host_api->setMemory(m_memory);
+}
 
-        //     // return it->second();//it->second(*this, import, arguments);
-        // }
-        return wasm::Literal(m_host_api->ext_logging_max_level_version_1());
+wasm::Literals ExternalInterface::callImport(wasm::Function* import, wasm::LiteralList& arguments) {
+    if (import->module == env) {        
+        if (auto it = m_imports.find(import->base.c_str()); it != m_imports.end()) {
+            return ((*m_host_api).*(it->second))(arguments);
+        }
     }
-
     wasm::Fatal() << "callImport: unknown import: " << import->module.str << "."
                   << import->name.str;
-    return wasm::Literal();
+    return wasm::Literals();
 }
 
 } //namespace plc::core::runtime
