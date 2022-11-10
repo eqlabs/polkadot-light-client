@@ -101,7 +101,6 @@ void JsonRpcServer::fail(error_code ec, char const* what) noexcept {
 
 void JsonRpcServer::onAccept(error_code ec)
 {
-    m_log->warn("JKL: listener onAccept");
     if(ec) {
         return fail(ec, "accept");
     } else {

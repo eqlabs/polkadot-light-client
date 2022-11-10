@@ -9,7 +9,6 @@
 
 #include "http_session.h"
 #include "websocket_session.h"
-#include "utils/ws_logger.h"
 
 
 // Append an HTTP rel-path to a local filesystem path.
@@ -137,11 +136,9 @@ void handle_request(
 http_session::http_session(tcp::socket socket, int id)
     : m_socket(std::move(socket)) 
     , m_id(id) {
-    plc::core::WsLogger::getLogger()->warn("http_session::http_session");
 }
 
 http_session::~http_session() {
-    plc::core::WsLogger::getLogger()->warn("http_session::~http_session");
 }
 
 void http_session::run() {
@@ -160,8 +157,6 @@ void http_session::fail(error_code ec, char const* what) {
     if(ec == net::error::operation_aborted) {
         return;
     }
-
-    plc::core::WsLogger::getLogger()->warn("http_session::fail {}: {}", what, ec.message());
 }
 
 void http_session::onRead(error_code ec, std::size_t) {
@@ -179,10 +174,8 @@ void http_session::onRead(error_code ec, std::size_t) {
     // See if it is a WebSocket Upgrade
     if(websocket::is_upgrade(m_req)) {
         // Create a WebSocket session by transferring the socket
-        plc::core::WsLogger::getLogger()->warn("http_session::onRead: upgrade to websocket");
         std::make_shared<websocket_session>(
             std::move(m_socket), m_id)->run(std::move(m_req));
-        plc::core::WsLogger::getLogger()->warn("http_session::onRead: done upgrade to websocket");
         return;
     }
 

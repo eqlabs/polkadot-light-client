@@ -8,7 +8,6 @@
 
 
 #include "websocket_session.h"
-#include "utils/ws_logger.h"
 
 std::function<void(int)> websocket_session::onClose;
 std::function<void(int, std::string message)> websocket_session::onMessage;
@@ -16,43 +15,36 @@ std::function<void(int, std::string message)> websocket_session::onMessage;
 websocket_session::websocket_session(tcp::socket socket, int id)
     : m_ws(std::move(socket))
     , m_id(id) {
-    plc::core::WsLogger::getLogger()->warn("websocket_session::websocket_session");
+    m_log->warn("websocket_session::websocket_session");
 }
 
 websocket_session::~websocket_session() {
-    plc::core::WsLogger::getLogger()->warn("websocket_session::~websocket_session");
+    m_log->warn("websocket_session::~websocket_session");
     onClose(m_id);
 }
 
 void websocket_session::fail(error_code ec, char const* what) {
-    plc::core::WsLogger::getLogger()->warn("websocket_session::fail what {}", what);
+    m_log->warn("websocket_session::fail what {}", what);
     // Don't report these
     if( ec == net::error::operation_aborted ) {
-        plc::core::WsLogger::getLogger()->warn("websocket_session::fail: net::error::operation_aborted");
+        m_log->warn("websocket_session::fail: net::error::operation_aborted");
         return;
     }
     if( ec == websocket::error::closed) {
-        plc::core::WsLogger::getLogger()->warn("websocket_session::fail: websocket::error::closed");
+        m_log->warn("websocket_session::fail: websocket::error::closed");
         return;
     }
     if( ec == net::error::operation_aborted ||
         ec == websocket::error::closed) {
         return;
     }
-
-    // std::cerr << what << ": " << ec.message() << "\n";
-    plc::core::WsLogger::getLogger()->warn("websocket_session::fail A {}: {}", what, ec.message());
 }
 
 void websocket_session::onAccept(error_code ec){
     // Handle the error, if any
-    plc::core::WsLogger::getLogger()->warn("websocket_session::onAccept");
     if(ec) {
         return fail(ec, "accept");
     }
-
-    // Add this session to the list of active sessions
-    // jkl state_->join(*this);
 
     // Read a message
     m_ws.async_read(m_buffer,[sp = shared_from_this()](
@@ -62,18 +54,14 @@ void websocket_session::onAccept(error_code ec){
 }
 
 void websocket_session::onRead(error_code ec, std::size_t size) {
-    plc::core::WsLogger::getLogger()->warn("websocket_session::onAccept");
+    m_log->warn("websocket_session::onAccept");
     // Handle the error, if any
     if(ec) {
         return fail(ec, "read");
     }
 
-    // Send to all connections
-    // auto const ss = std::make_shared<std::string const>(std::move(beast::buffers_to_string(m_buffer.data())));
+    // pass the message up to the server
     const std::string ss = beast::buffers_to_string(m_buffer.data());
-
-    //for(auto session : sessions_)
-    //this->send(ss);
     onMessage(m_id, ss);
 
     // Clear the buffer
@@ -108,7 +96,7 @@ void websocket_session::send(std::shared_ptr<std::string const> const& ss) {
 }
 
 void websocket_session::onWrite(error_code ec, std::size_t size) {
-    plc::core::WsLogger::getLogger()->warn("websocket_session::onWrite size {}", size);
+    m_log->warn("websocket_session::onWrite size {}", size);
     // Handle the error, if any
     if(ec) {
         return fail(ec, "write");
@@ -121,10 +109,9 @@ void websocket_session::onWrite(error_code ec, std::size_t size) {
     if(!m_queue.empty()) {
         m_ws.async_write(
             net::buffer(*m_queue.front()),
-            [sp = shared_from_this()](
-                error_code ec, std::size_t bytes)
-            {
-                plc::core::WsLogger::getLogger()->warn("websocket_session::onwrite");
+            [sp = shared_from_this(), logger = m_log](
+                error_code ec, std::size_t bytes) {
+                logger->warn("websocket_session::onwrite");
                 sp->onWrite(ec, bytes);
             });
     }

@@ -14,7 +14,6 @@ add_library(plc_core
     src/runner/client_runner.cpp
     src/runner/timer.cpp
     src/utils/hex.cpp
-    src/utils/ws_logger.cpp
     src/utils/stoppable.cpp
     src/utils/string_conversion.cpp)
 message(STATUS "dir = ${CMAKE_CURRENT_LIST_DIR}/src")
