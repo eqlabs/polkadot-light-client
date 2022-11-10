@@ -13,8 +13,20 @@ JsonRpcServer::JsonRpcServer(uint16_t port, std::shared_ptr<boost::asio::io_serv
     , m_io_service(io)
     , m_acceptor(*io)
     , m_socket(*io)
-    
+    , m_client_id(1000)
      {
+}
+
+int JsonRpcServer::getNextId() noexcept {
+    m_client_id++;
+    return m_client_id;
+}
+
+void JsonRpcServer::onClose(int id) {
+    m_log->warn("JsonRpcServer::onClose id {}", id);
+}
+void JsonRpcServer::onMessage(int id, std::string message) {
+    m_log->warn("JsonRpcServer::onMessage id {}, message {}", id, message);
 }
 
 
@@ -23,6 +35,14 @@ void JsonRpcServer::connect() {
     boost::system::error_code ec;
     boost::asio::ip::address ip_address = boost::asio::ip::address::from_string(localhost, ec);
     boost::asio::ip::tcp::endpoint bind_ep(ip_address, m_port);
+
+    auto self = shared_from_this();
+    websocket_session::onClose = [self](int id) {
+        self->onClose(id);
+    };
+    websocket_session::onMessage = [self](int id, std::string message) {
+        self->onMessage(id, message);
+    };
 
     m_acceptor.open(bind_ep.protocol(), ec);
     if(ec) {
@@ -71,13 +91,12 @@ void JsonRpcServer::run()
 
 // Report a failure
 
-void JsonRpcServer::fail(error_code ec, char const* what)
-{
+void JsonRpcServer::fail(error_code ec, char const* what) noexcept {
     // Don't report on canceled operations
     if(ec == net::error::operation_aborted) {
         return;
     }
-    m_log->warn("{}: {}", what, ec.message());
+    m_log->warn("JsonRpcServer::fail: {}: {}", what, ec.message());
 }
 
 void JsonRpcServer::onAccept(error_code ec)
@@ -87,8 +106,11 @@ void JsonRpcServer::onAccept(error_code ec)
         return fail(ec, "accept");
     } else {
         // Launch a new session for this connection
+        auto id = getNextId();
+        auto client = std::make_shared<JsonRpcClient>(id, m_io_service);
+        m_clients.emplace(id,client);
         std::make_shared<http_session>(
-            std::move(m_socket))->run();
+            std::move(m_socket), id)->run();
     }
 
     // Accept another connection

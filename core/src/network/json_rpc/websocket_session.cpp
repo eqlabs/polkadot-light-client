@@ -1,38 +1,47 @@
+// Rewritten and refactored based on code from here:
+// https://github.com/vinniefalco/CppCon2018
 //
 // Copyright (c) 2018 Vinnie Falco (vinnie dot falco at gmail dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-//
-// Official repository: https://github.com/vinniefalco/CppCon2018
-//
+
 
 #include "websocket_session.h"
 #include "utils/ws_logger.h"
 
+std::function<void(int)> websocket_session::onClose;
+std::function<void(int, std::string message)> websocket_session::onMessage;
 
-websocket_session::websocket_session(
-    tcp::socket socket)
-    : m_ws(std::move(socket)) {
+websocket_session::websocket_session(tcp::socket socket, int id)
+    : m_ws(std::move(socket))
+    , m_id(id) {
     plc::core::WsLogger::getLogger()->warn("websocket_session::websocket_session");
 }
 
 websocket_session::~websocket_session() {
-    // Remove this session from the list of active sessions
-    // jkl state_->leave(*this);
     plc::core::WsLogger::getLogger()->warn("websocket_session::~websocket_session");
+    onClose(m_id);
 }
 
 void websocket_session::fail(error_code ec, char const* what) {
-    plc::core::WsLogger::getLogger()->warn("websocket_session::fail");
+    plc::core::WsLogger::getLogger()->warn("websocket_session::fail what {}", what);
     // Don't report these
+    if( ec == net::error::operation_aborted ) {
+        plc::core::WsLogger::getLogger()->warn("websocket_session::fail: net::error::operation_aborted");
+        return;
+    }
+    if( ec == websocket::error::closed) {
+        plc::core::WsLogger::getLogger()->warn("websocket_session::fail: websocket::error::closed");
+        return;
+    }
     if( ec == net::error::operation_aborted ||
         ec == websocket::error::closed) {
         return;
     }
 
     // std::cerr << what << ": " << ec.message() << "\n";
-    plc::core::WsLogger::getLogger()->warn("websocket_session::fail {}: {}", what, ec.message());
+    plc::core::WsLogger::getLogger()->warn("websocket_session::fail A {}: {}", what, ec.message());
 }
 
 void websocket_session::onAccept(error_code ec){
@@ -60,10 +69,12 @@ void websocket_session::onRead(error_code ec, std::size_t size) {
     }
 
     // Send to all connections
-    auto const ss = std::make_shared<std::string const>(std::move("JKL: " + beast::buffers_to_string(m_buffer.data())));
+    // auto const ss = std::make_shared<std::string const>(std::move(beast::buffers_to_string(m_buffer.data())));
+    const std::string ss = beast::buffers_to_string(m_buffer.data());
 
     //for(auto session : sessions_)
-    this->send(ss);
+    //this->send(ss);
+    onMessage(m_id, ss);
 
     // Clear the buffer
     m_buffer.consume(m_buffer.size());

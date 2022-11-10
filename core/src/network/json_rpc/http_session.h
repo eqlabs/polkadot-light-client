@@ -1,13 +1,13 @@
 #pragma once
 
+// Rewritten and refactored based on code from here:
+// https://github.com/vinniefalco/CppCon2018
 //
 // Copyright (c) 2018 Vinnie Falco (vinnie dot falco at gmail dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-//
-// Official repository: https://github.com/vinniefalco/CppCon2018
-//
+
 
 
 #include <cstdlib>
@@ -32,13 +32,15 @@ class http_session : public std::enable_shared_from_this<http_session>
     tcp::socket m_socket;
     beast::flat_buffer m_buffer;
     http::request<http::string_body> m_req;
+    int m_id;
 
     void fail(error_code ec, char const* what);
     void onRead(error_code ec, std::size_t);
     void onWrite(error_code ec, std::size_t, bool close);
 
 public:
-    http_session(tcp::socket socket);
+    http_session(tcp::socket socket, int id);
+    ~http_session();
     void run();
 };
 
