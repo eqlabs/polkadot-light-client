@@ -1,3 +1,5 @@
+#pragma once
+
 //
 // Copyright (c) 2018 Vinnie Falco (vinnie dot falco at gmail dot com)
 //
@@ -7,13 +9,23 @@
 // Official repository: https://github.com/vinniefalco/CppCon2018
 //
 
-#ifndef CPPCON2018_HTTP_SESSION_HPP
-#define CPPCON2018_HTTP_SESSION_HPP
 
-#include "net.hpp"
-#include "beast.hpp"
+// #include "net.hpp"
+// #include "beast.hpp"
 #include <cstdlib>
 #include <memory>
+#include <boost/beast.hpp>
+#include <boost/asio.hpp>
+
+
+namespace beast = boost::beast;
+namespace http = boost::beast::http;            // from <boost/beast/http.hpp>
+namespace websocket = boost::beast::websocket;  // from <boost/beast/websocket.hpp>
+
+
+namespace net = boost::asio;                    // namespace asio
+using tcp = net::ip::tcp;                       // from <boost/asio/ip/tcp.hpp>
+using error_code = boost::system::error_code;   // from <boost/system/error_code.hpp>
 
 /** Represents an established HTTP connection
 */
@@ -35,4 +47,3 @@ public:
     void run();
 };
 
-#endif

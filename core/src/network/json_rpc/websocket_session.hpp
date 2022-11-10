@@ -1,3 +1,5 @@
+#pragma once
+
 //
 // Copyright (c) 2018 Vinnie Falco (vinnie dot falco at gmail dot com)
 //
@@ -7,11 +9,9 @@
 // Official repository: https://github.com/vinniefalco/CppCon2018
 //
 
-#ifndef CPPCON2018_WEBSOCKET_SESSION_HPP
-#define CPPCON2018_WEBSOCKET_SESSION_HPP
 
-#include "net.hpp"
-#include "beast.hpp"
+
+#include "http_session.hpp"
 
 #include <cstdlib>
 #include <memory>
@@ -65,5 +65,3 @@ run(http::request<Body, http::basic_fields<Allocator>> req)
             shared_from_this(),
             std::placeholders::_1));
 }
-
-#endif

@@ -1,3 +1,5 @@
+#pragma once
+
 //
 // Copyright (c) 2018 Vinnie Falco (vinnie dot falco at gmail dot com)
 //
@@ -7,12 +9,9 @@
 // Official repository: https://github.com/vinniefalco/CppCon2018
 //
 
-#ifndef CPPCON2018_LISTENER_HPP
-#define CPPCON2018_LISTENER_HPP
-
-#include "net.hpp"
 #include <memory>
 #include <string>
+#include "http_session.hpp"
 
 // Forward declaration
 
@@ -34,4 +33,3 @@ public:
     void run();
 };
 
-#endif
