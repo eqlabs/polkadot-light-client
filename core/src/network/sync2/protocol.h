@@ -61,7 +61,7 @@ private:
     libp2p::Host& m_host;
     runner::ClientRunner& m_runner;
 
-    libp2p::log::Logger m_log = libp2p::log::createLogger("Protocol", "sync_v2_protocol");
+    libp2p::log::Logger m_log = libp2p::log::createLogger("SyncProtocol", "network");
 };
 
 } // plc::core::network::sync2
