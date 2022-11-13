@@ -7,10 +7,10 @@ package plc.core.network.sync2.proto;
 // Sequence direction of the requested blocks
 enum Direction {
     // Enumerate in ascending order (from child to parent)
-    DIRECTION_ASCENDING = 0;
+    ASCENDING = 0;
 
     // Enumerate in descending order (from parent to canonical child)
-    DIRECTION_DESCENDING = 1;
+    DESCENDING = 1;
 }
 
 // Message used to get range of blocks from peers.
@@ -32,6 +32,10 @@ message BlockRequest {
 
     // Maximum amount of blocks to be returned. Implementation specific.
     optional uint32 max_amount = 6;
+
+    // This field is not present in the current /dot/sync/2 spec (https://spec.polkadot.network/#defn-msg-block-request)
+    // but is supported by substrate https://github.com/paritytech/substrate/blob/master/client/network/sync/src/schema/api.v1.proto
+    optional bool support_multiple_justifications = 7;
 }
 
 // Response to BlockRequest containing sequence of blocks.
@@ -61,5 +65,10 @@ message BlockData {
     optional bytes justification = 6;
 
     // Indicates whether the justification is empty
-    bool empty_justification = 7;
+    optional bool empty_justification = 7;
+
+    // Below are fields not present in the current /dot/sync/2 spec (https://spec.polkadot.network/#defn-msg-block-response)
+    // but are supported by substrate https://github.com/paritytech/substrate/blob/master/client/network/sync/src/schema/api.v1.proto
+    optional bytes justifications = 8;
+    repeated bytes indexed_body = 9;
 }
