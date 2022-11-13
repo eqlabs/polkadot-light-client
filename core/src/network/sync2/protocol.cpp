@@ -60,7 +60,7 @@ cppcoro::task<Result<proto::BlockResponse>> Protocol::send(proto::BlockRequest&&
             });
 
     if (!read_res) {
-        m_log->debug("Writing to a stream caused error: {}", write_res.error().message());
+        m_log->debug("Reading from stream caused error: {}", read_res.error().message());
         co_return read_res.error();
     }
 
