@@ -47,6 +47,7 @@
 #include "network/common/format_peer_id.h"
 #include "network/grandpa/protocol.h"
 #include "network/light2/protocol.h"
+#include "network/sync2/protocol.h"
 #include "utils/callback_to_coro.h"
 #include "utils/propagate.h"
 #include "utils/result.h"
@@ -222,6 +223,7 @@ void PeerManager::initProtocols() {
     m_grandpa = std::make_shared<grandpa::Protocol>(*m_host, *m_runner,
         std::make_shared<LogGrandpaObserver>(m_log));
     m_light = std::make_shared<light2::Protocol>(*m_host, *m_runner);
+    m_sync = std::make_shared<sync2::Protocol>(*m_host, *m_runner);
 
     m_host->setProtocolHandler(m_ping->getProtocolId(), [logger = m_log, ping = std::weak_ptr{m_ping}](auto&& stream) {
         if (auto ping_ptr = ping.lock()) {

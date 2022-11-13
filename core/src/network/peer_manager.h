@@ -43,6 +43,10 @@ namespace light2 {
 class Protocol;
 } // namespace light2
 
+namespace sync2 {
+    class Protocol;
+} // namespace sync2
+
 class PeerManager final : public Stoppable {
 public:
     struct Config {
@@ -101,6 +105,7 @@ private:
     std::shared_ptr<libp2p::protocol::Ping> m_ping;
     std::shared_ptr<grandpa::Protocol> m_grandpa;
     std::shared_ptr<light2::Protocol> m_light;
+    std::shared_ptr<sync2::Protocol> m_sync;
     std::unordered_map<libp2p::peer::PeerId, PeerState> m_peers_info;
     std::vector<libp2p::event::Handle> m_event_handlers;
 
