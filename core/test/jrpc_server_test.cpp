@@ -4,13 +4,13 @@
 #include <fstream>
 #include <thread>
 
-#include "network/json_rpc/json_rpc_server.h"
+#include "network/json_rpc/jrpc_server.h"
 
 #include "testutils/prepare_loggers.h"
 
-class JsonRpcServerTest : public testing::Test {
+class JrpcServerTest : public testing::Test {
 public:
-    JsonRpcServerTest() {
+    JrpcServerTest() {
         prepareLoggers();
         system("cd ./nodeutils && npm i");
     }
@@ -23,12 +23,12 @@ public:
 protected:
 };
 
-TEST_F(JsonRpcServerTest, ShouldReturnCorrectResponse) {
+TEST_F(JrpcServerTest, ShouldReturnCorrectResponse) {
     using namespace std::chrono_literals;
 
     std::shared_ptr<boost::asio::io_service> io = std::make_shared<boost::asio::io_service>();
 
-    auto json_rpc_server = std::make_shared<plc::core::network::json_rpc::JsonRpcServer>(2584, io);
+    auto jrpc_server = std::make_shared<plc::core::network::json_rpc::JrpcServer>(2584, io);
     // auto packio_server = json_rpc_server->getServer();
     // packio_server->dispatcher()->add_coro(
     //     "add", *json_rpc_server->getIoService(), [](int a, int b) -> packio::net::awaitable<int> {

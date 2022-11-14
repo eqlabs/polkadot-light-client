@@ -1,4 +1,4 @@
-#include "network/json_rpc/json_rpc_server.h"
+#include "network/json_rpc/jrpc_server.h"
 
 // #include <chrono>
 
@@ -8,7 +8,7 @@
 
 namespace plc::core::network::json_rpc {
 
-JsonRpcServer::JsonRpcServer(uint16_t port, std::shared_ptr<boost::asio::io_service> io)
+JrpcServer::JrpcServer(uint16_t port, std::shared_ptr<boost::asio::io_service> io)
     : m_port(port)
     , m_io_service(io)
     , m_acceptor(*io)
@@ -17,26 +17,26 @@ JsonRpcServer::JsonRpcServer(uint16_t port, std::shared_ptr<boost::asio::io_serv
      {
 }
 
-int JsonRpcServer::getNextId() noexcept {
+int JrpcServer::getNextId() noexcept {
     m_client_id++;
     return m_client_id;
 }
 
-void JsonRpcServer::onOpen(int id, std::shared_ptr<WebSocketSession> session) {
-    m_log->warn("JsonRpcServer::onOpen id {}", id);
-    auto client = std::make_shared<JsonRpcClient>(id, session, m_io_service);
+void JrpcServer::onOpen(int id, std::shared_ptr<WebSocketSession> session) {
+    m_log->warn("JrpcServer::onOpen id {}", id);
+    auto client = std::make_shared<JrpcClient>(id, session, m_io_service);
     m_clients.emplace(id,client);
 }
 
-void JsonRpcServer::onMessage(int id, std::string message) {
-    m_log->warn("JsonRpcServer::onMessage id {}, message {}", id, message);
+void JrpcServer::onMessage(int id, std::string message) {
+    m_log->warn("JrpcServer::onMessage id {}, message {}", id, message);
 }
 
-void JsonRpcServer::onClose(int id) {
-    m_log->warn("JsonRpcServer::onClose id {}", id);
+void JrpcServer::onClose(int id) {
+    m_log->warn("JrpcServer::onClose id {}", id);
 }
 
-void JsonRpcServer::initSessionCallbacks() {
+void JrpcServer::initSessionCallbacks() {
     auto self = shared_from_this();
     WebSocketSession::m_callbacks.onClose = [self](int id) {
         self->onClose(id);
@@ -51,7 +51,7 @@ void JsonRpcServer::initSessionCallbacks() {
 
 }
 
-void JsonRpcServer::connect() {
+void JrpcServer::connect() {
     std::string localhost = "127.0.0.1";
     boost::system::error_code ec;
     boost::asio::ip::address ip_address = boost::asio::ip::address::from_string(localhost, ec);
@@ -91,7 +91,7 @@ void JsonRpcServer::connect() {
     m_log->warn("done connect-------------");
 }
 
-void JsonRpcServer::run()
+void JrpcServer::run()
 {
     // Start accepting a connection
     m_log->warn("start run");
@@ -105,15 +105,15 @@ void JsonRpcServer::run()
 
 // Report a failure
 
-void JsonRpcServer::fail(error_code ec, char const* what) noexcept {
+void JrpcServer::fail(error_code ec, char const* what) noexcept {
     // Don't report on canceled operations
     if(ec == net::error::operation_aborted) {
         return;
     }
-    m_log->warn("JsonRpcServer::fail: {}: {}", what, ec.message());
+    m_log->warn("JrpcServer::fail: {}: {}", what, ec.message());
 }
 
-void JsonRpcServer::onAccept(error_code ec)
+void JrpcServer::onAccept(error_code ec)
 {
     if(ec) {
         return fail(ec, "accept");

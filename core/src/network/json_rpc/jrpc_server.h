@@ -9,7 +9,7 @@
 
 #include "runner/client_runner.h"
 #include "http_session.h"
-#include "json_rpc_client.h"
+#include "jrpc_client.h"
 #include <boost/property_tree/json_parser.hpp>
 
 namespace boost::asio {
@@ -19,12 +19,12 @@ namespace boost::asio {
 
 namespace plc::core::network::json_rpc {
 
-using JrpcHandler = std::function<void(std::shared_ptr<JsonRpcClient>, boost::property_tree::ptree &params)>;
+using JrpcHandler = std::function<void(std::shared_ptr<JrpcClient>, boost::property_tree::ptree &params)>;
 
-class JsonRpcServer : public std::enable_shared_from_this<JsonRpcServer> {
+class JrpcServer : public std::enable_shared_from_this<JrpcServer> {
 public:
-    JsonRpcServer(uint16_t port, std::shared_ptr<boost::asio::io_service> io);
-    ~JsonRpcServer() = default;
+    JrpcServer(uint16_t port, std::shared_ptr<boost::asio::io_service> io);
+    ~JrpcServer() = default;
     const std::shared_ptr<boost::asio::io_service> getIoService() noexcept { return m_io_service; }
     const libp2p::log::Logger getLogger() noexcept { return m_log; }
     void connect();
@@ -40,13 +40,13 @@ private:
     void onAccept(error_code ec);
     int getNextId() noexcept;
  
-    libp2p::log::Logger m_log = libp2p::log::createLogger("JsonRpcServer","network");
+    libp2p::log::Logger m_log = libp2p::log::createLogger("JrpcServer","network");
     const std::shared_ptr<boost::asio::io_service> m_io_service;
     const uint16_t m_port;
     int m_client_id;
     tcp::acceptor m_acceptor;
     tcp::socket m_socket;
-    std::unordered_map<int,std::shared_ptr<JsonRpcClient>> m_clients;
+    std::unordered_map<int,std::shared_ptr<JrpcClient>> m_clients;
     std::unordered_map<std::string,JrpcHandler> m_handlers;
 };
 

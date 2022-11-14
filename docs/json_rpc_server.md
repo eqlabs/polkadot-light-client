@@ -9,13 +9,13 @@ This is a header-only library, which we have patched to work with Boost 1.80, as
 To instantiate a server, you need a port and a Boost io_context, the latter being typically grabbed from the client runner.
 
 ```
-auto json_rpc_server = std::make_shared<network::JsonRpcServer>(2584, runner->getService());
+auto jrpc_server = std::make_shared<network::JrpcServer>(2584, runner->getService());
 ```
 
 To add handlers, obtain the packio_server from our JSON-RPC server.
 
 ```
-auto packio_server = json_rpc_server->getServer();
+auto packio_server = jrpc_server->getServer();
 ```
 
 With this object, you can add message handlers, which may be synchronous, asynchronous, or coroutines.
@@ -23,17 +23,17 @@ This example shows the use of basic coroutines
 
 ```
 packio_server->dispatcher()->add_coro(
-    "add", *json_rpc_server->getIoService(), [](int a, int b) -> packio::net::awaitable<int> {
+    "add", *jrpc_server->getIoService(), [](int a, int b) -> packio::net::awaitable<int> {
         printf("add: a is %d, b is %d\n", a, b);
         co_return a + b;
     });
 packio_server->dispatcher()->add_coro(
-    "multiply", *json_rpc_server->getIoService(), [](int a, int b) -> packio::net::awaitable<int> {
+    "multiply", *jrpc_server->getIoService(), [](int a, int b) -> packio::net::awaitable<int> {
         printf("multiply: a is %d, b is %d\n", a, b);
         co_return a * b;
     });
 packio_server->dispatcher()->add_coro(
-    "pow", *json_rpc_server->getIoService(), [](int a, int b) -> packio::net::awaitable<int> {
+    "pow", *jrpc_server->getIoService(), [](int a, int b) -> packio::net::awaitable<int> {
         printf("pow: a is %d, b is %d\n", a, b);
         co_return std::pow(a, b);
     });
