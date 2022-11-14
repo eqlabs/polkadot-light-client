@@ -97,8 +97,6 @@ void JrpcServer::connect() {
     }
 
     run();
-
-    m_log->info("done connect-------------");
 }
 
 void JrpcServer::run()
