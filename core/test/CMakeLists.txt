@@ -20,4 +20,7 @@ add_core_test(light2_test
 add_core_test(runtime_service_test
     runtime_service_test.cpp)
 
+add_core_test(memory_allocator_test
+    memory_allocator_test.cpp)
+
 file(COPY ${CMAKE_CURRENT_LIST_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR}/core/test)

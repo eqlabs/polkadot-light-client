@@ -24,8 +24,10 @@ groups:
   children:
     - name: testing
     - name: chain
+    - name: host
     - name: network
     - name: runner
+    - name: runtime
     - name: utils
     - name: transaction
 # ----- End of logging system config addon -----
