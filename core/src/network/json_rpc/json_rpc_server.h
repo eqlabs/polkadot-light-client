@@ -10,6 +10,7 @@
 #include "runner/client_runner.h"
 #include "http_session.h"
 #include "json_rpc_client.h"
+#include <boost/property_tree/json_parser.hpp>
 
 namespace boost::asio {
     class io_context;
@@ -17,6 +18,8 @@ namespace boost::asio {
 
 
 namespace plc::core::network::json_rpc {
+
+using JrpcHandler = std::function<void(std::shared_ptr<JsonRpcClient>, boost::property_tree::ptree &params)>;
 
 class JsonRpcServer : public std::enable_shared_from_this<JsonRpcServer> {
 public:
@@ -30,6 +33,7 @@ public:
     void onOpen(int id, std::shared_ptr<WebSocketSession> session);
     void onMessage(int id, std::string message);
     void onClose(int id);
+    void registerHandler(std::string, JrpcHandler);
 
 private:
     void fail(error_code ec, char const* what) noexcept;
@@ -43,6 +47,7 @@ private:
     tcp::acceptor m_acceptor;
     tcp::socket m_socket;
     std::unordered_map<int,std::shared_ptr<JsonRpcClient>> m_clients;
+    std::unordered_map<std::string,JrpcHandler> m_handlers;
 };
 
 } // namespace plc::core::network::json_rpc

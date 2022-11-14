@@ -20,8 +20,6 @@
 namespace beast = boost::beast;
 namespace http = boost::beast::http;
 namespace websocket = boost::beast::websocket;
-
-
 namespace net = boost::asio;
 using tcp = net::ip::tcp;
 using error_code = boost::system::error_code;
