@@ -16,6 +16,16 @@
 #include "http_session.h"
 #include <libp2p/log/logger.hpp>
 
+namespace plc::core::network::json_rpc {
+
+class WebSocketSession;
+
+struct WebSocketCallbacks {
+    std::function<void(int, std::shared_ptr<WebSocketSession>)> onOpen;
+    std::function<void(int, std::string message)> onMessage;
+    std::function<void(int)> onClose;
+};
+
 class WebSocketSession : public std::enable_shared_from_this<WebSocketSession> {
     beast::flat_buffer m_buffer;
     websocket::stream<tcp::socket> m_ws;
@@ -31,12 +41,10 @@ class WebSocketSession : public std::enable_shared_from_this<WebSocketSession> {
 public:
     WebSocketSession(tcp::socket socket, int id);
     ~WebSocketSession();
+    static WebSocketCallbacks m_callbacks;
     template<class Body, class Allocator>
     void run(http::request<Body, http::basic_fields<Allocator>> req);
     void send(std::shared_ptr<std::string const> const& ss);
-    static std::function<void(int, std::shared_ptr<WebSocketSession>)> onOpen;
-    static std::function<void(int, std::string message)> onMessage;
-    static std::function<void(int)> onClose;
 };
 
 template<class Body, class Allocator>
@@ -46,3 +54,5 @@ void WebSocketSession::run(http::request<Body, http::basic_fields<Allocator>> re
         shared_from_this(),
         std::placeholders::_1));
 }
+
+} // namespace plc::core::network::json_rpc

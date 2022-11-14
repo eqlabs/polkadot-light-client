@@ -9,9 +9,10 @@
 
 #include "websocket_session.h"
 
-std::function<void(int, std::shared_ptr<WebSocketSession>)> WebSocketSession::onOpen;
-std::function<void(int, std::string message)> WebSocketSession::onMessage;
-std::function<void(int)> WebSocketSession::onClose;
+namespace plc::core::network::json_rpc {
+
+
+WebSocketCallbacks WebSocketSession::m_callbacks;
 
 WebSocketSession::WebSocketSession(tcp::socket socket, int id)
     : m_ws(std::move(socket))
@@ -21,7 +22,7 @@ WebSocketSession::WebSocketSession(tcp::socket socket, int id)
 
 WebSocketSession::~WebSocketSession() {
     m_log->warn("WebSocketSession::~WebSocketSession");
-    onClose(m_id);
+    m_callbacks.onClose(m_id);
 }
 
 void WebSocketSession::fail(error_code ec, char const* what) {
@@ -48,7 +49,7 @@ void WebSocketSession::onAccept(error_code ec){
         return fail(ec, "accept");
     }
 
-    onOpen(m_id, shared_from_this());
+    m_callbacks.onOpen(m_id, shared_from_this());
 
     // Read a message
     m_ws.async_read(m_buffer,[sp = shared_from_this()](
@@ -66,7 +67,7 @@ void WebSocketSession::onRead(error_code ec, std::size_t size) {
 
     // pass the message up to the server
     const std::string ss = beast::buffers_to_string(m_buffer.data());
-    onMessage(m_id, ss);
+    m_callbacks.onMessage(m_id, ss);
 
     // Clear the buffer
     m_buffer.consume(m_buffer.size());
@@ -120,3 +121,5 @@ void WebSocketSession::onWrite(error_code ec, std::size_t size) {
             });
     }
 }
+
+} // namespace plc::core::network::json_rpc

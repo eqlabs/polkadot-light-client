@@ -36,6 +36,20 @@ void JsonRpcServer::onClose(int id) {
     m_log->warn("JsonRpcServer::onClose id {}", id);
 }
 
+void JsonRpcServer::initSessionCallbacks() {
+    auto self = shared_from_this();
+    WebSocketSession::m_callbacks.onClose = [self](int id) {
+        self->onClose(id);
+    };
+    WebSocketSession::m_callbacks.onMessage = [self](int id, std::string message) {
+        self->onMessage(id, message);
+    };
+    WebSocketSession::m_callbacks.onOpen = [self](int id, std::shared_ptr<WebSocketSession> session) {
+        self->onOpen(id, session);
+    };
+
+
+}
 
 void JsonRpcServer::connect() {
     std::string localhost = "127.0.0.1";
@@ -43,17 +57,7 @@ void JsonRpcServer::connect() {
     boost::asio::ip::address ip_address = boost::asio::ip::address::from_string(localhost, ec);
     boost::asio::ip::tcp::endpoint bind_ep(ip_address, m_port);
 
-    auto self = shared_from_this();
-    WebSocketSession::onClose = [self](int id) {
-        self->onClose(id);
-    };
-    WebSocketSession::onMessage = [self](int id, std::string message) {
-        self->onMessage(id, message);
-    };
-    WebSocketSession::onOpen = [self](int id, std::shared_ptr<WebSocketSession> session) {
-        self->onOpen(id, session);
-    };
-
+    initSessionCallbacks();
     m_acceptor.open(bind_ep.protocol(), ec);
     if(ec) {
         fail(ec, "open");
@@ -128,4 +132,4 @@ void JsonRpcServer::onAccept(error_code ec)
 }
 
 
-} // namespace plc::core::network
+} // namespace plc::core::network::json_rpc

@@ -26,6 +26,7 @@ public:
     const libp2p::log::Logger getLogger() noexcept { return m_log; }
     void connect();
     void run();
+    void initSessionCallbacks();
     void onOpen(int id, std::shared_ptr<WebSocketSession> session);
     void onMessage(int id, std::string message);
     void onClose(int id);
@@ -44,4 +45,4 @@ private:
     std::unordered_map<int,std::shared_ptr<JsonRpcClient>> m_clients;
 };
 
-} // namespace plc::core::network
+} // namespace plc::core::network::json_rpc

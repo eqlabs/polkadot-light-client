@@ -16,6 +16,7 @@
 #include <boost/asio.hpp>
 
 
+
 namespace beast = boost::beast;
 namespace http = boost::beast::http;
 namespace websocket = boost::beast::websocket;
@@ -25,8 +26,8 @@ namespace net = boost::asio;
 using tcp = net::ip::tcp;
 using error_code = boost::system::error_code;
 
-/** Represents an established HTTP connection
-*/
+namespace plc::core::network::json_rpc {
+
 class HttpSession : public std::enable_shared_from_this<HttpSession>
 {
     tcp::socket m_socket;
@@ -44,3 +45,4 @@ public:
     void run();
 };
 
+} // namespace plc::core::network::json_rpc

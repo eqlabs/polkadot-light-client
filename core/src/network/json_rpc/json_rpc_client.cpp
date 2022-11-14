@@ -14,7 +14,4 @@ JsonRpcClient::JsonRpcClient(int id, std::shared_ptr<WebSocketSession> session, 
     , m_io_service(io) {
 }
 
-
-
-
-} // namespace plc::core::network
+} // namespace plc::core::network::json_rpc

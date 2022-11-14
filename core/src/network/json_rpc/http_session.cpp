@@ -131,7 +131,7 @@ void handle_request(
     return send(std::move(res));
 }
 
-//------------------------------------------------------------------------------
+namespace plc::core::network::json_rpc {
 
 HttpSession::HttpSession(tcp::socket socket, int id)
     : m_socket(std::move(socket)) 
@@ -221,3 +221,6 @@ void HttpSession::onWrite(error_code ec, std::size_t, bool close) {
             self->onRead(ec, bytes);
         });
 }
+
+} // namespace plc::core::network::json_rpc
+

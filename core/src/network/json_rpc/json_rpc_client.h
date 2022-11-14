@@ -35,4 +35,4 @@ private:
     const int m_id;
 };
 
-} // namespace plc::core::network
+} // namespace plc::core::network::json_rpc
