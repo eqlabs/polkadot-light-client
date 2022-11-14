@@ -1,9 +1,10 @@
 #include "network/json_rpc/jrpc_server.h"
 
-// #include <chrono>
+#include <iostream>
 
 #include <boost/asio/io_context.hpp>
-
+#include <boost/iostreams/device/array.hpp>
+#include <boost/iostreams/stream.hpp>
 #include <boost/asio/signal_set.hpp>
 
 namespace plc::core::network::json_rpc {
@@ -23,17 +24,25 @@ int JrpcServer::getNextId() noexcept {
 }
 
 void JrpcServer::onOpen(int id, std::shared_ptr<WebSocketSession> session) {
-    m_log->warn("JrpcServer::onOpen id {}", id);
+    m_log->info("JrpcServer::onOpen id {}", id);
     auto client = std::make_shared<JrpcClient>(id, session, m_io_service);
     m_clients.emplace(id,client);
 }
 
 void JrpcServer::onMessage(int id, std::string message) {
-    m_log->warn("JrpcServer::onMessage id {}, message {}", id, message);
+    m_log->info("JrpcServer::onMessage id {}, message {}", id, message);
+
+    // TODO
+    // 1. get client, based on id
+    // 2. parse message
+    // 3. get method property
+    // 4. if handler exists for it,
+    //    a.  get params
+    //    b.  pass to handler with client
 }
 
 void JrpcServer::onClose(int id) {
-    m_log->warn("JrpcServer::onClose id {}", id);
+    m_log->info("JrpcServer::onClose id {}", id);
 }
 
 void JrpcServer::initSessionCallbacks() {
@@ -47,8 +56,6 @@ void JrpcServer::initSessionCallbacks() {
     WebSocketSession::m_callbacks.onOpen = [self](int id, std::shared_ptr<WebSocketSession> session) {
         self->onOpen(id, session);
     };
-
-
 }
 
 void JrpcServer::connect() {
@@ -88,29 +95,27 @@ void JrpcServer::connect() {
 
     run();
 
-    m_log->warn("done connect-------------");
+    m_log->info("done connect-------------");
 }
 
 void JrpcServer::run()
 {
     // Start accepting a connection
-    m_log->warn("start run");
+    m_log->info("start run");
     auto self = shared_from_this();
-    m_log->warn("got self");
+    m_log->info("got self");
     m_acceptor.async_accept(m_socket,
         [self](error_code ec) {
             self->onAccept(ec);
         });
 }
 
-// Report a failure
-
 void JrpcServer::fail(error_code ec, char const* what) noexcept {
     // Don't report on canceled operations
     if(ec == net::error::operation_aborted) {
         return;
     }
-    m_log->warn("JrpcServer::fail: {}: {}", what, ec.message());
+    m_log->info("JrpcServer::fail: {}: {}", what, ec.message());
 }
 
 void JrpcServer::onAccept(error_code ec)

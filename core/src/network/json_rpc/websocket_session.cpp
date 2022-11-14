@@ -11,29 +11,28 @@
 
 namespace plc::core::network::json_rpc {
 
-
 WebSocketCallbacks WebSocketSession::m_callbacks;
 
 WebSocketSession::WebSocketSession(tcp::socket socket, int id)
     : m_ws(std::move(socket))
     , m_id(id) {
-    m_log->warn("WebSocketSession::WebSocketSession");
+    m_log->info("WebSocketSession::WebSocketSession");
 }
 
 WebSocketSession::~WebSocketSession() {
-    m_log->warn("WebSocketSession::~WebSocketSession");
+    m_log->info("WebSocketSession::~WebSocketSession");
     m_callbacks.onClose(m_id);
 }
 
 void WebSocketSession::fail(error_code ec, char const* what) {
-    m_log->warn("WebSocketSession::fail what {}", what);
+    m_log->info("WebSocketSession::fail what {}", what);
     // Don't report these
     if( ec == net::error::operation_aborted ) {
-        m_log->warn("WebSocketSession::fail: net::error::operation_aborted");
+        m_log->info("WebSocketSession::fail: net::error::operation_aborted");
         return;
     }
     if( ec == websocket::error::closed) {
-        m_log->warn("WebSocketSession::fail: websocket::error::closed");
+        m_log->info("WebSocketSession::fail: websocket::error::closed");
         return;
     }
     if( ec == net::error::operation_aborted ||
@@ -43,7 +42,7 @@ void WebSocketSession::fail(error_code ec, char const* what) {
 }
 
 void WebSocketSession::onAccept(error_code ec){
-    m_log->warn("WebSocketSession::onAccept");
+    m_log->info("WebSocketSession::onAccept");
     // Handle the error, if any
     if(ec) {
         return fail(ec, "accept");
@@ -59,7 +58,7 @@ void WebSocketSession::onAccept(error_code ec){
 }
 
 void WebSocketSession::onRead(error_code ec, std::size_t size) {
-    m_log->warn("WebSocketSession::onAccept");
+    m_log->info("WebSocketSession::onAccept");
     // Handle the error, if any
     if(ec) {
         return fail(ec, "read");
@@ -101,7 +100,7 @@ void WebSocketSession::send(std::shared_ptr<std::string const> const& ss) {
 }
 
 void WebSocketSession::onWrite(error_code ec, std::size_t size) {
-    m_log->warn("WebSocketSession::onWrite size {}", size);
+    m_log->info("WebSocketSession::onWrite size {}", size);
     // Handle the error, if any
     if(ec) {
         return fail(ec, "write");
@@ -116,7 +115,7 @@ void WebSocketSession::onWrite(error_code ec, std::size_t size) {
             net::buffer(*m_queue.front()),
             [sp = shared_from_this(), logger = m_log](
                 error_code ec, std::size_t bytes) {
-                logger->warn("WebSocketSession::onwrite");
+                logger->info("WebSocketSession::onwrite");
                 sp->onWrite(ec, bytes);
             });
     }

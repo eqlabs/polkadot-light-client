@@ -17,9 +17,12 @@ namespace boost::asio {
 } // namespace boost::asio
 
 
+
 namespace plc::core::network::json_rpc {
 
-using JrpcHandler = std::function<void(std::shared_ptr<JrpcClient>, boost::property_tree::ptree &params)>;
+namespace pt = boost::property_tree;
+
+using JrpcHandler = std::function<void(std::shared_ptr<JrpcClient>, pt::ptree &params)>;
 
 class JrpcServer : public std::enable_shared_from_this<JrpcServer> {
 public:
