@@ -1,5 +1,6 @@
 #pragma once
 
+#include <libp2p/log/logger.hpp>
 #include <scale.hpp>
 #include <shell-interface.h>
 
@@ -12,6 +13,10 @@ namespace plc::core::runtime {
 class Executor final {
 public:
     Executor() = default;
+
+    enum class Error {
+        MissingReturnValue = 1
+    };
 
     void init(std::shared_ptr<wasm::ModuleInstance> module_instance, 
               std::shared_ptr<plc::core::runtime::Memory> memory) {
@@ -38,28 +43,34 @@ public:
 
         if constexpr (std::is_void_v<R>) {
             return libp2p::outcome::success();
-        } else {
+        } else if (result.size() > 0) {
             auto bytes = m_memory->loadBytes(Ptr(result[0].geti64()));
             R t;
             scale::ScaleDecoderStream s(bytes);
             try {
-            s >> t;
-            // Check whether the whole byte buffer was consumed
-            if (s.hasMore(1)) {
-                // m_log->error("Runtime API call result size exceeds the size of the type to initialize {}",
-                //               typeid(R).name());
-                return libp2p::outcome::failure(std::errc::illegal_byte_sequence);
-            }
+                s >> t;
+                // Check whether the whole byte buffer was consumed
+                if (s.hasMore(1)) {
+                    m_log->error("Runtime API call result size exceeds the size of the type to initialize {}",
+                                typeid(R).name());
+                    return libp2p::outcome::failure(std::errc::illegal_byte_sequence);
+                }
                 return libp2p::outcome::success(std::move(t));
             } catch (std::system_error &e) {
                 return libp2p::outcome::failure(e.code());
             }
+        } else {
+            return libp2p::outcome::failure(Error::MissingReturnValue);
         }
     }
 
 private:
     std::shared_ptr<wasm::ModuleInstance> m_module_instance;
     std::shared_ptr<plc::core::runtime::Memory> m_memory;
+
+    libp2p::log::Logger m_log = libp2p::log::createLogger("runtime::Executor", "runtime");
 };
 
 } //namespace plc::core::runtime
+
+OUTCOME_HPP_DECLARE_ERROR(plc::core::runtime, Executor::Error);

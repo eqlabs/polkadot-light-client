@@ -34,8 +34,10 @@ groups:
         - name: core
           children:
             - name: chain
+            - name: host
             - name: network
             - name: runner
+            - name: runtime
             - name: utils
             - name: transaction
         - name: app

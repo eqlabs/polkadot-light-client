@@ -95,7 +95,7 @@ Result<void> Service::processRuntime(const ByteBuffer &runtime) {
 
     if (coreVersionResult) {
         auto version = coreVersionResult.value();
-        int x=  5;
+        m_log->info("Got core_version: {}, {}", version.m_spec_name, version.m_impl_name);
     }       
     return libp2p::outcome::success();
 }

@@ -50,7 +50,7 @@ private:
     std::shared_ptr<ExternalInterface> m_external_interface;
     std::shared_ptr<wasm::ModuleInstance> m_module_instance;
 
-    libp2p::log::Logger m_log = libp2p::log::createLogger("Module", "runtime");
+    libp2p::log::Logger m_log = libp2p::log::createLogger("runtime::Service", "runtime");
 };
 
 } //namespace plc::core::runtime

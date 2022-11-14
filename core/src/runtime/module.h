@@ -22,7 +22,7 @@ public:
     }
 private:
     std::shared_ptr<wasm::Module> m_module;
-    libp2p::log::Logger m_log = libp2p::log::createLogger("Module", "runtime");
+    libp2p::log::Logger m_log = libp2p::log::createLogger("runtime::Module", "runtime");
 };
 
 } //namespace plc::core::runtime

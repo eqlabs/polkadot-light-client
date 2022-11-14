@@ -1,6 +1,5 @@
 #include "host/api.h"
 
-#include <boost/assert.hpp>
 #include <wasm-interpreter.h>
 #include "runtime/ptr.h"
 
@@ -22,6 +21,8 @@ wasm::Literals Api::ext_logging_max_level_version_1(const wasm::LiteralList& arg
 
 wasm::Literals Api::ext_logging_log_version_1(const wasm::LiteralList& arguments) {
     ensureArgumentsSize(arguments.size(), 3);
+    ensureArgumentsType(arguments, {wasm::Type::i32, wasm::Type::i64, wasm::Type::i64});
+
     uint32_t level = arguments[0].geti32();
     plc::core::runtime::Ptr target(arguments[1].geti64());
     plc::core::runtime::Ptr message(arguments[2].geti64());
@@ -44,13 +45,17 @@ wasm::Literals Api::ext_logging_log_version_1(const wasm::LiteralList& arguments
 
 wasm::Literals Api::ext_allocator_malloc_version_1(const wasm::LiteralList& arguments) {
     ensureArgumentsSize(arguments.size(), 1);
+    ensureArgumentsType(arguments, {wasm::Type::i32});
+
     uint32_t size = arguments[0].geti32();
 
-    return wasm::Literals({wasm::Literal(m_memory->allocate(size))});    
+    return wasm::Literals({wasm::Literal(m_memory->allocate(size))});
 }
 
 wasm::Literals Api::ext_allocator_free_version_1(const wasm::LiteralList& arguments) {
     ensureArgumentsSize(arguments.size(), 1);
+    ensureArgumentsType(arguments, {wasm::Type::i32});
+
     uint32_t ptr = arguments[0].geti32();
 
     auto result = m_memory->deallocate(ptr);

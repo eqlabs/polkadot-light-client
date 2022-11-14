@@ -16,6 +16,7 @@ add_library(plc_core
     src/runtime/service.cpp
     src/runtime/api.cpp
     src/runtime/external_interface.cpp
+    src/runtime/executor.cpp
     src/runtime/memory.cpp
     src/runtime/memory_allocator.cpp
     src/host/api.cpp)

@@ -37,7 +37,7 @@ private:
     std::unordered_map<WasmPtr, WasmSize> m_allocated;
     std::map<WasmPtr, WasmSize> m_deallocated;
     
-    libp2p::log::Logger m_log = libp2p::log::createLogger("Module", "runtime");
+    libp2p::log::Logger m_log = libp2p::log::createLogger("runtime::MemoryAllocator", "runtime");
 
     std::function<void(size_t)> m_resize_handle;
 };
