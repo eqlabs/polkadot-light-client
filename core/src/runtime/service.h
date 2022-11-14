@@ -34,6 +34,14 @@ public:
     Result<void> loadGenesisRuntime();
     cppcoro::task<Result<void>> loadRuntimeForBlock(libp2p::peer::PeerId, BlockHash block);
 
+    std::shared_ptr<Api> getRuntimeApi() {
+        return m_api;
+    }
+
+    std::shared_ptr<plc::core::host::Api> getHostApi() {
+        return m_host_api;
+    }
+
 private:
     Result<void> uncompressCodeIfNeeded(const ByteBuffer &in, ByteBuffer &out);
     Result<void> processRuntime(const ByteBuffer &runtime);

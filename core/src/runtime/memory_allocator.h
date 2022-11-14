@@ -13,7 +13,7 @@ namespace plc::core::runtime {
 // Alignment for pointers, same with substrate:
 // https://github.com/paritytech/substrate/blob/743981a083f244a090b40ccfb5ce902199b55334/primitives/allocator/src/freeing_bump.rs#L56
 constexpr uint8_t alignment = sizeof(size_t);
-constexpr size_t initial_memory_size = 2097152UL; //MB
+constexpr size_t initial_memory_size = 2097152UL; //2 MB
 constexpr static uint32_t max_memory_size = std::numeric_limits<uint32_t>::max();
 
 class MemoryAllocator final {

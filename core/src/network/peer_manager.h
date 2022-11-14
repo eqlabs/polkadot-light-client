@@ -8,6 +8,13 @@
 #include <libp2p/peer/peer_id.hpp>
 #include <libp2p/network/connection_manager.hpp>
 
+#include <libp2p/protocol/kademlia/impl/content_routing_table_impl.hpp>
+#include <libp2p/protocol/kademlia/impl/kademlia_impl.hpp>
+#include <libp2p/protocol/kademlia/impl/peer_routing_table_impl.hpp>
+#include <libp2p/protocol/kademlia/impl/storage_impl.hpp>
+#include <libp2p/protocol/kademlia/impl/storage_backend_default.hpp>
+#include <libp2p/protocol/kademlia/impl/validator_default.hpp>
+
 #include "runner/client_runner.h"
 
 namespace boost::asio {
@@ -20,10 +27,6 @@ namespace host {
 } // namespace host
 
 namespace protocol {
-namespace kademlia {
-    class Config;
-    class Kademlia;
-} // namespace kademlia
     class Identify;
     class Ping;
 } // namespace protocol
@@ -43,7 +46,7 @@ namespace light2 {
 class Protocol;
 } // namespace light2
 
-class PeerManager final : public Stoppable {
+class PeerManager : public Stoppable {
 public:
     struct Config {
         size_t max_peers_to_connect;
@@ -60,6 +63,9 @@ public:
     void stop() noexcept override;
     std::vector<libp2p::peer::PeerId> getPeersInfo() const;
     std::shared_ptr<libp2p::host::BasicHost> getHost() const;
+
+protected:
+    PeerManager() = default;
 
 private:
     enum class ConnectionState {

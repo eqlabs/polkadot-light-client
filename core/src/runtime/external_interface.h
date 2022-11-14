@@ -20,7 +20,9 @@ public:
     }
 
     void registerImports();
-    void initMemory(WasmSize heap_base);
+    void initMemory(WasmSize heap_base) {
+        m_memory = std::make_shared<plc::core::runtime::Memory>(&memory, heap_base);
+    }
     std::shared_ptr<plc::core::runtime::Memory> getMemory() {
         return m_memory;
     }

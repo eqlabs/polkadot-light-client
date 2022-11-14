@@ -13,7 +13,7 @@
 
 namespace plc::core::runner {
 
-class ClientRunner final : public Stoppable {
+class ClientRunner : public Stoppable {
 public:
     ClientRunner(std::shared_ptr<plc::core::StopHandler> stop_handler) noexcept;
 
@@ -40,6 +40,9 @@ public:
     std::shared_ptr<boost::asio::io_service> getService() const noexcept;
 
     PeriodicTimer makePeriodicTimer(std::chrono::milliseconds interval, PeriodicTimer::Handler&& handler) const noexcept;
+
+protected:
+    ClientRunner() = default;
 
 private:
     // NOTE: some libp2p methods require shared pointers to service, that's why

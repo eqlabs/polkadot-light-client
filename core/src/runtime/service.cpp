@@ -85,18 +85,16 @@ Result<void> Service::processRuntime(const ByteBuffer &runtime) {
     auto heap_base_res = m_module_instance->getExport("__heap_base"); 
     int heap_base = 0;
     if (heap_base_res.size() > 0) {
-        heap_base = heap_base_res[0].geti32();        
+        heap_base = heap_base_res[0].geti32();
+        m_log->debug("Setting heap base to {}", heap_base);
+    } else {
+        m_log->warn("Could not get heap base from the runtime, setting it to 0");
     }
+    //init memory and modules using it
     m_external_interface->initMemory(heap_base);
     m_executor->init(m_module_instance, m_external_interface->getMemory());
-
-    //trying to launch core_version api method
-    auto coreVersionResult = m_api->coreVersion();
-
-    if (coreVersionResult) {
-        auto version = coreVersionResult.value();
-        m_log->info("Got core_version: {}, {}", version.m_spec_name, version.m_impl_name);
-    }       
+    m_host_api->init(m_external_interface->getMemory());
+    
     return libp2p::outcome::success();
 }
 

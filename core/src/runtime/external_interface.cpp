@@ -14,11 +14,6 @@ void ExternalInterface::registerImports() {
     REGISTER_HOST_API_FUNCTION(ext_allocator_free_version_1);
 }
 
-void ExternalInterface::initMemory(WasmSize heap_base) {
-    m_memory = std::make_shared<plc::core::runtime::Memory>(&memory, heap_base);
-    m_host_api->setMemory(m_memory);
-}
-
 wasm::Literals ExternalInterface::callImport(wasm::Function* import, wasm::LiteralList& arguments) {
     if (import->module == env) {        
         if (auto it = m_imports.find(import->base.c_str()); it != m_imports.end()) {

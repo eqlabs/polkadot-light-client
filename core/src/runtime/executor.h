@@ -35,8 +35,7 @@ public:
             //store args
             auto ptr = m_memory->storeBytes(encoded_args);
             arguments = {wasm::Literal{ptr.m_addr}, wasm::Literal{ptr.m_size}};
-        }
-        else {
+        } else {
             arguments = {wasm::Literal{0}, wasm::Literal{0}};
         }
         auto result = m_module_instance->callExport(wasm::Name{name.data()}, arguments);

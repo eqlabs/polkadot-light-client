@@ -32,12 +32,6 @@
 #include <libp2p/peer/impl/identity_manager_impl.hpp>
 #include <libp2p/peer/impl/peer_repository_impl.hpp>
 #include <libp2p/protocol_muxer/multiselect.hpp>
-#include <libp2p/protocol/kademlia/impl/content_routing_table_impl.hpp>
-#include <libp2p/protocol/kademlia/impl/kademlia_impl.hpp>
-#include <libp2p/protocol/kademlia/impl/peer_routing_table_impl.hpp>
-#include <libp2p/protocol/kademlia/impl/storage_impl.hpp>
-#include <libp2p/protocol/kademlia/impl/storage_backend_default.hpp>
-#include <libp2p/protocol/kademlia/impl/validator_default.hpp>
 #include <libp2p/protocol/identify/identify.hpp>
 #include <libp2p/protocol/ping/ping.hpp>
 #include <libp2p/security/noise.hpp>

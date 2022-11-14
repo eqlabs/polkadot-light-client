@@ -42,7 +42,7 @@ TEST_F(ChainSpecParseTest, ShouldParseSpec) {
     EXPECT_EQ("DOT", properties["tokenSymbol"]);
 
     auto genesis = chain_spec.getGenesis();
-    EXPECT_EQ(3, genesis.size());
+    EXPECT_EQ(4, genesis.size());
 
     EXPECT_EQ(1, genesis[0].first.size());
     EXPECT_EQ(1, genesis[0].second.size());

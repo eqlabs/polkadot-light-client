@@ -18,7 +18,7 @@ class Api final {
 public:
     Api();
 
-    void setMemory(std::shared_ptr<plc::core::runtime::Memory> memory) {
+    void init(std::shared_ptr<plc::core::runtime::Memory> memory) {
         m_memory = memory;
     }
 

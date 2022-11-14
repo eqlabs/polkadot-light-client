@@ -87,11 +87,11 @@ WasmPtr MemoryAllocator::freealloc(WasmSize size) {
     for (const auto &[chunk_ptr, chunk_size] : m_deallocated) {
         BOOST_ASSERT(chunk_size > 0);
         if (chunk_size >= size and chunk_size < min_chunk_size) {
-                min_chunk_size = chunk_size;
-                ptr = chunk_ptr;
-                if (min_chunk_size == size) {
-                    break;
-                }
+            min_chunk_size = chunk_size;
+            ptr = chunk_ptr;
+            if (min_chunk_size == size) {
+                break;
+            }
         }
     }
     if (ptr == 0) {
