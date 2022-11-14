@@ -102,37 +102,6 @@ int main(const int count, const char** args) {
     connection_manager = std::make_shared<network::PeerManager>(runner, chainSpec.getBootNodes(), stop_handler);
     stop_handler->add(connection_manager);
 
-    auto jrpc_server = std::make_shared<network::json_rpc::JrpcServer>(2584, runner->getService());
-    mainLogger->warn("got shared ptr for server");
-    jrpc_server->connect();
-    // jrpc_server->connect();
-    // auto packio_server = jrpc_server->getServer();
-
-    // packio_server->dispatcher()->add_coro(
-    //     "add", *jrpc_server->getIoService(), [](int a, int b) -> packio::net::awaitable<int> {
-    //         printf("add: a is %d, b is %d\n", a, b);
-    //         co_return a + b;
-    //     });
-
-    // packio_server->dispatcher()->add_async(
-    //     "multiply", {"a", "b"}, [io = jrpc_server->getIoService(), logger = mainLogger](packio::json_rpc::completion_handler complete, int a, int b) {
-    //         // Call the completion handler later
-    //         packio::net::post(
-    //             *io, [a, b, complete = std::move(complete), logger]() mutable {
-    //                 logger->warn("multiply a {} b {}", a, b)
-    //                 complete(a * b);
-    //             });
-    //     });
-
-    // packio_server->dispatcher()->add_coro(
-    //     "pow", *jrpc_server->getIoService(), [](int a, int b) -> packio::net::awaitable<int> {
-    //         // mainLogger->warn("pow: a is {}, b is {}, session {}", a, b, (void*)session_ptr.get());
-    //         // mainLogger->warn("pow: a is {}, b is {}", a, b);
-    //         printf("pow: a is %d, b is %d\n", a, b);
-    //         // mainLogger->info("info");
-    //         co_return std::pow(a, b);
-    //     });
-
     runner->run();
 
     mainLogger->info("Exiting application");
