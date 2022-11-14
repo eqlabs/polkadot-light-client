@@ -21,7 +21,6 @@ WebSocketSession::WebSocketSession(tcp::socket socket, int id)
 
 WebSocketSession::~WebSocketSession() {
     m_log->info("WebSocketSession::~WebSocketSession");
-    m_callbacks.onClose(m_id);
 }
 
 void WebSocketSession::fail(error_code ec, char const* what) {
@@ -29,16 +28,12 @@ void WebSocketSession::fail(error_code ec, char const* what) {
     // Don't report these
     if( ec == net::error::operation_aborted ) {
         m_log->info("WebSocketSession::fail: net::error::operation_aborted");
-        return;
     }
     if( ec == websocket::error::closed) {
         m_log->info("WebSocketSession::fail: websocket::error::closed");
-        return;
     }
-    if( ec == net::error::operation_aborted ||
-        ec == websocket::error::closed) {
-        return;
-    }
+    m_callbacks.onClose(m_id);
+
 }
 
 void WebSocketSession::onAccept(error_code ec){

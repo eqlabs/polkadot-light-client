@@ -27,6 +27,7 @@ void JrpcServer::onOpen(int id, std::shared_ptr<WebSocketSession> session) {
     m_log->info("JrpcServer::onOpen id {}", id);
     auto client = std::make_shared<JrpcClient>(id, session, m_io_service);
     m_clients.emplace(id,client);
+    m_log->info("{} clients currently attached", m_clients.size());
 }
 
 void JrpcServer::onMessage(int id, std::string message) {
@@ -43,6 +44,8 @@ void JrpcServer::onMessage(int id, std::string message) {
 
 void JrpcServer::onClose(int id) {
     m_log->info("JrpcServer::onClose id {}", id);
+    m_clients.erase(id);
+    m_log->info("{} clients currently attached", m_clients.size());
 }
 
 void JrpcServer::initSessionCallbacks() {
