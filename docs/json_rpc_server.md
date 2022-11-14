@@ -1,52 +1,66 @@
 # JSON-RPC Server
 
-Our JSON-RPC server uses the packio library:  `https://github.com/qchateau/packio`
+Our JSON-RPC server is build on top of a boost websocket server. The http_session and websocket_session code is based on Vinnie Falco's demo project here: https://github.com/vinniefalco/CppCon2018
 
-This is a header-only library, which we have patched to work with Boost 1.80, as well as our own logger.  It is built on top of boost::asio, and therefor integrates easily into our library.
 
 ## Usage
 
-To instantiate a server, you need a port and a Boost io_context, the latter being typically grabbed from the client runner.
+To instantiate a server, you need a port and a Boost io_context, the latter being typically grabbed from our client runner.
 
 ```
-auto jrpc_server = std::make_shared<network::JrpcServer>(2584, runner->getService());
-```
-
-To add handlers, obtain the packio_server from our JSON-RPC server.
+auto jrpc_server = std::make_shared<network::json_rpc::JrpcServer>(2584, runner->getService());
+jrpc_server->connect();
 
 ```
-auto packio_server = jrpc_server->getServer();
-```
 
-With this object, you can add message handlers, which may be synchronous, asynchronous, or coroutines.
-This example shows the use of basic coroutines
+Although message parsing and handlers are not yet implemented, you can connect to websocket clients, receiving messages from said clients which will get printed to the console.
+
+This is an example JavaScript node client that sends the same message every 5 seconds. Note that the port (2584) must match the port that the server is listening on.
 
 ```
-packio_server->dispatcher()->add_coro(
-    "add", *jrpc_server->getIoService(), [](int a, int b) -> packio::net::awaitable<int> {
-        printf("add: a is %d, b is %d\n", a, b);
-        co_return a + b;
+var WebSocketClient = require('websocket').client;
+
+var client = new WebSocketClient();
+
+client.on('connectFailed', function(error) {
+    console.log('Connect Error: ' + error.toString());
+});
+
+client.on('connect', function(connection) {
+    console.log('WebSocket Client Connected');
+    connection.on('error', function(error) {
+        console.log("Connection Error: " + error.toString());
     });
-packio_server->dispatcher()->add_coro(
-    "multiply", *jrpc_server->getIoService(), [](int a, int b) -> packio::net::awaitable<int> {
-        printf("multiply: a is %d, b is %d\n", a, b);
-        co_return a * b;
+    connection.on('close', function() {
+        console.log('echo-protocol Connection Closed');
     });
-packio_server->dispatcher()->add_coro(
-    "pow", *jrpc_server->getIoService(), [](int a, int b) -> packio::net::awaitable<int> {
-        printf("pow: a is %d, b is %d\n", a, b);
-        co_return std::pow(a, b);
+    connection.on('message', function(message) {
+        console.log('got message', message)
     });
 
+    function sendMessage() {
+        if (connection.connected) {
+            let msg = {
+                jsonrpc: '2.0',
+                id: 42,
+                method: 'multiply',
+                params: [ 21, 12]
+            };
+            let msgtext = JSON.stringify(msg);
+            console.log('sending message: ', msgtext);
+            connection.send(msgtext);
+        }
+    }
+    function doSomething() {
+        sendMessage();
+        setTimeout(doSomething, 5000);
+    }
+    
+    setTimeout(doSomething, 5000);
+});
+
+client.connect('ws://127.0.0.1:2584');
 ```
 
-To test a running instance of the server, you can pass in a message to this test web client.  You would need to install the node libraries prior to use (`npm i`).
 
-[demo node.js JSON-RPC client](../core/test/nodeutils/json-rpc-client.js)
 
-For example, to perform an `add` using the handler above, you would call the app like this:
-
-```
-node json-rpc-client.js '{"id": 12, "method": "add", "params": [21,34]}'
-```
-The app writes the response to the console.
