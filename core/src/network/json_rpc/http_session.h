@@ -27,7 +27,7 @@ using error_code = boost::system::error_code;
 
 /** Represents an established HTTP connection
 */
-class http_session : public std::enable_shared_from_this<http_session>
+class HttpSession : public std::enable_shared_from_this<HttpSession>
 {
     tcp::socket m_socket;
     beast::flat_buffer m_buffer;
@@ -39,8 +39,8 @@ class http_session : public std::enable_shared_from_this<http_session>
     void onWrite(error_code ec, std::size_t, bool close);
 
 public:
-    http_session(tcp::socket socket, int id);
-    ~http_session();
+    HttpSession(tcp::socket socket, int id);
+    ~HttpSession();
     void run();
 };
 

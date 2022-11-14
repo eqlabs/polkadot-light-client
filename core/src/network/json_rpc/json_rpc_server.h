@@ -26,8 +26,9 @@ public:
     const libp2p::log::Logger getLogger() noexcept { return m_log; }
     void connect();
     void run();
-    void onClose(int id);
+    void onOpen(int id, std::shared_ptr<WebSocketSession> session);
     void onMessage(int id, std::string message);
+    void onClose(int id);
 
 private:
     void fail(error_code ec, char const* what) noexcept;

@@ -8,8 +8,9 @@
 
 namespace plc::core::network::json_rpc {
 
-JsonRpcClient::JsonRpcClient(int id, std::shared_ptr<boost::asio::io_service> io)
+JsonRpcClient::JsonRpcClient(int id, std::shared_ptr<WebSocketSession> session, std::shared_ptr<boost::asio::io_service> io)
     : m_id(id)
+    , m_session(session)
     , m_io_service(io) {
 }
 

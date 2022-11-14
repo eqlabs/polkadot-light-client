@@ -16,7 +16,7 @@
 #include "http_session.h"
 #include <libp2p/log/logger.hpp>
 
-class websocket_session : public std::enable_shared_from_this<websocket_session> {
+class WebSocketSession : public std::enable_shared_from_this<WebSocketSession> {
     beast::flat_buffer m_buffer;
     websocket::stream<tcp::socket> m_ws;
     std::vector<std::shared_ptr<std::string const>> m_queue;
@@ -29,19 +29,20 @@ class websocket_session : public std::enable_shared_from_this<websocket_session>
     void onWrite(error_code ec, std::size_t bytes_transferred);
 
 public:
-    websocket_session(tcp::socket socket, int id);
-    ~websocket_session();
+    WebSocketSession(tcp::socket socket, int id);
+    ~WebSocketSession();
     template<class Body, class Allocator>
     void run(http::request<Body, http::basic_fields<Allocator>> req);
     void send(std::shared_ptr<std::string const> const& ss);
-    static std::function<void(int)> onClose;
+    static std::function<void(int, std::shared_ptr<WebSocketSession>)> onOpen;
     static std::function<void(int, std::string message)> onMessage;
+    static std::function<void(int)> onClose;
 };
 
 template<class Body, class Allocator>
-void websocket_session::run(http::request<Body, http::basic_fields<Allocator>> req) {
+void WebSocketSession::run(http::request<Body, http::basic_fields<Allocator>> req) {
     m_ws.async_accept(req,std::bind(
-        &websocket_session::onAccept,
+        &WebSocketSession::onAccept,
         shared_from_this(),
         std::placeholders::_1));
 }

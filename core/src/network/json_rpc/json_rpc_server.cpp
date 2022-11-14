@@ -22,11 +22,18 @@ int JsonRpcServer::getNextId() noexcept {
     return m_client_id;
 }
 
-void JsonRpcServer::onClose(int id) {
-    m_log->warn("JsonRpcServer::onClose id {}", id);
+void JsonRpcServer::onOpen(int id, std::shared_ptr<WebSocketSession> session) {
+    m_log->warn("JsonRpcServer::onOpen id {}", id);
+    auto client = std::make_shared<JsonRpcClient>(id, session, m_io_service);
+    m_clients.emplace(id,client);
 }
+
 void JsonRpcServer::onMessage(int id, std::string message) {
     m_log->warn("JsonRpcServer::onMessage id {}, message {}", id, message);
+}
+
+void JsonRpcServer::onClose(int id) {
+    m_log->warn("JsonRpcServer::onClose id {}", id);
 }
 
 
@@ -37,11 +44,14 @@ void JsonRpcServer::connect() {
     boost::asio::ip::tcp::endpoint bind_ep(ip_address, m_port);
 
     auto self = shared_from_this();
-    websocket_session::onClose = [self](int id) {
+    WebSocketSession::onClose = [self](int id) {
         self->onClose(id);
     };
-    websocket_session::onMessage = [self](int id, std::string message) {
+    WebSocketSession::onMessage = [self](int id, std::string message) {
         self->onMessage(id, message);
+    };
+    WebSocketSession::onOpen = [self](int id, std::shared_ptr<WebSocketSession> session) {
+        self->onOpen(id, session);
     };
 
     m_acceptor.open(bind_ep.protocol(), ec);
@@ -106,9 +116,7 @@ void JsonRpcServer::onAccept(error_code ec)
     } else {
         // Launch a new session for this connection
         auto id = getNextId();
-        auto client = std::make_shared<JsonRpcClient>(id, m_io_service);
-        m_clients.emplace(id,client);
-        std::make_shared<http_session>(
+        std::make_shared<HttpSession>(
             std::move(m_socket), id)->run();
     }
 

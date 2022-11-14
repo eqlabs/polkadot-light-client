@@ -133,15 +133,15 @@ void handle_request(
 
 //------------------------------------------------------------------------------
 
-http_session::http_session(tcp::socket socket, int id)
+HttpSession::HttpSession(tcp::socket socket, int id)
     : m_socket(std::move(socket)) 
     , m_id(id) {
 }
 
-http_session::~http_session() {
+HttpSession::~HttpSession() {
 }
 
-void http_session::run() {
+void HttpSession::run() {
     // Read a request
     http::async_read(m_socket, m_buffer, m_req,
         [self = shared_from_this()]
@@ -152,14 +152,14 @@ void http_session::run() {
 }
 
 // Report a failure
-void http_session::fail(error_code ec, char const* what) {
+void HttpSession::fail(error_code ec, char const* what) {
     // Don't report on canceled operations
     if(ec == net::error::operation_aborted) {
         return;
     }
 }
 
-void http_session::onRead(error_code ec, std::size_t) {
+void HttpSession::onRead(error_code ec, std::size_t) {
     // This means they closed the connection
     if(ec == http::error::end_of_stream) {
         m_socket.shutdown(tcp::socket::shutdown_send, ec);
@@ -174,7 +174,7 @@ void http_session::onRead(error_code ec, std::size_t) {
     // See if it is a WebSocket Upgrade
     if(websocket::is_upgrade(m_req)) {
         // Create a WebSocket session by transferring the socket
-        std::make_shared<websocket_session>(
+        std::make_shared<WebSocketSession>(
             std::move(m_socket), m_id)->run(std::move(m_req));
         return;
     }
@@ -196,7 +196,7 @@ void http_session::onRead(error_code ec, std::size_t) {
     });
 }
 
-void http_session::onWrite(error_code ec, std::size_t, bool close) {
+void HttpSession::onWrite(error_code ec, std::size_t, bool close) {
     // Handle the error, if any
     if(ec) {
         return fail(ec, "write");
