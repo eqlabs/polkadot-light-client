@@ -7,8 +7,8 @@ add_library(plc_core
     src/network/peer_manager.cpp
     src/network/json_rpc/http_session.cpp
     src/network/json_rpc/websocket_session.cpp
-    src/network/json_rpc/json_rpc_server.cpp
-    src/network/json_rpc/json_rpc_client.cpp
+    src/network/json_rpc/jrpc_server.cpp
+    src/network/json_rpc/jrpc_client.cpp
     src/network/protobuf/message_reader_writer.cpp
     src/network/scale/message_reader_writer.cpp
     src/runner/client_runner.cpp
