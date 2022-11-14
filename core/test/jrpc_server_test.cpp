@@ -29,23 +29,8 @@ TEST_F(JrpcServerTest, ShouldReturnCorrectResponse) {
     std::shared_ptr<boost::asio::io_service> io = std::make_shared<boost::asio::io_service>();
 
     auto jrpc_server = std::make_shared<plc::core::network::json_rpc::JrpcServer>(2584, io);
-    // auto packio_server = json_rpc_server->getServer();
-    // packio_server->dispatcher()->add_coro(
-    //     "add", *json_rpc_server->getIoService(), [](int a, int b) -> packio::net::awaitable<int> {
-    //         co_return a + b;
-    //     });
-    // packio_server->dispatcher()->add_coro(
-    //     "multiply", *json_rpc_server->getIoService(), [](int a, int b) -> packio::net::awaitable<int> {
-    //         co_return a * b;
-    //     });
-    // packio_server->dispatcher()->add_coro(
-    //     "pow", *json_rpc_server->getIoService(), [](int a, int b) -> packio::net::awaitable<int> {
-    //         co_return std::pow(a, b);
-    //     });
-
-    // std::thread io_thread([io](){
-    //     io->run();
-    // });
+    // TODO
+    // rewrite tests when handlers get added to new JrpcServer
 
     // system("cd ./nodeutils && node json-rpc-client.js '{\"jsonrpc\": \"2.0\",\"id\": 12, \"method\": \"add\", \"params\": [55,34]}' > ./rpc_test.txt");
     // system("cd ./nodeutils && node json-rpc-client.js '{\"jsonrpc\": \"2.0\",\"id\": 12, \"method\": \"multiply\", \"params\": [11,9]}' >> ./rpc_test.txt");
