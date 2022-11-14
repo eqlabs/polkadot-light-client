@@ -61,6 +61,3 @@ client.on('connect', function(connection) {
 
 client.connect('ws://127.0.0.1:2584');
 ```
-
-
-
