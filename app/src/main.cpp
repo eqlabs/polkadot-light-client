@@ -1,12 +1,12 @@
 #include <iostream>
-
 #include <boost/program_options.hpp>
-#include <iostream>
 
 #include "chain/spec.h"
 #include "runner/client_runner.h"
 #include "network/peer_manager.h"
 #include "logger.h"
+#include "runtime/service.h"
+#include "utils/hex.h"
 
 namespace plc::app {
 
@@ -97,9 +97,12 @@ int main(const int count, const char** args) {
     if (result.has_error()) {
         exit(EXIT_FAILURE);
     }
-    auto chainSpec = result.value();
-    connection_manager = std::make_shared<network::PeerManager>(runner, chainSpec.getBootNodes(), stop_handler);
+    auto chain_spec = std::make_shared<plc::core::chain::Spec>(result.value());
+    connection_manager = std::make_shared<network::PeerManager>(runner, chain_spec->getBootNodes(), stop_handler);
     stop_handler->add(connection_manager);
+
+    auto service = std::make_shared<plc::core::runtime::Service>(chain_spec, connection_manager, runner);
+    service->loadGenesisRuntime();
 
     runner->run();
 

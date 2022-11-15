@@ -11,7 +11,10 @@ add_library(plc_core
     src/runner/timer.cpp
     src/utils/hex.cpp
     src/utils/stoppable.cpp
-    src/utils/string_conversion.cpp)
+    src/utils/string_conversion.cpp
+    src/runtime/module.cpp
+    src/runtime/service.cpp
+    src/runtime/api.cpp)
 message(STATUS "dir = ${CMAKE_CURRENT_LIST_DIR}/src")
 target_include_directories(plc_core PUBLIC "${CMAKE_CURRENT_LIST_DIR}/src")
 target_link_libraries(plc_core
@@ -24,4 +27,6 @@ target_link_libraries(plc_core
         p2p::p2p_gossip
         p2p::p2p_loopback_stream
         scale::scale
-        cppcoro::cppcoro)
+        cppcoro::cppcoro
+        binaryen
+        zstd::zstd)

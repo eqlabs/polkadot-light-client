@@ -3,6 +3,9 @@
 #include <chrono>
 
 #include <boost/asio/io_context.hpp>
+#include <boost/range/adaptor/filtered.hpp>
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/algorithm/copy.hpp>
 
 #include <libp2p/basic/scheduler/scheduler_impl.hpp>
 #include <libp2p/basic/scheduler/asio_scheduler_backend.hpp>
@@ -460,6 +463,23 @@ void PeerManager::updateConnections() {
             }
         }
     }
+}
+
+std::vector<libp2p::peer::PeerId> PeerManager::getPeersInfo() const {
+    std::vector<libp2p::peer::PeerId> peers;
+    peers.reserve(m_peers_info.size());
+    boost::copy(m_peers_info 
+        | boost::adaptors::filtered([](auto pair) {
+            return pair.second.state == ConnectionState::Connected;
+            })
+        | boost::adaptors::transformed([](auto pair){return pair.first;}),
+        std::back_inserter(peers));
+
+    return peers;
+}
+
+std::shared_ptr<libp2p::host::BasicHost> PeerManager::getHost() const {
+    return m_host;
 }
 
 } // namespace plc::core::network

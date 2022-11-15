@@ -58,6 +58,8 @@ public:
         std::shared_ptr<plc::core::StopHandler> stop_handler);
     ~PeerManager();
     void stop() noexcept override;
+    std::vector<libp2p::peer::PeerId> getPeersInfo() const;
+    std::shared_ptr<libp2p::host::BasicHost> getHost() const;
 
 private:
     enum class ConnectionState {
