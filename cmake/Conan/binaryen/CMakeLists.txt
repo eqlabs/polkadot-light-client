@@ -5,7 +5,7 @@ include(ExternalProject)
 
 set(INSTALL_DIR "${CMAKE_BINARY_DIR}/install")
 ExternalProject_Add(binaryen
-    GIT_REPOSITORY     "https://${GITHUB_HOST}/WebAssembly/binaryen.git"
+    GIT_REPOSITORY     "https://github.com/WebAssembly/binaryen.git"
     GIT_TAG            "version_100"
     GIT_SHALLOW        TRUE
     DOWNLOAD_DIR       "${CMAKE_BINARY_DIR}/download"

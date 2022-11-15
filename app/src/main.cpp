@@ -76,16 +76,6 @@ CommandLineArgs parseArgs(const int count, const char** &args) {
     }
 }
 
-cppcoro::task<void>test(std::shared_ptr<plc::core::network::PeerManager> connection_manager, std::shared_ptr<plc::core::runtime::Service> service) {
-    auto block_hash = plc::core::unhexWith0xToBlockHash("0x1611aaf014ea221866a309dda02dd97633782d6d6fe0925eaaef9952105da89b");
-    
-    for (auto peer: connection_manager->getPeersInfo()) {
-        std::cout << "Peer: " << peer.toBase58() << std::endl;
-        co_await service->loadRuntimeForBlock(peer, block_hash.value());
-    }
-    co_return;
-}
-
 
 } // namespace plc::app
 
@@ -114,13 +104,6 @@ int main(const int count, const char** args) {
     auto service = std::make_shared<plc::core::runtime::Service>(chain_spec, connection_manager, runner);
     service->loadGenesisRuntime();
 
-    bool finished = false;
-    // auto timer = runner->makePeriodicTimer(std::chrono::milliseconds(2000), [&finished, connection_manager, runner, service]() {
-    //     if (!finished) {
-    //         runner->dispatchTask(test(connection_manager, service));
-    //         finished = true;
-    //     }
-    // });
     runner->run();
 
     mainLogger->info("Exiting application");

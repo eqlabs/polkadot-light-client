@@ -61,8 +61,7 @@ cppcoro::task<Result<void>> Service::loadRuntimeForBlock(libp2p::peer::PeerId pe
 
     if (result.has_error()) {
         co_return Error::ObtainingRuntimeError;
-    }
-    else {
+    } else {
         auto val = result.value();
 
         plc::core::ByteBuffer buf;
