@@ -37,7 +37,7 @@ cppcoro::task<Result<proto::BlockResponse>> Protocol::send(proto::BlockRequest&&
             });
 
     if (!stream_res) {
-        m_log->debug("Getting stream caused an error: {}", stream_res.error().message());
+        m_log->error("Getting stream caused an error: {}", stream_res.error().message());
         co_return stream_res.error();
     }
 
@@ -49,7 +49,7 @@ cppcoro::task<Result<proto::BlockResponse>> Protocol::send(proto::BlockRequest&&
             });
 
     if (!write_res) {
-        m_log->debug("Writing to a stream caused error: {}", write_res.error().message());
+        m_log->error("Writing to a stream caused error: {}", write_res.error().message());
         co_return write_res.error();
     }
 
@@ -60,7 +60,7 @@ cppcoro::task<Result<proto::BlockResponse>> Protocol::send(proto::BlockRequest&&
             });
 
     if (!read_res) {
-        m_log->debug("Reading from stream caused error: {}", read_res.error().message());
+        m_log->error("Reading from stream caused error: {}", read_res.error().message());
         co_return read_res.error();
     }
 
