@@ -97,8 +97,8 @@ static constexpr size_t max_connections = 20;
 PeerManager::PeerManager(std::shared_ptr<runner::ClientRunner> runner,
     const std::vector<std::string>& peers,
     std::shared_ptr<plc::core::StopHandler> stop_handler)
-    : m_stop_handler(std::move(stop_handler))
-    , m_runner(std::move(runner)) {
+    : m_stop_handler(stop_handler)
+    , m_runner(runner) {
     initProtocols();
 
     m_kademlia->addPeer(m_host->getPeerInfo(), true);
@@ -115,8 +115,8 @@ PeerManager::PeerManager(std::shared_ptr<runner::ClientRunner> runner,
 PeerManager::PeerManager(std::shared_ptr<runner::ClientRunner> runner,
     const std::vector<libp2p::multi::Multiaddress> &peers,
     std::shared_ptr<plc::core::StopHandler> stop_handler)
-    : m_stop_handler(std::move(stop_handler))
-    , m_runner(std::move(runner)) {
+    : m_stop_handler(stop_handler)
+    , m_runner(runner) {
     initProtocols();
 
     m_kademlia->addPeer(m_host->getPeerInfo(), true);

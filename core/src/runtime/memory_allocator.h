@@ -8,6 +8,10 @@
 #include "runtime/ptr.h"
 #include "utils/types.h"
 
+/*
+ * Code of this class was based on MemoryAllocator class from Kagome: https://github.com/soramitsu/kagome/blob/master/core/runtime/common/memory_allocator.hpp
+ */
+
 namespace plc::core::runtime {
 
 // Alignment for pointers, same with substrate:

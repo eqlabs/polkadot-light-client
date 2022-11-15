@@ -17,7 +17,7 @@ public:
     };
     Result<void> parseCode(const ByteBuffer &code);
 
-    std::shared_ptr<wasm::Module> getWasmModule() {
+    std::shared_ptr<wasm::Module> getWasmModule() noexcept {
         return m_module;
     }
 private:

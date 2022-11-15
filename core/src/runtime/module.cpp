@@ -29,7 +29,6 @@ Result<void> Module::parseCode(const ByteBuffer &code) {
         m_log->error("Parsing runtime code error {}", msg.str());
         return Error::ParsingError;
     }
-    
     return libp2p::outcome::success();
 }
 

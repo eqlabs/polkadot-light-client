@@ -10,10 +10,11 @@
 #include "runtime/executor.h"
 #include "runtime/external_interface.h"
 #include "runtime/module.h"
+#include "utils/stoppable.h"
 
 namespace plc::core::runtime {
 
-class Service final {
+class Service final : public plc::core::Stoppable {
 public:
     enum class Error {
         DecompresionError = 1,
@@ -23,24 +24,20 @@ public:
 
     Service(std::shared_ptr<plc::core::chain::Spec> spec,
             std::shared_ptr<plc::core::network::PeerManager> connection_manager, 
-            std::shared_ptr<plc::core::runner::ClientRunner> runner) : 
-            m_spec(spec), m_connection_manager(connection_manager), m_runner(runner) {
-                m_module = std::make_shared<Module>();
-                m_executor = std::make_shared<Executor>();
-                m_api = std::make_shared<Api>(m_executor);
-                m_host_api = std::make_shared<plc::core::host::Api>();
-            }
+            std::shared_ptr<plc::core::runner::ClientRunner> runner);
 
     Result<void> loadGenesisRuntime();
     cppcoro::task<Result<void>> loadRuntimeForBlock(libp2p::peer::PeerId, BlockHash block);
 
-    std::shared_ptr<Api> getRuntimeApi() {
+    std::shared_ptr<Api> getRuntimeApi() noexcept {
         return m_api;
     }
 
-    std::shared_ptr<plc::core::host::Api> getHostApi() {
+    std::shared_ptr<plc::core::host::Api> getHostApi() noexcept {
         return m_host_api;
     }
+
+    void stop() noexcept override;
 
 private:
     Result<void> uncompressCodeIfNeeded(const ByteBuffer &in, ByteBuffer &out);

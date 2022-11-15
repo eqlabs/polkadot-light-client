@@ -19,11 +19,11 @@ public:
         registerImports();
     }
 
-    void registerImports();
+    void registerImports() noexcept;
     void initMemory(WasmSize heap_base) {
         m_memory = std::make_shared<plc::core::runtime::Memory>(&memory, heap_base);
     }
-    std::shared_ptr<plc::core::runtime::Memory> getMemory() {
+    std::shared_ptr<plc::core::runtime::Memory> getMemory() noexcept {
         return m_memory;
     }
 

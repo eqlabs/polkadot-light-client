@@ -8,6 +8,10 @@
 #include "runtime/ptr.h"
 #include "utils/types.h"
 
+/*
+ * Code of this class was based on MemoryImpl class from Kagome: https://github.com/soramitsu/kagome/blob/master/core/runtime/binaryen/memory_impl.hpp
+ */
+
 namespace plc::core::runtime {
 
 class Memory final {

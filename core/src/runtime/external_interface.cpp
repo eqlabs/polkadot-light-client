@@ -7,7 +7,7 @@ const static wasm::Name env = "env";
 #define REGISTER_HOST_API_FUNCTION(name) \
     m_imports[#name] = &plc::core::host::Api::name
 
-void ExternalInterface::registerImports() {
+void ExternalInterface::registerImports() noexcept {
     REGISTER_HOST_API_FUNCTION(ext_logging_max_level_version_1);
     REGISTER_HOST_API_FUNCTION(ext_logging_log_version_1);
     REGISTER_HOST_API_FUNCTION(ext_allocator_malloc_version_1);

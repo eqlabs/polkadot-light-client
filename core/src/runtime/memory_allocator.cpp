@@ -79,7 +79,6 @@ WasmPtr MemoryAllocator::freealloc(WasmSize size) {
     if (size == 0) {
         return 0;
     }
-
     size = roundUp(size);
 
     auto min_chunk_size = std::numeric_limits<WasmSize>::max();

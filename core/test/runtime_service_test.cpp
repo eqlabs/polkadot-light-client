@@ -41,15 +41,7 @@ protected:
 
 };
 
-TEST_F(RuntimeServiceTest, shouldParseGenesisRuntime) {
-    auto result = m_runtime_service->loadGenesisRuntime();
-    EXPECT_FALSE(result.has_error());
-}
-
 TEST_F(RuntimeServiceTest, shouldReturnCorrectCoreVersion) {
-    auto result = m_runtime_service->loadGenesisRuntime();
-    EXPECT_FALSE(result.has_error());
-
     auto runtime_api = m_runtime_service->getRuntimeApi();
 
     auto coreVersionResult = runtime_api->coreVersion();
@@ -61,9 +53,6 @@ TEST_F(RuntimeServiceTest, shouldReturnCorrectCoreVersion) {
 }
 
 TEST_F(RuntimeServiceTest, hostApiShouldAllocateMemory) {
-    auto result = m_runtime_service->loadGenesisRuntime();
-    EXPECT_FALSE(result.has_error());
-
     auto host_api = m_runtime_service -> getHostApi();
 
     auto size = wasm::Literal(1);
@@ -75,9 +64,6 @@ TEST_F(RuntimeServiceTest, hostApiShouldAllocateMemory) {
 }
 
 TEST_F(RuntimeServiceTest, hostApiShouldReturnProperLoggingLevel) {
-    auto result = m_runtime_service->loadGenesisRuntime();
-    EXPECT_FALSE(result.has_error());
-
     auto host_api = m_runtime_service -> getHostApi();
 
     auto logging_level = host_api->ext_logging_max_level_version_1({});

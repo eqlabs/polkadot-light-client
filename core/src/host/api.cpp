@@ -23,7 +23,7 @@ wasm::Literals Api::ext_logging_log_version_1(const wasm::LiteralList& arguments
     ensureArgumentsSize(arguments.size(), 3);
     ensureArgumentsType(arguments, {wasm::Type::i32, wasm::Type::i64, wasm::Type::i64});
 
-    uint32_t level = arguments[0].geti32();
+    auto level = arguments[0].geti32();
     plc::core::runtime::Ptr target(arguments[1].geti64());
     plc::core::runtime::Ptr message(arguments[2].geti64());
 
@@ -35,8 +35,8 @@ wasm::Literals Api::ext_logging_log_version_1(const wasm::LiteralList& arguments
     if (it != m_wasm_log_level_map.end()) {
         soralog_level = it->first;
     }    
-    std::string targetStr = m_memory->loadString(target);
-    std::string messageStr = m_memory->loadString(message);
+    auto targetStr = m_memory->loadString(target);
+    auto messageStr = m_memory->loadString(message);
 
     m_log->log(soralog_level, "{}: {}", targetStr, messageStr);
 
@@ -47,7 +47,7 @@ wasm::Literals Api::ext_allocator_malloc_version_1(const wasm::LiteralList& argu
     ensureArgumentsSize(arguments.size(), 1);
     ensureArgumentsType(arguments, {wasm::Type::i32});
 
-    uint32_t size = arguments[0].geti32();
+    auto size = arguments[0].geti32();
 
     return wasm::Literals({wasm::Literal(m_memory->allocate(size))});
 }
@@ -56,7 +56,7 @@ wasm::Literals Api::ext_allocator_free_version_1(const wasm::LiteralList& argume
     ensureArgumentsSize(arguments.size(), 1);
     ensureArgumentsType(arguments, {wasm::Type::i32});
 
-    uint32_t ptr = arguments[0].geti32();
+    auto ptr = arguments[0].geti32();
 
     auto result = m_memory->deallocate(ptr);
     if (!result) {

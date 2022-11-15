@@ -19,7 +19,7 @@ public:
     };
 
     void init(std::shared_ptr<wasm::ModuleInstance> module_instance, 
-              std::shared_ptr<plc::core::runtime::Memory> memory) {
+              std::shared_ptr<plc::core::runtime::Memory> memory) noexcept {
         m_module_instance = module_instance;
         m_memory = memory;
     }

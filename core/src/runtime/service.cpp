@@ -1,6 +1,7 @@
 #include "runtime/service.h"
 
 #include <iostream>
+
 #include <libp2p/host/basic_host/basic_host.hpp>
 #include <zstd.h>
 
@@ -33,6 +34,22 @@ constexpr uint8_t zstd_prefix[zstd_prefix_size] = {0x52, 0xBC, 0x53, 0x76, 0x46,
 // https://github.com/paritytech/substrate/blob/polkadot-v0.9.8/primitives/maybe-compressed-blob/src/lib.rs#L35
 constexpr size_t code_blob_bomb_limit = 50 * 1024 * 1024;
 
+Service::Service(std::shared_ptr<plc::core::chain::Spec> spec,
+            std::shared_ptr<plc::core::network::PeerManager> connection_manager, 
+            std::shared_ptr<plc::core::runner::ClientRunner> runner) : 
+    m_spec(spec), m_connection_manager(connection_manager), m_runner(runner) {
+    m_module = std::make_shared<Module>();
+    m_executor = std::make_shared<Executor>();
+    m_api = std::make_shared<Api>(m_executor);
+    m_host_api = std::make_shared<plc::core::host::Api>();
+
+    auto result = loadGenesisRuntime();
+    if (result.has_error()) {
+        m_log->error("Error while trying to load genesis runtime: {}", result.error());
+    }
+    //TODO: start listening for new block events
+}
+
 Result<void> Service::loadGenesisRuntime() {
     auto genesis = m_spec->getGenesis();
 
@@ -47,14 +64,11 @@ Result<void> Service::loadGenesisRuntime() {
 }
 
 cppcoro::task<Result<void>> Service::loadRuntimeForBlock(libp2p::peer::PeerId peer, BlockHash block) {
+    //TODO: this was not tested yet
     auto host = m_connection_manager->getHost();
     auto light2 = plc::core::network::light2::Protocol(*host, *m_runner);
 
-    //Only for testing purposes, but seems obtaining the runtime from full node doesn't work. Yet...
-    auto block_hash = plc::core::unhexWith0xToBlockHash("0x1611aaf014ea221866a309dda02dd97633782d6d6fe0925eaaef9952105da89b");
-    //{0x16, 0x11, 0xaa,0xf0,0x14,0xea,0x22,0x18,0x66,0xa3,0x09,0xdd,0xa0,0x2d,0xd9,0x76,0x33,0x78,0x2d,0x6d,0x6f,0xe0,0x92,0x5e,0xaa,0xef,0x99,0x52,0x10,0x5d,0xa8,0x9b};
-
-    plc::core::network::light2::RemoteReadRequest req = {block_hash.value(), {":code"}};    
+    plc::core::network::light2::RemoteReadRequest req = {block, {":code"}};    
 
     m_log->debug("Trying to get runtime from peer {}", peer.toBase58());
     auto result = co_await light2.send(std::move(req), peer);
@@ -64,11 +78,10 @@ cppcoro::task<Result<void>> Service::loadRuntimeForBlock(libp2p::peer::PeerId pe
     } else {
         auto val = result.value();
 
-        plc::core::ByteBuffer buf;
-        for (auto i = 0; i < val.proof.size(); ++i) {
-            buf.push_back(val.proof[i]);
-        }
+        plc::core::ByteBuffer buf(val.proof.size());
+        std::copy(val.proof.begin(), val.proof.end(), buf.begin());
 
+        //TODO: check if new runtime differs from the one we currently have and process it if yes
         co_return processRuntime(buf);
     }
 }
@@ -82,7 +95,7 @@ Result<void> Service::processRuntime(const ByteBuffer &runtime) {
     m_module_instance = std::make_shared<wasm::ModuleInstance>(*m_module->getWasmModule(), m_external_interface.get());    
 
     auto heap_base_res = m_module_instance->getExport("__heap_base"); 
-    int heap_base = 0;
+    auto heap_base = 0;
     if (heap_base_res.size() > 0) {
         heap_base = heap_base_res[0].geti32();
         m_log->debug("Setting heap base to {}", heap_base);
@@ -122,6 +135,10 @@ Result<void> Service::uncompressCodeIfNeeded(const ByteBuffer &in, ByteBuffer &o
         out = in;
     }
     return libp2p::outcome::success();
+}
+
+void Service::stop() noexcept {
+    //TODO: when service will listen for new block events stop it here
 }
 
 } //namespace plc::core::runtime
