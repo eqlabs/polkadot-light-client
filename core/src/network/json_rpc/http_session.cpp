@@ -223,4 +223,3 @@ void HttpSession::onWrite(error_code ec, std::size_t, bool close) {
 }
 
 } // namespace plc::core::network::json_rpc
-

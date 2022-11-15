@@ -24,14 +24,14 @@ int JrpcServer::getNextId() noexcept {
 }
 
 void JrpcServer::onOpen(int id, std::shared_ptr<WebSocketSession> session) {
-    m_log->info("JrpcServer::onOpen id {}", id);
+    m_log->debug("JrpcServer::onOpen id {}", id);
     auto client = std::make_shared<JrpcClient>(id, session, m_io_service);
     m_clients.emplace(id,client);
-    m_log->info("{} clients currently attached", m_clients.size());
+    m_log->debug("{} clients currently attached", m_clients.size());
 }
 
 void JrpcServer::onMessage(int id, std::string message) {
-    m_log->info("JrpcServer::onMessage id {}, message {}", id, message);
+    m_log->debug("JrpcServer::onMessage id {}, message {}", id, message);
 
     // TODO
     // 1. get client, based on id
@@ -43,9 +43,9 @@ void JrpcServer::onMessage(int id, std::string message) {
 }
 
 void JrpcServer::onClose(int id) {
-    m_log->info("JrpcServer::onClose id {}", id);
+    m_log->debug("JrpcServer::onClose id {}", id);
     m_clients.erase(id);
-    m_log->info("{} clients currently attached", m_clients.size());
+    m_log->debug("{} clients currently attached", m_clients.size());
 }
 
 void JrpcServer::initSessionCallbacks() {
@@ -76,10 +76,6 @@ void JrpcServer::connect() {
 
     // Allow address reuse
     m_acceptor.set_option(net::socket_base::reuse_address(true));
-    if(ec) {
-        fail(ec, "set_option");
-        return;
-    }
 
     // Bind to the server address
     m_acceptor.bind(bind_ep, ec);
@@ -114,7 +110,7 @@ void JrpcServer::fail(error_code ec, char const* what) noexcept {
     if(ec == net::error::operation_aborted) {
         return;
     }
-    m_log->info("JrpcServer::fail: {}: {}", what, ec.message());
+    m_log->error("JrpcServer::fail: {}: {}", what, ec.message());
 }
 
 void JrpcServer::onAccept(error_code ec)
