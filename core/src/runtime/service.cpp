@@ -40,7 +40,7 @@ Service::Service(std::shared_ptr<plc::core::chain::Spec> spec,
     m_spec(spec), m_connection_manager(connection_manager), m_runner(runner) {
     m_module = std::make_shared<Module>();
     m_executor = std::make_shared<Executor>();
-    m_api = std::make_shared<Api>(m_executor);
+    m_runtime_api = std::make_shared<Api>(m_executor);
     m_host_api = std::make_shared<plc::core::host::Api>();
 
     auto result = loadGenesisRuntime();

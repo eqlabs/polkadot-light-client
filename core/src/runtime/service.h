@@ -30,7 +30,7 @@ public:
     cppcoro::task<Result<void>> loadRuntimeForBlock(libp2p::peer::PeerId, BlockHash block);
 
     std::shared_ptr<Api> getRuntimeApi() noexcept {
-        return m_api;
+        return m_runtime_api;
     }
 
     std::shared_ptr<plc::core::host::Api> getHostApi() noexcept {
@@ -49,7 +49,7 @@ private:
 
     std::shared_ptr<Module> m_module;
     std::shared_ptr<Executor> m_executor;
-    std::shared_ptr<Api> m_api;    
+    std::shared_ptr<Api> m_runtime_api;    
     std::shared_ptr<plc::core::host::Api> m_host_api;
 
     std::shared_ptr<ExternalInterface> m_external_interface;
