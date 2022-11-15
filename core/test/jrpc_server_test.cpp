@@ -29,6 +29,8 @@ TEST_F(JrpcServerTest, ShouldReturnCorrectResponse) {
     std::shared_ptr<boost::asio::io_service> io = std::make_shared<boost::asio::io_service>();
 
     auto jrpc_server = std::make_shared<plc::core::network::json_rpc::JrpcServer>(2584, io);
+    jrpc_server->connect();
+
     // TODO
     // rewrite tests when handlers get added to new JrpcServer
 

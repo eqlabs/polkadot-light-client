@@ -62,7 +62,7 @@ void JrpcServer::initSessionCallbacks() {
 }
 
 void JrpcServer::connect() {
-    std::string localhost = "127.0.0.1";
+    const std::string localhost = "127.0.0.1";
     boost::system::error_code ec;
     boost::asio::ip::address ip_address = boost::asio::ip::address::from_string(localhost, ec);
     boost::asio::ip::tcp::endpoint bind_ep(ip_address, m_port);
@@ -102,9 +102,7 @@ void JrpcServer::connect() {
 void JrpcServer::run()
 {
     // Start accepting a connection
-    m_log->info("start run");
     auto self = shared_from_this();
-    m_log->info("got self");
     m_acceptor.async_accept(m_socket,
         [self](error_code ec) {
             self->onAccept(ec);

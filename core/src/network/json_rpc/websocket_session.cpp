@@ -24,13 +24,12 @@ WebSocketSession::~WebSocketSession() {
 }
 
 void WebSocketSession::fail(error_code ec, char const* what) {
-    m_log->info("WebSocketSession::fail what {}", what);
-    // Don't report these
     if( ec == net::error::operation_aborted ) {
         m_log->info("WebSocketSession::fail: net::error::operation_aborted");
-    }
-    if( ec == websocket::error::closed) {
+    } else if( ec == websocket::error::closed) {
         m_log->info("WebSocketSession::fail: websocket::error::closed");
+    } else {
+        m_log->info("WebSocketSession::fail what {}", what);
     }
     m_callbacks.onClose(m_id);
 
