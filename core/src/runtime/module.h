@@ -17,12 +17,12 @@ public:
     };
     Result<void> parseCode(const ByteBuffer &code);
 
-    std::shared_ptr<wasm::Module> getWasmModule() {
+    std::shared_ptr<wasm::Module> getWasmModule() noexcept {
         return m_module;
     }
 private:
     std::shared_ptr<wasm::Module> m_module;
-    libp2p::log::Logger m_log = libp2p::log::createLogger("Module", "runtime");
+    libp2p::log::Logger m_log = libp2p::log::createLogger("runtime::Module", "runtime");
 };
 
 } //namespace plc::core::runtime

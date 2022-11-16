@@ -1,16 +1,19 @@
 #pragma once
 
+#include "utils/types.h"
+
 namespace plc::core::runtime {
 
 struct Ptr {
     Ptr() = default;
     Ptr(uint64_t wasmPtr) {
-        const uint32_t ptr = wasmPtr & 0xFFFFFFFFLLU;
-        const uint32_t size = (wasmPtr >> 32u) & 0xFFFFFFFFLLU;
+        m_addr = wasmPtr & 0xFFFFFFFFLLU;
+        m_size = (wasmPtr >> 32u) & 0xFFFFFFFFLLU;
     }
+    Ptr(WasmPtr addr, WasmSize size) : m_addr(addr), m_size(size) {}
 
-    uint32_t ptr;
-    uint32_t size;
+    WasmPtr m_addr;
+    WasmSize m_size;
 };
 
 } //namespace plc::core::runtime {

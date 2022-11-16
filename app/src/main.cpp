@@ -101,8 +101,8 @@ int main(const int count, const char** args) {
     connection_manager = std::make_shared<network::PeerManager>(runner, chain_spec->getBootNodes(), stop_handler);
     stop_handler->add(connection_manager);
 
-    auto service = std::make_shared<plc::core::runtime::Service>(chain_spec, connection_manager, runner);
-    service->loadGenesisRuntime();
+    auto runtime_service = std::make_shared<plc::core::runtime::Service>(chain_spec, connection_manager, runner);
+    stop_handler->add(runtime_service);
 
     runner->run();
 

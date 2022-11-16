@@ -1,7 +1,5 @@
 #include "runtime/module.h"
 
-
-#include <wasm-features.h>
 #include <shell-interface.h>
 
 #include "utils/hex.h"
@@ -20,9 +18,7 @@ namespace plc::core::runtime {
 
 Result<void> Module::parseCode(const ByteBuffer &code) {
     m_module = std::make_shared<wasm::Module>();
-    wasm::WasmBinaryBuilder parser(
-        *m_module,
-        reinterpret_cast<std::vector<char> const&>(code));
+    wasm::WasmBinaryBuilder parser(*m_module, reinterpret_cast<std::vector<char> const&>(code));
 
     try {
         m_log->debug("Parsing runtime code");
@@ -33,7 +29,6 @@ Result<void> Module::parseCode(const ByteBuffer &code) {
         m_log->error("Parsing runtime code error {}", msg.str());
         return Error::ParsingError;
     }
-    
     return libp2p::outcome::success();
 }
 

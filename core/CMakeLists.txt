@@ -14,7 +14,12 @@ add_library(plc_core
     src/utils/string_conversion.cpp
     src/runtime/module.cpp
     src/runtime/service.cpp
-    src/runtime/api.cpp)
+    src/runtime/api.cpp
+    src/runtime/external_interface.cpp
+    src/runtime/executor.cpp
+    src/runtime/memory.cpp
+    src/runtime/memory_allocator.cpp
+    src/host/api.cpp)
 message(STATUS "dir = ${CMAKE_CURRENT_LIST_DIR}/src")
 target_include_directories(plc_core PUBLIC "${CMAKE_CURRENT_LIST_DIR}/src")
 target_link_libraries(plc_core
