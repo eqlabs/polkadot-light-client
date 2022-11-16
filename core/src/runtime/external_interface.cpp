@@ -15,7 +15,7 @@ void ExternalInterface::registerImports() noexcept {
 }
 
 wasm::Literals ExternalInterface::callImport(wasm::Function* import, wasm::LiteralList& arguments) {
-    if (import->module == env) {        
+    if (import && import->module == env) {        
         if (auto it = m_imports.find(import->base.c_str()); it != m_imports.end()) {
             return ((*m_host_api).*(it->second))(arguments);
         }

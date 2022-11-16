@@ -6,17 +6,11 @@
 namespace plc::core::host {
 
 Api::Api() {
-    m_wasm_log_level_map[soralog::Level::ERROR] = 0;
-    m_wasm_log_level_map[soralog::Level::WARN] = 1;
-    m_wasm_log_level_map[soralog::Level::INFO] = 2;
-    m_wasm_log_level_map[soralog::Level::VERBOSE] = 3;
-    m_wasm_log_level_map[soralog::Level::DEBUG] = 4;
-    m_wasm_log_level_map[soralog::Level::TRACE] = 5;
 }
 
 wasm::Literals Api::ext_logging_max_level_version_1(const wasm::LiteralList& arguments) {    
     ensureArgumentsSize(arguments.size(), 0);
-    return wasm::Literals({wasm::Literal(m_wasm_log_level_map[m_log->level()])});
+    return wasm::Literals({wasm::Literal(m_wasm_log_level_map.at(m_log->level()))});
 }
 
 wasm::Literals Api::ext_logging_log_version_1(const wasm::LiteralList& arguments) {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <map>
+#include <unordered_map>
 
 #include <boost/assert.hpp>
 #include <libp2p/log/logger.hpp>
@@ -37,7 +37,14 @@ private:
         }
     }
     std::shared_ptr<plc::core::runtime::Memory> m_memory;
-    std::map<soralog::Level, int> m_wasm_log_level_map;
+    const std::unordered_map<soralog::Level, int> m_wasm_log_level_map = {
+        {soralog::Level::ERROR, 0},
+        {soralog::Level::WARN, 1},
+        {soralog::Level::INFO, 2},
+        {soralog::Level::VERBOSE, 3},
+        {soralog::Level::DEBUG, 4},
+        {soralog::Level::TRACE, 5}
+    };
 
     libp2p::log::Logger m_log = libp2p::log::createLogger("host::Api", "host");
 };
