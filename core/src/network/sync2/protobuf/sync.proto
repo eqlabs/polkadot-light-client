@@ -1,0 +1,74 @@
+// Schema definition for sync/2 messages.
+
+syntax = "proto3";
+
+package plc.core.network.sync2.proto;
+
+// Sequence direction of the requested blocks
+enum Direction {
+    // Enumerate in ascending order (from child to parent)
+    ASCENDING = 0;
+
+    // Enumerate in descending order (from parent to canonical child)
+    DESCENDING = 1;
+}
+
+// Message used to get range of blocks from peers.
+message BlockRequest {
+    // Bit representation (big endian) of block data to request (header, body or justification)
+    uint32 block_data_to_req = 1;
+
+    // Starting block to be get from peer - either using block hash or block number
+    oneof start_block {
+        bytes block_hash = 2;
+        bytes block_number = 3;
+    }
+
+    // Block to be the last block fetched - either hash or number whatever has been chosen for start_block
+    optional bytes end_block = 4;
+
+    // Sequence direction (0 if missing)
+    optional Direction direction = 5;
+
+    // Maximum amount of blocks to be returned. Implementation specific.
+    optional uint32 max_amount = 6;
+
+    // This field is not present in the current /dot/sync/2 spec (https://spec.polkadot.network/#defn-msg-block-request)
+    // but is supported by substrate https://github.com/paritytech/substrate/blob/master/client/network/sync/src/schema/api.v1.proto
+    optional bool support_multiple_justifications = 7;
+}
+
+// Response to BlockRequest containing sequence of blocks.
+message BlockResponse {
+    // Block data with requested blocks/
+    repeated BlockData block_data = 1;
+}
+
+// Single data block.
+message BlockData {
+    // Encoded block header hash
+    bytes header_hash = 1;
+
+    // Block header
+    optional bytes header = 2;
+
+    // Sequence of extrinsics, each encoded as a byte array (SCALE encoded array of byte arrays).
+    repeated bytes body = 3;
+
+    // Block receipt
+    optional bytes receipt = 4;
+
+    // Block message queue
+    optional bytes message_queue = 5;
+
+    // Justification for the block
+    optional bytes justification = 6;
+
+    // Indicates whether the justification is empty
+    optional bool empty_justification = 7;
+
+    // Below are fields not present in the current /dot/sync/2 spec (https://spec.polkadot.network/#defn-msg-block-response)
+    // but are supported by substrate https://github.com/paritytech/substrate/blob/master/client/network/sync/src/schema/api.v1.proto
+    optional bytes justifications = 8;
+    repeated bytes indexed_body = 9;
+}

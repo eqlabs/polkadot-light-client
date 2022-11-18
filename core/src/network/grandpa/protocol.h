@@ -60,7 +60,7 @@ private:
     std::shared_ptr<Observer> m_observer;
     bool m_is_running = false;
 
-    libp2p::log::Logger m_log = libp2p::log::createLogger("Protocol", "grandpa_protocol");
+    libp2p::log::Logger m_log = libp2p::log::createLogger("grandpa_protocol", "network");
 };
 
 }  // namespace plc::core::network
