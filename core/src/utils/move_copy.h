@@ -1,6 +1,6 @@
 #pragma once
 
-namespace pcl::core {
+namespace plc::core {
 
 #define PLC_DISABLE_COPY(TypeName) \
     TypeName(const TypeName&) = delete;\

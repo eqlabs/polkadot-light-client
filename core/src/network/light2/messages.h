@@ -54,7 +54,7 @@ struct RemoteReadRequest {
             msg.add_keys(std::move(key));
         }
 
-        return msg;
+        return req;
     }
 };
 
@@ -88,7 +88,7 @@ struct RemoteReadChildRequest {
             msg.add_keys(std::move(key));
         }
 
-        return msg;
+        return req;
     }
 };
 
